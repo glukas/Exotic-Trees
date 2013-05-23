@@ -35,15 +35,6 @@ public class BinarySearchTreeIterator<T> implements Iterator<T> {
 		return result;
 	}
 	
-	
-	private void addSubtreeToDeque(TreeNode<T> node) {
-		if (node == null) return;	
-		addSubtreeToDeque(node.getLeftChild());
-		deque.addLast(node);
-		addSubtreeToDeque(node.getRightChild());
-	}
-
-	
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException();	

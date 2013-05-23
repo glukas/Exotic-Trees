@@ -20,13 +20,7 @@ class Main {
 		}
 		
 		
-		Treap<Integer> treap = new Treap<Integer>(new Comparator<Integer>() {
-            @Override
-            public int compare(Integer o1,Integer o2) {
-            	
-            	return  ((Integer) o1.compareTo(o2));
-            }
-        });
+		Treap<Integer> treap = new Treap<Integer>();
 		testSet(treap);
 		treap.clear();
 		randomTestSet(treap);

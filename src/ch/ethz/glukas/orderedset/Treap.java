@@ -17,6 +17,18 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		internalComparator = comparator;
 	}
 	
+	public Treap()
+	{
+		clear();
+		internalComparator = new Comparator<T>() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public int compare(T arg0, T arg1) {
+				return ((Comparable<T>)arg0).compareTo(arg1);
+			}
+		};
+	}
+	
 
 	
 	/////
@@ -142,7 +154,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 
 	@Override
 	public T first() {
-		if (size() == 0) throw new NoSuchElementException();
+		if (isEmpty()) throw new NoSuchElementException();
 		TreeNode<T> node = metaRoot.getLeftChild();
 		while (node.getLeftChild() != null) {
 			node = node.getLeftChild();
@@ -158,7 +170,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 
 	@Override
 	public T last() {
-		if (size() == 0) throw new NoSuchElementException();
+		if (isEmpty()) throw new NoSuchElementException();
 		TreeNode<T> node = metaRoot.getLeftChild();
 		while (node.getRightChild() != null) {
 			node = node.getRightChild();
