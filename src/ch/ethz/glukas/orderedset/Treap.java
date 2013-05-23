@@ -1,7 +1,8 @@
 package ch.ethz.glukas.orderedset;
+import java.lang.reflect.Array;
 import java.util.*;
 
-public class Treap<T> implements SortedSet<T> {
+public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	
 
 	
@@ -75,14 +76,8 @@ public class Treap<T> implements SortedSet<T> {
 	}
 
 	@Override
-	public boolean isEmpty() {
-		return size()==0;
-	}
-
-	@Override
 	public Iterator<T> iterator() {
-		// TODO Auto-generated method stub
-		return null;
+		return new BinarySearchTreeIterator<T>(metaRoot.getLeftChild());
 	}
 
 	/**
@@ -108,13 +103,15 @@ public class Treap<T> implements SortedSet<T> {
 			TreeNode<T> parent = trace.get(trace.size()-2);
 			
 			internalRemove(toRemove, parent);
-			assert !contains(value);
+			
 			internalRebalanceDownwards(toRemove, parent);
 			
 			decrementCount();
+			
+			assert isInOrder();
 		}
 		
-		
+		assert !contains(value);
 		return false;
 	}
 
@@ -130,27 +127,14 @@ public class Treap<T> implements SortedSet<T> {
 
 	@Override
 	public boolean retainAll(Collection<?> arg0) {
-		// TODO Auto-generated method stub
-		return false;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public int size() {
 		return count;
 	}
-
-	@Override
-	public Object[] toArray() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public <T> T[] toArray(T[] arg0) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 	@Override
 	public Comparator<? super T> comparator() {
 		return internalComparator;
@@ -158,10 +142,12 @@ public class Treap<T> implements SortedSet<T> {
 
 	@Override
 	public T first() {
-		//TODO: test
-		ArrayList<TreeNode<T>> node = traceNodeWithValueStartingFrom(metaRoot.getLeftChild(), null);
-		
-		return node.get(0).getValue();
+		if (size() == 0) throw new NoSuchElementException();
+		TreeNode<T> node = metaRoot.getLeftChild();
+		while (node.getLeftChild() != null) {
+			node = node.getLeftChild();
+		}
+		return node.getValue();
 	}
 
 	@Override
@@ -172,8 +158,12 @@ public class Treap<T> implements SortedSet<T> {
 
 	@Override
 	public T last() {
-		// TODO Auto-generated method stub
-		return null;
+		if (size() == 0) throw new NoSuchElementException();
+		TreeNode<T> node = metaRoot.getLeftChild();
+		while (node.getRightChild() != null) {
+			node = node.getRightChild();
+		}
+		return node.getValue();
 	}
 
 	@Override
@@ -193,49 +183,8 @@ public class Treap<T> implements SortedSet<T> {
 	///IMPLEMENTATION
 	//////
 	
-	
-	private boolean internalAddRotatingDownwards(T value, int p, TreeNode<T> node)
-	{
-		int comparison = compareValues(value, node.getValue());
-		boolean modified = false;
-		if (comparison < 0) {
-			if (node.getLeftChild() == null) {
-				node.setLeftChild(new TreeNode<T>(value));
-				incrementCount();
-				modified = true;
-			} else {
-				modified = internalAddRotatingDownwards(value, p, node.getLeftChild());
-			}
-			
-			if (modified && getPriorityForNode(node.getLeftChild()) < p) {
-				treeRotateUpwards(node.getLeftChild(), node);
-			}
-			
-		} else if (comparison > 0) {
-			if (node.getRightChild() == null) {
-				node.setRightChild(new TreeNode<T>(value));
-				incrementCount();
-				modified = true;
-			} else {
-				modified = internalAddRotatingDownwards(value, p, node.getRightChild());
-			}
-			
-			if (modified && getPriorityForNode(node.getRightChild()) < p) {
-				treeRotateUpwards(node.getLeftChild(), node);
-			}
-		}
-		
-		return modified;
-	}
-	
-	private void treeRotateUpwards(TreeNode<T> leftChild, TreeNode<T> node) {
-		// TODO Auto-generated method stub
-		
-	}
 
-
-
-	//insertion algorithm 1
+	//analogous to insertion into an unbalanced BST, but restore heap property afterwards
 	private boolean internalAddAtLeafAndRebalanceUpwards(T arg0)
 	{
 		ArrayList<TreeNode<T>> trace = find(arg0);
@@ -250,6 +199,7 @@ public class Treap<T> implements SortedSet<T> {
 			internalRebalanceUpwards(trace);
 			
 			incrementCount();
+			assert isInOrder();
 		}
 		
 		return modified;
@@ -276,9 +226,6 @@ public class Treap<T> implements SortedSet<T> {
 		//return traceNodeWithValueStartingFrom(metaRoot.getLeftChild(), value, false).size() > 0;
 		return findNodeWithValueStartingFrom(metaRoot, value) != null;
 	}
-	
-
-	
 	
 
 	//if toRemove has 1 or 0 children it is removed and toRemove.getRightChild()==toRemove.getLeftChild()==null
@@ -431,6 +378,8 @@ public class Treap<T> implements SortedSet<T> {
 	////IMPLEMENTATION :: BALANCE
 	//////
 	
+	
+	/*
 	private void internalRebalanceUpwards(Buffer<TreeNode<T>> trace)
 	{
 		assert trace.size() > 0;
@@ -443,7 +392,7 @@ public class Treap<T> implements SortedSet<T> {
 			trace.swap(currentIndex, currentIndex-1);//the tree rotation needs to be reflected in the trace
 			currentIndex = currentIndex - 1;
 		}
-	}
+	}*/
 	
 	
 	private void internalRebalanceUpwards(ArrayList<TreeNode<T>> trace)
@@ -458,6 +407,8 @@ public class Treap<T> implements SortedSet<T> {
 			swap(trace, currentIndex, currentIndex-1);//the tree rotation needs to be reflected in the trace
 			currentIndex = currentIndex - 1;
 		}
+		
+		assert isHeapOrdered(trace.get(0));
 	}
 	
 	
@@ -580,8 +531,34 @@ public class Treap<T> implements SortedSet<T> {
 		count++;
 	}
 
-
+	//INVARIANTS
 	
+	
+	@SuppressWarnings("unchecked")
+	private boolean isInOrder()
+	{
+		T[] sorted = (T[]) toArray();
+		for (int i=1; i<sorted.length; i++) {
+			if (compareValues(sorted[i], sorted[i-1]) < 0) return false;
+		}
+		return true;
+	}
+	
+	private boolean isHeapOrdered(TreeNode<T> node)
+	{
+		//base case
+		if (node == null) return true;
+		
+		//recursion
+		boolean result = true;
+		if (node != metaRoot && nodeWithLocallyMinimalPriority(node) != node) {
+			result = false;
+		} else {
+			result = result && isHeapOrdered(node.getLeftChild());
+			result = result && isHeapOrdered(node.getRightChild());
+		}
+		return result;
+	}
 	
 	//////
 	//INSTANCE VARIABLES

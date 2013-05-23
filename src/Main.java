@@ -29,8 +29,9 @@ class Main {
         });
 		testSet(treap);
 		treap.clear();
-		//randomTestSet(treap);
+		randomTestSet(treap);
 		treap.clear();
+		testSortedSet(treap);
 		//performanceTestSet(treap, 80000);
 		//performanceTestSet(new HashSet<Integer>(), 80000);
 		//performanceTestSet(new TreeSet<Integer>(), 80000);
@@ -43,7 +44,7 @@ class Main {
 		//use a proven java.util set as golden model
 		Set<Integer> controlSet = new HashSet<Integer>();
 		
-		int testSize = 10000;
+		int testSize = 1000;
 		int testRange = testSize/5;
 		Random random = new Random(9);
 		Date start = new Date();
@@ -70,11 +71,46 @@ class Main {
 		
 	}
 	
+	
+	public static void testSortedSet(SortedSet<Integer> set) {
+		SortedSet<Integer> controlSet = new TreeSet<Integer>();
+		
+		int testSize = 200;
+		int testRange = testSize/5;
+		Random random = new Random(38);
+		Date start = new Date();
+		
+		for (int i=0; i< testSize; i++) {
+			int nextOperation = random.nextInt(3);
+			int nextNumber = random.nextInt(testRange);
+			if (nextOperation > 0) {
+				controlSet.add(nextNumber);
+				set.add(nextNumber);
+			} else {
+				controlSet.remove(nextNumber);
+				set.remove(nextNumber);
+			}
+			if (controlSet.size() > 0) {
+				if (set.first() != controlSet.first()) throw new Error();
+				if (set.last() != controlSet.last()) throw new Error();
+			}
+		}
+		
+		if (controlSet.size() != set.size()) throw new Error();
+		for (Integer number : controlSet) {
+			if (!controlSet.contains(number)) throw new Error();
+		}
+		
+		Date end = new Date();
+		System.out.println("randomized test set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		
+	}
+	
 	public static void testSet(Set<Integer> set)
 	{
 		Set<Integer> controlSet = new HashSet<Integer>();
 		
-		int testSize = 5000;
+		int testSize = 1000;
 		Random random = new Random(5);
 		
 		Date start = new Date();
