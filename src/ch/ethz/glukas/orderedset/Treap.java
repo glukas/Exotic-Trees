@@ -39,7 +39,6 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	public boolean add(T arg0) {
 		if (arg0.equals(null)) throw new NullPointerException();
 		
-		//return internalAddRotatingDownwards(arg0, getPriorityForValue(arg0), metaRoot);
 		return internalAddAtLeafAndRebalanceUpwards(arg0);
 	}
 
@@ -186,6 +185,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 
 	@Override
 	public SortedSet<T> tailSet(T arg0) {
+		//TODO
 		return null;
 	}
 	
@@ -323,12 +323,12 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	}
 	*/
 	
-	
+	//result contains 2 elements: the successors parent at 0 and the successor at 1
 	private Buffer<TreeNode<T>> findSuccessor(TreeNode<T> node)
 	{
 		assert node.getRightChild() != null;
 		
-		Buffer<TreeNode<T>> trace = traceNodeWithValueStartingFrom((TreeNode<T>)node.getRightChild(), node.getValue(), 2);
+		Buffer<TreeNode<T>> trace = traceNodeWithValueStartingFrom(node.getRightChild(), node.getValue(), 2);
 		if (trace.numberOfUsedSlots() == 1) {//if the successor is the immediate right child, the node will need to be added to the trace
 			TreeNode<T> successor = trace.get(0);
 			trace.add(node);
@@ -349,7 +349,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		int comparison = -1;
 		
 		while (currentNode != null) {
-			trace.add((TreeNode<T>)currentNode);
+			trace.add(currentNode);
 			
 			comparison = compareValues(valueToFind, currentNode.getValue());
 			if (comparison < 0) {
@@ -372,7 +372,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		TreeNode<T> currentNode = startingNode;
 		int comparison = -1;
 		while (currentNode != null) {
-			trace.add((TreeNode<T>)currentNode);
+			trace.add(currentNode);
 			comparison = compareValues(valueToFind, currentNode.getValue());
 			if (comparison < 0) {
 				currentNode = currentNode.getLeftChild();
@@ -487,7 +487,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		
 		if (node.getLeftChild() == null) return 1;
 		if (node.getRightChild() == null) return -1;
-		return (getPriorityForNode((TreeNode<T>) node.getLeftChild())) - (getPriorityForNode((TreeNode<T>) node.getRightChild()));
+		return (getPriorityForNode(node.getLeftChild())) - (getPriorityForNode(node.getRightChild()));
 	}
 	
 	
@@ -501,10 +501,10 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	private TreeNode<T> nodeWithLocallyMinimalPriority(TreeNode<T> currentNode)
 	{
 		TreeNode<T> min = currentNode;
-		if (currentNode.getLeftChild() != null && getPriorityForNode(((TreeNode<T>) currentNode.getLeftChild())) < getPriorityForNode(currentNode)) {
+		if (currentNode.getLeftChild() != null && getPriorityForNode((currentNode.getLeftChild())) < getPriorityForNode(currentNode)) {
 			min = currentNode;
 		}
-		if (currentNode.getRightChild() != null && getPriorityForNode((TreeNode<T>) currentNode.getRightChild()) < getPriorityForNode(currentNode)) {
+		if (currentNode.getRightChild() != null && getPriorityForNode(currentNode.getRightChild()) < getPriorityForNode(currentNode)) {
 			min = currentNode;
 		}
 		return min;
