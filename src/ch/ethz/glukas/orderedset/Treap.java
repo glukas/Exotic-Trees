@@ -174,15 +174,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 
 	@Override
 	public SortedSet<T> tailSet(T arg0) {
-		TreeNode<T> firstContained = findNodeWithValueStartingFrom(metaRoot.getLeftChild(), arg0);
-		SortedSet<T> result = new Treap<T>(comparator());
-		if (firstContained != null) {
-			Iterator<T> it = new BinarySearchTreeIterator<T>(firstContained);
-			while (it.hasNext()) {
-				result.add(it.next());
-			}
-		}
-		return result;
+		return null;
 	}
 	
 	

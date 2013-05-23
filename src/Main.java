@@ -75,7 +75,7 @@ class Main {
 	public static void testSortedSet(SortedSet<Integer> set) {
 		SortedSet<Integer> controlSet = new TreeSet<Integer>();
 		
-		int testSize = 200;
+		int testSize = 1000;
 		int testRange = testSize/5;
 		Random random = new Random(38);
 		Date start = new Date();
@@ -91,8 +91,8 @@ class Main {
 				set.remove(nextNumber);
 			}
 			if (controlSet.size() > 0) {
-				if (set.first() != controlSet.first()) throw new Error();
-				if (set.last() != controlSet.last()) throw new Error();
+				if (!set.first().equals(controlSet.first())) throw new Error();
+				if (!set.last().equals(controlSet.last())) throw new Error();
 			}
 		}
 		
@@ -110,7 +110,7 @@ class Main {
 	{
 		Set<Integer> controlSet = new HashSet<Integer>();
 		
-		int testSize = 1000;
+		int testSize = 2000;
 		Random random = new Random(5);
 		
 		Date start = new Date();
