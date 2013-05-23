@@ -10,10 +10,10 @@ import javax.naming.OperationNotSupportedException;
 
 
 public class BinarySearchTreeIterator<T> implements Iterator<T> {
-
+	//idea for traversal from http://leetcode.com/2010/04/binary-search-tree-in-order-traversal.html
 	
 	public BinarySearchTreeIterator(TreeNode<T> node) {
-		addSubtreeToDeque(node);
+		deque.addLast(node);
 	}
 
 	@Override
@@ -23,23 +23,33 @@ public class BinarySearchTreeIterator<T> implements Iterator<T> {
 
 	@Override
 	public T next() {
-		return deque.pollFirst().getValue();
+		T result = null;
+		if (current != null) {
+			deque.addLast(current);
+			current = current.getLeftChild();
+		} else {
+			current = deque.pollLast();
+			result = current.getValue();
+			current = current.getRightChild();
+		 }
+		return result;
 	}
 	
-	public void addSubtreeToDeque(TreeNode<T> node) {
-		if (node == null) return;
-		
+	
+	private void addSubtreeToDeque(TreeNode<T> node) {
+		if (node == null) return;	
 		addSubtreeToDeque(node.getLeftChild());
 		deque.addLast(node);
 		addSubtreeToDeque(node.getRightChild());
 	}
 
+	
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException();	
 	}
 
 	Deque<TreeNode<T>> deque = new ArrayDeque<TreeNode<T>>();
-	
+	TreeNode<T> current;
 	
 }
