@@ -13,7 +13,9 @@ public class BinarySearchTreeIterator<T> implements Iterator<T> {
 	//idea for traversal from http://leetcode.com/2010/04/binary-search-tree-in-order-traversal.html
 	
 	public BinarySearchTreeIterator(TreeNode<T> node) {
-		deque.addLast(node);
+		if (node != null) {
+			deque.addLast(node);
+		}
 	}
 
 	@Override

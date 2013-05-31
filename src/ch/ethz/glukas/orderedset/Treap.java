@@ -39,7 +39,8 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	public boolean add(T arg0) {
 		if (arg0.equals(null)) throw new NullPointerException();
 		
-		return internalAddAtLeafAndRebalanceUpwards(arg0);
+		//return addTopDown(arg0);
+		return addBottomUp(arg0);
 	}
 
 	
@@ -115,7 +116,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 			
 			internalRemove(toRemove, parent);
 			
-			internalRebalanceDownwards(toRemove, parent);
+			rebalanceDownwards(toRemove, parent);
 			
 			decrementCount();
 			
@@ -154,12 +155,13 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	@Override
 	public T first() {
 		if (isEmpty()) throw new NoSuchElementException();
-		TreeNode<T> node = metaRoot.getLeftChild();
-		while (node.getLeftChild() != null) {
-			node = node.getLeftChild();
-		}
+		
+		TreeNode<T> node = findFirst(metaRoot.getLeftChild());
+		
 		return node.getValue();
 	}
+	
+
 
 	@Override
 	public SortedSet<T> headSet(T arg0) {
@@ -190,13 +192,53 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	}
 	
 	
+	////
+	//NAVIGABLE SET
+	////
+	
+	
+	public T upper(T value)
+	{
+		//TODO: test / only works if value present
+		TreeNode<T> node = findNodeWithValueStartingFrom(metaRoot.getLeftChild(), value);
+		TreeNode<T> successor = findNodeWithValueStartingFrom(node.getRightChild(), node.getValue());
+		return successor.getValue();
+	}
+	
+	
 	/////
 	///IMPLEMENTATION
 	//////
 	
+	
+	private boolean addTopDown(T value)
+	{
+		
+		boolean alreadyContained = internalContains(value);
+		
+		if (!alreadyContained) {
+			
+			TreeNode<T> newNode = new TreeNode<T>(value);
+			TreeNode<T> tailSet = split(metaRoot.getLeftChild(), metaRoot, value);
+			
+			newNode.setLeftChild(metaRoot.getLeftChild());
+			newNode.setRightChild(tailSet);
+			
+			metaRoot.setLeftChild(newNode);
+			
+			rebalanceDownwards(newNode, metaRoot);
+			
+			incrementCount();
+			assert isInOrder();
+			assert isHeapOrdered();
+		}
+		
+		return !alreadyContained;
+	
+	}
 
 	//analogous to insertion into an unbalanced BST, but restore heap property afterwards
-	private boolean internalAddAtLeafAndRebalanceUpwards(T arg0)
+	private boolean addBottomUp(T arg0)
 	{
 		ArrayList<TreeNode<T>> trace = find(arg0);
 		
@@ -205,9 +247,9 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		if (trace.size() == 1 || compareValues( trace.get(trace.size()-1).getValue(), arg0) != 0) {
 			modified = true;
 			
-			TreeNode<T> newNode = internalAdd(trace.get(trace.size()-1), arg0);
+			TreeNode<T> newNode = makeChildWithValue(trace.get(trace.size()-1), arg0);
 			trace.add(newNode);
-			internalRebalanceUpwards(trace);
+			rebalanceUpwards(trace);
 			
 			incrementCount();
 			assert isInOrder();
@@ -216,7 +258,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		return modified;
 	}
 	
-	private TreeNode<T> internalAdd(TreeNode<T> parent, T newValue) {
+	private TreeNode<T> makeChildWithValue(TreeNode<T> parent, T newValue) {
 		
 		TreeNode<T> newNode = new TreeNode<T>(newValue);
 		
@@ -234,7 +276,6 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 
 	private boolean internalContains(T value)
 	{
-		//return traceNodeWithValueStartingFrom(metaRoot.getLeftChild(), value, false).size() > 0;
 		return findNodeWithValueStartingFrom(metaRoot, value) != null;
 	}
 	
@@ -272,11 +313,117 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	}
 	
 	
+	////
+	//IMPLEMENTATION :: SPLIT
+	////
+	
+	
+	/**
+	 * Splits of the right subtree and returns it
+	 * @param parent
+	 * @return the root of the subtree, parent.getRightChild()
+	 */
+	/*private TreeNode<T> splitRight(TreeNode<T> parent)
+	{
+		assert parent.getRightChild() != null;
+		TreeNode<T> rightChild = parent.getRightChild();
+		parent.setRightChild(null);
+		return rightChild;
+	}*/
+	
+	
+	/**
+	 * preconditions:	 the search tree invariant holds
+	 *   			     the heap invariant holds 
+	 * 					 all values in node are larger than metaRoot.getLeftChild(), or metaRoot.getLeftChild() == null
+	 * 					 the tree referred to by node is a valid treap
+	 * postcondition:	 node (and its children) are part of the treap.
+	 * 					 the search tree invariant holds
+	 *   			     the heap invariant holds
+	 *
+	 * @param node
+	 */
+	/*
+	private void joinInRightwards(TreeNode<T> node)
+	{
+		node.setLeftChild(metaRoot.getLeftChild());
+		metaRoot.setLeftChild(node);
+		if (node.getLeftChild() != null) {
+			rebalanceDownwards(node.getLeftChild(), node);
+		}
+		assert isInOrder();
+		assert isHeapOrdered();
+	}*/
+
+	
+	private TreeNode<T> split(TreeNode<T> root, TreeNode<T> parent, T value)
+	{
+		//splitMetaRoot.getLeftChild()  will contain the subtree with values greater than or equal to the value
+		//if the value is contained in the subtree rooted at root, it will be the smallest/leftmost node of the returned tree
+		TreeNode<T> splitMetaRoot = new TreeNode<T>(null);
+		TreeNode<T> currentSplitNode = splitMetaRoot;
+		
+		int comparison = -1;
+		while(root != null && comparison != 0) {
+			
+			comparison = compareValues(value, root.getValue());
+			
+			if (comparison > 0) {//value is greater than current node: don't include the current root, continue looking for larger values
+				parent = root;
+				root = root.getRightChild();
+			} else if (comparison <= 0) {//value is smaller than current node: include current node into the large value subtree, continue looking for smaller values
+				
+				//append to large value tree
+				currentSplitNode.setLeftChild(root);
+				currentSplitNode = root;
+				
+				//remove from small value tree
+				parent.replaceChild(root, root.getLeftChild());
+				//advance search
+				root = root.getLeftChild();
+				
+			}
+			
+		}
+		
+		currentSplitNode.setLeftChild(null);
+		
+		assert isInOrder();
+		assert isHeapOrdered();
+		assert isHeapOrdered(splitMetaRoot.getLeftChild());
+		
+		return splitMetaRoot.getLeftChild();
+	}
+	
+	
 	
 	//////
 	///IMPLEMENTATION :: FIND
 	//////
 	
+	
+	/**
+	 * Finds the parent of the first value greater than or equal to the value provided
+	 * @param value
+	 * @return
+	 */
+	/*
+	private TreeNode<T> findCeil(T value)
+	{
+		return findNodeWithValueStartingFrom(metaRoot.getLeftChild(), value);
+	}*/
+	
+	
+	/**
+	 * Returns the node with the smallest value (the leftmost node in the subtree rooted at 'node')
+	 */
+	private TreeNode<T> findFirst(TreeNode<T> node)
+	{
+		while (node.getLeftChild() != null) {
+			node = node.getLeftChild();
+		}
+		return node;
+	}
 	
 	
 	//the first element of the list is always the metaRoot
@@ -294,34 +441,22 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	
 	
 	
-	//Basically identical to traceNodeWithValueStartinFrom, but has less overhead, since only the last node is returned:
 	private TreeNode<T> findNodeWithValueStartingFrom(TreeNode<T> currentNode, T valueToFind)
 	{
 		int comparison = -1;
-		while (currentNode != null && comparison != 0) {
+		while (currentNode != null) {
 			comparison = compareValues(valueToFind, currentNode.getValue());
 			if (comparison < 0) {
 				currentNode = currentNode.getLeftChild();
 			} else if (comparison > 0) {
 				currentNode = currentNode.getRightChild();
+			} else {
+				break;
 			}
 		}
 		return currentNode;
 	}
 	
-	
-	/*
-	private ArrayList<TreeNode<T>> findSuccessor(TreeNode<T> node)
-	{
-		assert node.getRightChild() != null;
-		
-		ArrayList<TreeNode<T>> trace = traceNodeWithValueStartingFrom((TreeNode<T>)node.getRightChild(), node.getValue());
-		if (trace.size() == 1) {//if the successor is the immediate right child, the node will need to be added to the trace
-			trace.add(0, node);
-		}
-		return trace;
-	}
-	*/
 	
 	//result contains 2 elements: the successors parent at 0 and the successor at 1
 	private Buffer<TreeNode<T>> findSuccessor(TreeNode<T> node)
@@ -340,9 +475,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	
 	private ArrayList<TreeNode<T>> traceNodeWithValueStartingFrom(TreeNode<T> startingNode, T valueToFind)
 	{
-		int initialCapacity = Integer.numberOfLeadingZeros(count);
-		
-		ArrayList<TreeNode<T>> trace = new ArrayList<TreeNode<T>>(initialCapacity);
+		ArrayList<TreeNode<T>> trace = new ArrayList<TreeNode<T>>();
 
 		TreeNode<T> currentNode = startingNode;
 		
@@ -388,25 +521,9 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	//////
 	////IMPLEMENTATION :: BALANCE
 	//////
+
 	
-	
-	/*
-	private void internalRebalanceUpwards(Buffer<TreeNode<T>> trace)
-	{
-		assert trace.size() > 0;
-		
-		int currentIndex = trace.size()-1;
-		
-		while (currentIndex > 1 && getPriorityForNode(trace.get(currentIndex)) < getPriorityForNode(trace.get(currentIndex-1))) {
-			
-			treeRotateUp(trace.get(currentIndex), trace.get(currentIndex-1), trace.get(currentIndex-2));
-			trace.swap(currentIndex, currentIndex-1);//the tree rotation needs to be reflected in the trace
-			currentIndex = currentIndex - 1;
-		}
-	}*/
-	
-	
-	private void internalRebalanceUpwards(ArrayList<TreeNode<T>> trace)
+	private void rebalanceUpwards(ArrayList<TreeNode<T>> trace)
 	{
 		assert trace.size() > 0;
 		
@@ -423,8 +540,11 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	}
 	
 	
-	private void internalRebalanceDownwards(TreeNode<T> currentNode, TreeNode<T> parent)
+	private void rebalanceDownwards(TreeNode<T> currentNode, TreeNode<T> parent)
 	{
+		assert currentNode != null;
+		assert parent != null;
+		
 		TreeNode<T> localMin = nodeWithLocallyMinimalPriority(currentNode);
 		while (localMin != currentNode) {
 			
@@ -501,11 +621,13 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	private TreeNode<T> nodeWithLocallyMinimalPriority(TreeNode<T> currentNode)
 	{
 		TreeNode<T> min = currentNode;
-		if (currentNode.getLeftChild() != null && getPriorityForNode((currentNode.getLeftChild())) < getPriorityForNode(currentNode)) {
-			min = currentNode;
+		int currentMinPriority = getPriorityForNode(min);
+		if (currentNode.getLeftChild() != null && getPriorityForNode((currentNode.getLeftChild())) < currentMinPriority) {
+			min = currentNode.getLeftChild();
+			currentMinPriority = getPriorityForNode(currentNode.getLeftChild());
 		}
-		if (currentNode.getRightChild() != null && getPriorityForNode(currentNode.getRightChild()) < getPriorityForNode(currentNode)) {
-			min = currentNode;
+		if (currentNode.getRightChild() != null && getPriorityForNode(currentNode.getRightChild()) < currentMinPriority) {
+			min = currentNode.getRightChild();
 		}
 		return min;
 	}
@@ -522,11 +644,14 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	{
 		return getPriorityForValue(node.getValue());
 	}
+	
+	
 	private int getPriorityForValue(T value)
 	{
 		int c = value.hashCode();
 		int cc = c*c;
 		int ccc = cc*c;
+		
 		return a0+c*a1+cc*a2+ccc*a3;
 	}
 	
@@ -555,12 +680,17 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		return true;
 	}
 	
+	private boolean isHeapOrdered()
+	{
+		return isHeapOrdered(metaRoot.getLeftChild());
+	}
+	
 	private boolean isHeapOrdered(TreeNode<T> node)
 	{
 		//base case
 		if (node == null) return true;
 		
-		//recursion
+		//recursive step
 		boolean result = true;
 		if (node != metaRoot && nodeWithLocallyMinimalPriority(node) != node) {
 			result = false;
