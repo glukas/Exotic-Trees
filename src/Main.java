@@ -27,7 +27,7 @@ class Main {
 		treap.clear();
 		testSortedSet(treap);
 		treap.clear();
-		int performanceTestSize = 2000000;
+		int performanceTestSize = 1000000;
 		performanceTestSet(treap, performanceTestSize);
 		performanceTestSet(new HashSet<Integer>(), performanceTestSize);
 		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
@@ -40,7 +40,7 @@ class Main {
 		//use a proven java.util set as golden model
 		Set<Integer> controlSet = new HashSet<Integer>();
 		
-		int testSize = 10000;
+		int testSize = 1000;
 		int testRange = testSize/5;
 		Random random = new Random(9);
 		Date start = new Date();
@@ -71,7 +71,7 @@ class Main {
 	public static void testSortedSet(SortedSet<Integer> set) {
 		SortedSet<Integer> controlSet = new TreeSet<Integer>();
 		
-		int testSize = 10000;
+		int testSize = 1000;
 		int testRange = testSize/5;
 		Random random = new Random(38);
 		Date start = new Date();
@@ -106,7 +106,7 @@ class Main {
 	{
 		Set<Integer> controlSet = new HashSet<Integer>();
 		
-		int testSize = 10000;
+		int testSize = 1000;
 		Random random = new Random(5);
 		
 		Date start = new Date();
@@ -146,15 +146,19 @@ class Main {
 	static void performanceTestSet(Set<Integer> set, int testSize)
 	{
 		int testRange = testSize/5;
-		Random random = new Random(3);
+		Random random = new Random();
 		Date start = new Date();
+		
 		
 		for (int i=0; i<testSize; i++) {
 			set.add(i);
+			set.contains(i);
 		}
 		for (int i=0; i<testSize; i++) {
 			set.remove(i);
+			set.contains(i);
 		}
+		
 		
 		for (int i=0; i< testSize; i++) {
 			int nextOperation = random.nextInt(10);
