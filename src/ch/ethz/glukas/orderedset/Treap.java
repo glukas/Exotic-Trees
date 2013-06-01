@@ -2,7 +2,7 @@ package ch.ethz.glukas.orderedset;
 import java.lang.reflect.Array;
 import java.util.*;
 
-public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
+public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 	
 
 	
@@ -13,23 +13,15 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	
 	public Treap(Comparator<? super T> comparator)
 	{
-		clear();
-		internalComparator = comparator;
+		super(comparator);
+		
 	}
 	
 	public Treap()
 	{
-		clear();
-		internalComparator = new Comparator<T>() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public int compare(T arg0, T arg1) {
-				return ((Comparable<T>)arg0).compareTo(arg1);
-			}
-		};
+		super();
 	}
 	
-
 	
 	/////
 	///SORTED SET INTERFACE
@@ -39,11 +31,9 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	public boolean add(T arg0) {
 		if (arg0.equals(null)) throw new NullPointerException();
 		
-		return addTopDown(arg0);
-		//return addBottomUp(arg0);
+		//return addTopDown(arg0);
+		return addBottomUp(arg0);
 	}
-
-	
 	
 	@Override
 	public boolean addAll(Collection<? extends T> arg0) {
@@ -56,40 +46,13 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 
 	@Override
 	public void clear() {
-		count = 0;
-		metaRoot = new TreeNode<T>(null);
+		super.clear();
+		random = new Random(1);
 		a0 = random.nextInt();
 		a1 = random.nextInt();
 		a2 = random.nextInt();
 		a3 = random.nextInt();
 		//a4 = random.nextInt();
-	}
-
-	
-	@Override
-	public boolean contains(Object arg0) {
-		if (arg0 == null) return false;
-
-		@SuppressWarnings("unchecked")
-		T value = (T)arg0;
-		return internalContains(value);
-	}
-
-	@Override
-	public boolean containsAll(Collection<?> arg0) {
-		boolean contains = true;
-		for (Object o : arg0) {
-			if (!contains(o)) {
-				contains = false;
-				break;
-			}
-		}
-		return contains;
-	}
-
-	@Override
-	public Iterator<T> iterator() {
-		return new BinarySearchTreeIterator<T>(metaRoot.getLeftChild());
 	}
 
 	/**
@@ -127,36 +90,12 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		return false;
 	}
 
-	@Override
-	public boolean removeAll(Collection<?> arg0) {
-		boolean modified = false;
-		for (Object o : arg0) {
-			modified = modified || remove(o);
-		}
-		return modified;
-	}
-	
-
-	@Override
-	public boolean retainAll(Collection<?> arg0) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int size() {
-		return count;
-	}
-	
-	@Override
-	public Comparator<? super T> comparator() {
-		return internalComparator;
-	}
 
 	@Override
 	public T first() {
 		if (isEmpty()) throw new NoSuchElementException();
 		
-		TreeNode<T> node = findFirst(metaRoot.getLeftChild());
+		TreeNode<T> node = findFirst(getRoot());
 		
 		return node.getValue();
 	}
@@ -172,10 +111,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	@Override
 	public T last() {
 		if (isEmpty()) throw new NoSuchElementException();
-		TreeNode<T> node = metaRoot.getLeftChild();
-		while (node.getRightChild() != null) {
-			node = node.getRightChild();
-		}
+		TreeNode<T> node = findLast(getRoot());
 		return node.getValue();
 	}
 
@@ -193,20 +129,34 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	
 	
 	////
-	//NAVIGABLE SET
+	//MORE SORTED SET OPERATIONS
 	////
 	
-	
-	public T upper(T value)
+
+	public Treap<T> splitHeadSet(T value, boolean includeValue)
 	{
-		return null;
-		/*
-		//TODO: test / only works if value present
-		TreeNode<T> node = findNodeWithValueStartingFrom(metaRoot.getLeftChild(), value);
-		TreeNode<T> successor = findNodeWithValueStartingFrom(node.getRightChild(), node.getValue());
-		return successor.getValue();*/
+		//TODO: count is not updated
+		//it may be necessary to make each node hold the number of descendants it has
+		
+		Treap<T> treap = new Treap<T>();
+		
+		Ref<TreeNode<T>> less = new Ref<TreeNode<T>>();
+		Ref<TreeNode<T>> greater  = new Ref<TreeNode<T>>();
+		
+		TreeNode<T> equal = split(getRoot(), metaRoot, value, less, greater);
+		
+		treap.setRoot(less.get());
+		this.setRoot(greater.get());
+		if (includeValue) {
+			treap.addBottomUp(value);
+		} else {
+			this.addBottomUp(value);
+		}
+		
+		return treap;
 	}
 	
+
 	
 	/////
 	///IMPLEMENTATION
@@ -249,10 +199,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	}*/
 	
 	
-	private void setRoot(TreeNode<T> root)
-	{
-		metaRoot.setLeftChild(root);
-	}
+
 	
 	
 	private boolean addTopDown(T value)
@@ -265,7 +212,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		Ref<TreeNode<T>> tailSet = new Ref<TreeNode<T>>();
 		Ref<TreeNode<T>> headSet = new Ref<TreeNode<T>>();
 		
-		valueNode = split(metaRoot.getLeftChild(), metaRoot, value, headSet, tailSet);
+		valueNode = split(getRoot(), metaRoot, value, headSet, tailSet);
 		if (valueNode == null) {
 			alreadyContained = false;
 			valueNode = new TreeNode<T>(value);
@@ -323,11 +270,6 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		return newNode;
 	}
 	
-
-	private boolean internalContains(T value)
-	{
-		return findNodeWithValueStartingFrom(metaRoot, value) != null;
-	}
 	
 
 	//if toRemove has 1 or 0 children it is removed and toRemove.getRightChild()==toRemove.getLeftChild()==null
@@ -361,302 +303,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		}
 		
 	}
-	
-	
-	////
-	//IMPLEMENTATION :: SPLIT
-	////
-	
-	
-	/**
-	 * Splits of the right subtree and returns it
-	 * @param parent
-	 * @return the root of the subtree, parent.getRightChild()
-	 */
-	/*private TreeNode<T> splitRight(TreeNode<T> parent)
-	{
-		assert parent.getRightChild() != null;
-		TreeNode<T> rightChild = parent.getRightChild();
-		parent.setRightChild(null);
-		return rightChild;
-	}*/
-	
-	
-	/**
-	 * preconditions:	 the search tree invariant holds
-	 *   			     the heap invariant holds 
-	 * 					 all values in node are larger than metaRoot.getLeftChild(), or metaRoot.getLeftChild() == null
-	 * 					 the tree referred to by node is a valid treap
-	 * postcondition:	 node (and its children) are part of the treap.
-	 * 					 the search tree invariant holds
-	 *   			     the heap invariant holds
-	 *
-	 * @param node
-	 */
-	/*
-	private void joinInRightwards(TreeNode<T> node)
-	{
-		node.setLeftChild(metaRoot.getLeftChild());
-		metaRoot.setLeftChild(node);
-		if (node.getLeftChild() != null) {
-			rebalanceDownwards(node.getLeftChild(), node);
-		}
-		assert isInOrder();
-		assert isHeapOrdered();
-	}*/
 
-	
-	/*
-	//Algorithm from http://www.cs.cmu.edu/~scandal/papers/treaps-spaa98.pdf
-	private TreeNode<T> persistentSplit(TreeNode<T> root, T value, Ref<TreeNode<T>> greater, Ref<TreeNode<T>> less)
-	{
-		//base case 1
-		if (root == null) {
-			greater.set(null);
-			less.set(null);
-			return null;
-		}
-		
-		
-		TreeNode<T> newRoot = new TreeNode<T>(root.getValue());
-		int comparison = compareValues(root.getValue(), value);
-		
-		if (comparison < 0) {//recursive step 1
-			
-			less.set(newRoot);
-			Ref<TreeNode<T>> newRootLess = new Ref<TreeNode<T>>();
-			newRoot = persistentSplit(root.getRightChild(), value, greater, newRootLess);
-			if (newRoot != null) {
-				newRoot.setRightChild(newRootLess.get());
-			}
-			return newRoot;
-			
-		} else if (comparison > 0) {//recursive step 2
-			greater.set(newRoot);
-			Ref<TreeNode<T>> newRootGreater = new Ref<TreeNode<T>>();
-			newRoot = persistentSplit(root.getLeftChild(), value, newRootGreater, less);
-			if (newRoot != null) {
-				newRoot.setLeftChild(newRootGreater.get());
-			}
-			return newRoot;
-			
-		} else {//base case 2
-			
-			assert comparison == 0;
-			less.set(root.getLeftChild());
-			greater.set(root.getRightChild());
-			return newRoot;
-		}
-		
-		
-	}*/
-	
-	
-	
-	/*
-	 * Iterative top down non-persistent split
-	 * 
-	 * returns the node that has equal value to 'value'
-	 * less and greater contain the headSet and tailSet respectively
-	 */
-	private TreeNode<T> split(TreeNode<T> root, TreeNode<T> parent, T value, Ref<TreeNode<T>> less, Ref<TreeNode<T>> greater)
-	{
-		
-		if (root == null) {
-			greater.set(null);
-			less.set(null);
-			return null;
-		}
-		
-		assert parent != null;
-		
-		TreeNode<T> equal = null;
-		
-		TreeNode<T> currentNode = root;
-		TreeNode<T> currentParent = parent;
-		
-		TreeNode<T> splitMetaRoot = new TreeNode<T>(null);
-		TreeNode<T> currentSplitNode = splitMetaRoot;
-		
-		int comparison = -1;
-		while(currentNode != null) {
-			
-			comparison = compareValues(value, currentNode.getValue());
-			
-			if (comparison > 0) {//value is greater than current node: don't include the current root, continue looking for larger values
-				currentParent = currentNode;
-				currentNode = currentNode.getRightChild();
-			} else if (comparison < 0) {//value is smaller than current node: include current node into the large value subtree, continue looking for smaller values
-				
-				//append to large value tree
-				currentSplitNode.setLeftChild(currentNode);
-				currentSplitNode = currentNode;
-				
-				//remove from small value tree
-				currentParent.replaceChild(currentNode, currentNode.getLeftChild());
-				//advance search
-				currentNode = currentNode.getLeftChild();
-				
-
-			} else if (comparison == 0) {
-				
-				equal = currentNode;
-				
-				currentSplitNode.setLeftChild(currentNode.getRightChild());
-				
-				//remove from smaller valued tree
-				currentParent.replaceChild(currentNode, currentNode.getLeftChild());
-				
-				currentNode.isolate();
-				break;
-			}
-			
-		}
-
-		if (comparison != 0) {
-			currentSplitNode.setLeftChild(null);
-		}
-		
-		
-		greater.set(splitMetaRoot.getLeftChild());
-		
-		if (compareValues(root.getValue(), parent.getValue()) < 0) {
-			less.set(parent.getLeftChild());
-			parent.setLeftChild(null);
-		} else {
-			less.set(parent.getRightChild());
-			parent.setRightChild(null);
-		}
-		
-		assert isHeapOrdered(greater.get());
-		assert isHeapOrdered(less.get());
-		
-		
-		return equal;
-	}
-	
-	
-	
-	//////
-	///IMPLEMENTATION :: FIND
-	//////
-	
-	
-	/**
-	 * Finds the parent of the first value greater than or equal to the value provided
-	 * @param value
-	 * @return
-	 */
-	/*
-	private TreeNode<T> findCeil(T value)
-	{
-		return findNodeWithValueStartingFrom(metaRoot.getLeftChild(), value);
-	}*/
-	
-	
-	/**
-	 * Returns the node with the smallest value (the leftmost node in the subtree rooted at 'node')
-	 */
-	private TreeNode<T> findFirst(TreeNode<T> node)
-	{
-		while (node.getLeftChild() != null) {
-			node = node.getLeftChild();
-		}
-		return node;
-	}
-	
-	
-	//the first element of the list is always the metaRoot
-	//else if the value is present in the collection, the last element of the returned list is the node containing the value
-	//else the last element of the list is the next highest node
-	private ArrayList<TreeNode<T>> find(T value)
-	{
-		return traceNodeWithValueStartingFrom(metaRoot, value);
-	}
-	
-	private Buffer<TreeNode<T>> find(T value, int capacity)
-	{
-		return traceNodeWithValueStartingFrom(metaRoot, value, capacity);
-	}
-	
-	
-	
-	private TreeNode<T> findNodeWithValueStartingFrom(TreeNode<T> currentNode, T valueToFind)
-	{
-		int comparison = -1;
-		while (currentNode != null) {
-			comparison = compareValues(valueToFind, currentNode.getValue());
-			if (comparison < 0) {
-				currentNode = currentNode.getLeftChild();
-			} else if (comparison > 0) {
-				currentNode = currentNode.getRightChild();
-			} else {
-				break;
-			}
-		}
-		return currentNode;
-	}
-	
-	
-	//result contains 2 elements: the successors parent at 0 and the successor at 1
-	private Buffer<TreeNode<T>> findSuccessor(TreeNode<T> node)
-	{
-		assert node.getRightChild() != null;
-		
-		Buffer<TreeNode<T>> trace = traceNodeWithValueStartingFrom(node.getRightChild(), node.getValue(), 2);
-		if (trace.numberOfUsedSlots() == 1) {//if the successor is the immediate right child, the node will need to be added to the trace
-			TreeNode<T> successor = trace.get(0);
-			trace.add(node);
-			trace.add(successor);
-		}
-		return trace;
-	}
-	
-	
-	private ArrayList<TreeNode<T>> traceNodeWithValueStartingFrom(TreeNode<T> startingNode, T valueToFind)
-	{
-		ArrayList<TreeNode<T>> trace = new ArrayList<TreeNode<T>>();
-
-		TreeNode<T> currentNode = startingNode;
-		
-		int comparison = -1;
-		
-		while (currentNode != null) {
-			trace.add(currentNode);
-			
-			comparison = compareValues(valueToFind, currentNode.getValue());
-			if (comparison < 0) {
-				currentNode = currentNode.getLeftChild();
-			} else if (comparison > 0) {
-				currentNode = currentNode.getRightChild();
-			} else {
-				break;
-			}
-		}
-		
-		return trace;
-	}
-	
-	private Buffer<TreeNode<T>> traceNodeWithValueStartingFrom(TreeNode<T> startingNode, T valueToFind, int maximumParentBufferSize)
-	{
-
-		Buffer<TreeNode<T>> trace = new Buffer<TreeNode<T>>(maximumParentBufferSize);
-
-		TreeNode<T> currentNode = startingNode;
-		int comparison = -1;
-		while (currentNode != null) {
-			trace.add(currentNode);
-			comparison = compareValues(valueToFind, currentNode.getValue());
-			if (comparison < 0) {
-				currentNode = currentNode.getLeftChild();
-			} else if (comparison > 0) {
-				currentNode = currentNode.getRightChild();
-			} else {
-				break;
-			}
-		}
-		return trace;
-	}
 	
 	//////
 	////IMPLEMENTATION :: BALANCE
@@ -695,49 +342,12 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		}
 	}
 	
-	private void treeRotateLeft(TreeNode<T> child, TreeNode<T> parent)
-	{
-		parent.setRightChild(child.getLeftChild());
-		child.setLeftChild(parent);
-	}
-	
-	private void treeRotateRight(TreeNode<T> child, TreeNode<T> parent)
-	{
-		parent.setLeftChild(child.getRightChild());
-		child.setRightChild(parent);
-	}
-	
-	private void treeRotateUp(TreeNode<T> child, TreeNode<T> parent, TreeNode<T> grandmother)
-	{
-		assert child != parent;
-		assert parent != grandmother;
-		
-		grandmother.replaceChild(parent, child);
-		if (parent.getLeftChild() == child) {
-			treeRotateRight(child, parent);
-		} else {
-			assert parent.getRightChild() == child;
-			treeRotateLeft(child, parent);
-		}
-		
-		assert child.getLeftChild() != child.getRightChild();
-		assert grandmother.getLeftChild() == child || grandmother.getRightChild() == child;
-		assert child.getLeftChild() == parent || child.getRightChild() == parent;
-	}
-	
+
 
 	////
 	//IMPLEMENTATION : HELPERS
 	/////
 	
-	//wraps the comparator to make it partially null-safe: null is interpreted as +infinity
-	//if both arguments are 0 the value is undefined
-	private int compareValues(T v1 ,T v2) {
-		assert v1 != null || v2 != null;
-		if (v2 == null) return -1;
-		if (v1 == null) return +1;
-		return comparator().compare(v1, v2);
-	}
 	
 	
 	//precondition: node.hasChildren()
@@ -795,35 +405,15 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 		return a0+c*a1;
 		//return a0+c*a1+cc*a2+ccc*a3;
 	}
-	
-	
-	private void decrementCount()
-	{
-		assert count > 0;
-		count--;
-	}
-	
-	private void incrementCount()
-	{
-		count++;
-	}
+
 
 	//INVARIANTS
 	
 	
-	@SuppressWarnings("unchecked")
-	private boolean isInOrder()
-	{
-		T[] sorted = (T[]) toArray();
-		for (int i=1; i<sorted.length; i++) {
-			if (compareValues(sorted[i], sorted[i-1]) < 0) return false;
-		}
-		return true;
-	}
 	
 	private boolean isHeapOrdered()
 	{
-		return isHeapOrdered(metaRoot.getLeftChild());
+		return isHeapOrdered(getRoot());
 	}
 	
 	private boolean isHeapOrdered(TreeNode<T> node)
@@ -847,11 +437,7 @@ public class Treap<T> extends AbstractCollection<T> implements SortedSet<T>{
 	//INSTANCE VARIABLES
 	////
 	
-	private int count = 0;
-	private Comparator<? super T> internalComparator;
-	private TreeNode<T> metaRoot;
-	
-	private Random random = new Random(1);
+	private Random random;
 	
 	//random polynomial coefficients (for priority hash function)
 	private int a0;
