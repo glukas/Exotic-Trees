@@ -27,6 +27,8 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 		setRoot(internalAdd(value, getRoot(), modified));
 		
 		assert subtreeSizeConsistent(getRoot());
+		assert isInOrder();
+		
 		return modified.get();
 	}
 	
@@ -43,6 +45,8 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 		setRoot(internalRemove(value, getRoot(), modified));
 
 		assert subtreeSizeConsistent(getRoot());
+		assert isInOrder();
+		
 		return modified.get();
 	}
 	

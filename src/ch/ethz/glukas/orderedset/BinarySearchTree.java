@@ -58,28 +58,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		T value = (T)arg0;
 		return internalContains(value);
 	}
-
-	@Override
-	public boolean containsAll(Collection<?> arg0) {
-		boolean contains = true;
-		for (Object o : arg0) {
-			if (!contains(o)) {
-				contains = false;
-				break;
-			}
-		}
-		return contains;
-	}
 	
-	@Override
-	public boolean addAll(Collection<? extends T> arg0) {
-		boolean changed = false;
-		for (T elem : arg0) {
-			changed = changed || add(elem);
-		}
-		return changed;
-	}
-
 
 	@Override
 	public Iterator<T> iterator() {
