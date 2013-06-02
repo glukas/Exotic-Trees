@@ -23,12 +23,9 @@ class Main {
 		randomTestSet(new RandomizedBST<Integer>());
 		
 		
-		
-		int performanceTestSize = 2000000;
-
 		testAccessByRank(new RandomizedBST<Integer>());
-		//performanceTestSet(new RandomizedBinarySearchTree<Integer>(), performanceTestSize);
 
+		
 		Treap<Integer> treap = new Treap<Integer>();
 		testSet(treap);
 		treap.clear();
@@ -37,6 +34,8 @@ class Main {
 		testSortedSet(treap);
 		treap.clear();
 		
+		int performanceTestSize = 2000000;
+		performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
 		//performanceTestSet(treap, performanceTestSize);
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
 		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
@@ -46,13 +45,17 @@ class Main {
 	
 	public static void testAccessByRank(RandomizedBST<Integer> set)
 	{
-		int testSize = 100000;
+		int testSize = 1000;
 		Date start = new Date();
 		for (int i=0; i < testSize; i++) {
 			set.add(i);
 			if (set.get(i) != i) throw new Error();
 			if (set.indexOf(i) != i) throw new Error();
 		}
+		for (int i=0; i< testSize; i++) {
+			if (set.remove(0) == false) throw new Error();
+		}
+		if (set.isEmpty() == false) throw new Error();
 		Date end = new Date();
 		System.out.println("testAccessByRank done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 	}

@@ -10,7 +10,7 @@ import java.util.Set;
  * http://www.cis.temple.edu/~wolfgang/cis551/martinez.pdf
  * 
  * Expected add, contains and remove performance is O(logn) for all input distributions
- * 
+ * In addition to access by key, the structure provides O(logn) access and deletion by rank
  * 
  * @author Lukas Gianinazzi
  *
@@ -23,10 +23,8 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 	public boolean add(T value)
 	{
 		Out<Boolean> modified = new Out<Boolean>();
-		modified.set(false);
-		
-		setRoot(internalAdd(value, getRoot(), modified));
 
+		setRoot(internalAdd(value, getRoot(), modified));
 		
 		assert subtreeSizeConsistent(getRoot());
 		return modified.get();
@@ -56,7 +54,6 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 	
 	@Override
 	public void clear() {
-		super.clear();
 		metaRoot = new RankedTreeNode<T>(null);
 	}
 	
@@ -70,8 +67,8 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 	 */
 	public T get(int index)
 	{
-		if (index < 0) throw new IllegalArgumentException();
-		if (index >= size()) throw new IllegalArgumentException(); 
+		if (index < 0) throw new IndexOutOfBoundsException();
+		if (index >= size()) throw new IndexOutOfBoundsException();
 		
 		
 		TreeNode<T> result = getByRank(getRoot(), index);
@@ -86,29 +83,62 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 	 */
 	public boolean remove(int index)
 	{
-		TreeNode<T> node = getByRank(getRoot(), index);
+		
+		T value = get(index);
 		boolean modified = false;
-		if (node != null) {
+		if (value != null) {
 			modified = true;
-			remove(node.getValue());
+			remove(value);
 		}
 		return modified;
 	}
 	
 	/**
-	 * 
+	 * If 'value' is the k'th smallest element in the set, this method returns 'k'
 	 * @param value
-	 * @return
+	 * @return the rank of 'value'
 	 */
 	public int indexOf(T value)
 	{
 		return internalIndexOf(value, getRoot());
 	}
 	
-	
+	/**
+	 * Since values are unique, this method is equivalent to indexOf
+	 * @param value
+	 * @return the rank of 'value'
+	 */
 	public int lastIndexOf(T value)
 	{
 		return indexOf(value);
+	}
+	
+	
+
+	
+	////
+	//NAVIGABLE SET
+	///
+	
+	public T pollFirst()
+	{
+		if (isEmpty()) return null;
+		T first = first();
+		remove(first);
+		return first;
+	}
+	
+	public T poll()
+	{
+		return pollFirst();
+	}
+	
+	public T pollLast()
+	{
+		if (isEmpty()) return null;
+		T last = last();
+		remove(last);
+		return last;
 	}
 	
 	
@@ -126,7 +156,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 		}
 		
 		
-		if (size == rand) {//base case: decided to stop here
+		if (size == rand) {//base case: insert here, restructure r
 			return insertAtRoot(value, r, modified);
 		}
 		
@@ -138,6 +168,8 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 		} else if (comparison > 0) {
 			r.setRightChild(internalAdd(value, r.getRightChild(),  modified));
 			
+		} else {
+			modified.set(false);
 		}
 		
 		return r;
@@ -169,9 +201,10 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 	//index is 0 based: smallest element has index '0'
 	private TreeNode<T> getByRank(TreeNode<T> root, int index)
 	{
-		assert index <= size(root);
+		assert index < size(root);
 		
-		//base case
+		//base case 1
+		//base case 2
 		int leftChildren = size(root.getLeftChild());
 		if (leftChildren == index) return root;
 		
@@ -213,7 +246,8 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 		return indexOfValue;
 	}
 
-	
+	//insert the value here: restructure the subtree rooted at 'r' so that value is the the root of this subtree, return the new root
+	//if the value was already present, modified will be set to false, else if will be set to true
 	private TreeNode<T> insertAtRoot(T value, TreeNode<T> r, Out<Boolean> modified)
 	{
 
@@ -238,7 +272,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 		equal.setRightChild(greater.get());
 		
 		assert subtreeSizeConsistent(equal);
-		
+		assert modified.get() != null;
 		return equal;
 	}
 
@@ -267,6 +301,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 	
 
 	
+	//all nodes of this tree are ranked
 	private int size(TreeNode<T> node)
 	{
 		if (node == null) return 0;
@@ -274,6 +309,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 	}
 	
 	
+
 	
 	//INVARIANTS
 	

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**
@@ -17,7 +18,7 @@ import java.util.Set;
  * @param <T>
  */
 
-class BinarySearchTree<T> extends AbstractCollection<T> implements Set<T>{
+abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<T>{
 	
 	
 	///
@@ -69,6 +70,16 @@ class BinarySearchTree<T> extends AbstractCollection<T> implements Set<T>{
 		}
 		return contains;
 	}
+	
+	@Override
+	public boolean addAll(Collection<? extends T> arg0) {
+		boolean changed = false;
+		for (T elem : arg0) {
+			changed = changed || add(elem);
+		}
+		return changed;
+	}
+
 
 	@Override
 	public Iterator<T> iterator() {
@@ -77,13 +88,7 @@ class BinarySearchTree<T> extends AbstractCollection<T> implements Set<T>{
 	
 	
 	@Override
-	public int size() {
-		return count;
-	}
-	
-	@Override
 	public void clear() {
-		count = 0;
 		metaRoot = new TreeNode<T>(null);
 	}
 	
@@ -91,6 +96,20 @@ class BinarySearchTree<T> extends AbstractCollection<T> implements Set<T>{
 	////
 	//ORDERING
 	////
+
+	
+	public T first() {
+		if (isEmpty()) throw new NoSuchElementException();
+		TreeNode<T> node = findFirst(getRoot());
+		return node.getValue();
+	}
+	
+	
+	public T last() {
+		if (isEmpty()) throw new NoSuchElementException();
+		TreeNode<T> node = findLast(getRoot());
+		return node.getValue();
+	}
 	
 	public Comparator<? super T> comparator() {
 		return internalComparator;
@@ -301,16 +320,7 @@ class BinarySearchTree<T> extends AbstractCollection<T> implements Set<T>{
 	//IMPLEMENTATION : HELPER METHODS
 	/////
 	
-	protected void decrementCount()
-	{
-		assert count > 0;
-		count--;
-	}
-	
-	protected void incrementCount()
-	{
-		count++;
-	}
+
 	
 	protected TreeNode<T> getRoot()
 	{
@@ -354,7 +364,7 @@ class BinarySearchTree<T> extends AbstractCollection<T> implements Set<T>{
 	
 
 	
-	private int count = 0;
+
 	private Comparator<? super T> internalComparator;
 	protected TreeNode<T> metaRoot;
 }

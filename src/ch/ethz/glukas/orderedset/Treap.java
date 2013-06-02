@@ -53,18 +53,11 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 		return addBottomUp(arg0);
 	}
 	
-	@Override
-	public boolean addAll(Collection<? extends T> arg0) {
-		boolean changed = false;
-		for (T elem : arg0) {
-			changed = changed || add(elem);
-		}
-		return changed;
-	}
 
 	@Override
 	public void clear() {
 		super.clear();
+		count = 0;
 		random = new Random(1);
 		a0 = random.nextInt();
 		a1 = random.nextInt();
@@ -73,6 +66,12 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 		//a4 = random.nextInt();
 	}
 
+	@Override
+	public int size() {
+		return count;
+	}
+	
+	
 	/**
 	 * if arg0 is null, false is returned and the collection is not modified
 	 */
@@ -109,16 +108,6 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 	}
 
 
-	@Override
-	public T first() {
-		if (isEmpty()) throw new NoSuchElementException();
-		
-		TreeNode<T> node = findFirst(getRoot());
-		
-		return node.getValue();
-	}
-	
-
 
 	@Override
 	public SortedSet<T> headSet(T arg0) {
@@ -126,12 +115,6 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 		return null;
 	}
 
-	@Override
-	public T last() {
-		if (isEmpty()) throw new NoSuchElementException();
-		TreeNode<T> node = findLast(getRoot());
-		return node.getValue();
-	}
 
 	@Override
 	public SortedSet<T> subSet(T arg0, T arg1) {
@@ -150,7 +133,7 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 	//MORE SORTED SET OPERATIONS
 	////
 	
-
+	/*
 	public Treap<T> splitHeadSet(T value, boolean includeValue)
 	{
 		//TODO: count is not updated
@@ -172,7 +155,7 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 		}
 		
 		return treap;
-	}
+	}*/
 	
 
 	
@@ -331,6 +314,7 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 	 * 
 	 * returns the node that has equal value to 'value'
 	 * less and greater contain the headSet and tailSet respectively
+	 * 
 	 */
 	/*
 	protected TreeNode<T> split(T value, TreeNode<T> root, TreeNode<T> parent, Out<TreeNode<T>> less, Out<TreeNode<T>> greater)
@@ -410,7 +394,16 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 	//IMPLEMENTATION : HELPERS
 	/////
 	
+	protected void decrementCount()
+	{
+		assert count > 0;
+		count--;
+	}
 	
+	protected void incrementCount()
+	{
+		count++;
+	}
 	
 	//precondition: node.hasChildren()
 	private int compareChildrenPriorities(TreeNode<T> node)
@@ -500,7 +493,7 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 	////
 	
 	private Random random;
-	
+	private int count = 0;
 	//random polynomial coefficients (for priority hash function)
 	private int a0;
 	private int a1;
