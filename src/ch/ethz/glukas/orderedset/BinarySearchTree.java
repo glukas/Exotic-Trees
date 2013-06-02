@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * 
@@ -16,7 +17,7 @@ import java.util.Iterator;
  * @param <T>
  */
 
-class BinarySearchTree<T> extends AbstractCollection<T> {
+class BinarySearchTree<T> extends AbstractCollection<T> implements Set<T>{
 	
 	
 	///
@@ -40,7 +41,7 @@ class BinarySearchTree<T> extends AbstractCollection<T> {
 				return ((Comparable<T>)arg0).compareTo(arg1);
 			}
 		};
-}
+	}
 	
 	
 	/////
@@ -258,137 +259,43 @@ class BinarySearchTree<T> extends AbstractCollection<T> {
 	}
 	
 	
-	
 	////
-	//IMPLEMENTATION :: SPLIT
-	////
+	//IMPLEMENTATION : SPLIT
+	///
 	
-	
-	/*
-	//Algorithm from http://www.cs.cmu.edu/~scandal/papers/treaps-spaa98.pdf
-	protected TreeNode<T> persistentSplit(TreeNode<T> root, T value, Ref<TreeNode<T>> greater, Ref<TreeNode<T>> less)
+	protected TreeNode<T> split(T value, TreeNode<T> r, Out<TreeNode<T>> less, Out<TreeNode<T>> greater)
 	{
-		//base case 1
-		if (root == null) {
-			greater.set(null);
+		
+		if (r == null) {//base case
 			less.set(null);
+			greater.set(null);
 			return null;
 		}
 		
 		
-		TreeNode<T> newRoot = new TreeNode<T>(root.getValue());
-		int comparison = compareValues(root.getValue(), value);
-		
-		if (comparison < 0) {//recursive step 1
-			
-			less.set(newRoot);
-			Ref<TreeNode<T>> newRootLess = new Ref<TreeNode<T>>();
-			newRoot = persistentSplit(root.getRightChild(), value, greater, newRootLess);
-			if (newRoot != null) {
-				newRoot.setRightChild(newRootLess.get());
-			}
-			return newRoot;
-			
-		} else if (comparison > 0) {//recursive step 2
-			greater.set(newRoot);
-			Ref<TreeNode<T>> newRootGreater = new Ref<TreeNode<T>>();
-			newRoot = persistentSplit(root.getLeftChild(), value, newRootGreater, less);
-			if (newRoot != null) {
-				newRoot.setLeftChild(newRootGreater.get());
-			}
-			return newRoot;
-			
-		} else {//base case 2
-			
-			assert comparison == 0;
-			less.set(root.getLeftChild());
-			greater.set(root.getRightChild());
-			return newRoot;
-		}
-		
-		
-	}*/
-	
-	
-	
-	/*
-	 * Iterative top down non-persistent split
-	 * 
-	 * returns the node that has equal value to 'value'
-	 * less and greater contain the headSet and tailSet respectively
-	 */
-	protected TreeNode<T> split(TreeNode<T> root, TreeNode<T> parent, T value, Ref<TreeNode<T>> less, Ref<TreeNode<T>> greater)
-	{
-		
-		if (root == null) {
-			greater.set(null);
-			less.set(null);
-			return null;
-		}
-		
-		assert parent != null;
+		int comparison = compareValues(value, r.getValue());
 		
 		TreeNode<T> equal = null;
 		
-		TreeNode<T> currentNode = root;
-		TreeNode<T> currentParent = parent;
-		
-		TreeNode<T> splitMetaRoot = new TreeNode<T>(null);
-		TreeNode<T> currentSplitNode = splitMetaRoot;
-		
-		int comparison = -1;
-		while(currentNode != null) {
+		if (comparison < 0) {
 			
-			comparison = compareValues(value, currentNode.getValue());
+			equal = split(value, r.getLeftChild(), less, greater);
+			r.setLeftChild(greater.get());
+			greater.set(r);
 			
-			if (comparison > 0) {//value is greater than current node: don't include the current root, continue looking for larger values
-				currentParent = currentNode;
-				currentNode = currentNode.getRightChild();
-			} else if (comparison < 0) {//value is smaller than current node: include current node into the large value subtree, continue looking for smaller values
-				
-				//append to large value tree
-				currentSplitNode.setLeftChild(currentNode);
-				currentSplitNode = currentNode;
-				
-				//remove from small value tree
-				currentParent.replaceChild(currentNode, currentNode.getLeftChild());
-				//advance search
-				currentNode = currentNode.getLeftChild();
-				
-
-			} else if (comparison == 0) {
-				
-				equal = currentNode;
-				
-				currentSplitNode.setLeftChild(currentNode.getRightChild());
-				
-				//remove from smaller valued tree
-				currentParent.replaceChild(currentNode, currentNode.getLeftChild());
-				
-				currentNode.isolate();
-				break;
-			}
+		} else if (comparison > 0) {
+			equal = split(value, r.getRightChild(), less, greater);
+			r.setRightChild(less.get());
+			less.set(r);
 			
-		}
-
-		if (comparison != 0) {
-			currentSplitNode.setLeftChild(null);
-		}
-		
-		
-		greater.set(splitMetaRoot.getLeftChild());
-		
-		if (compareValues(root.getValue(), parent.getValue()) < 0) {
-			less.set(parent.getLeftChild());
-			parent.setLeftChild(null);
 		} else {
-			less.set(parent.getRightChild());
-			parent.setRightChild(null);
+			equal = r;
+			less.set(r.getLeftChild());
+			greater.set(r.getRightChild());
 		}
 		
 		return equal;
 	}
-	
 	
 	/////
 	//IMPLEMENTATION : HELPER METHODS

@@ -19,7 +19,16 @@ class Main {
 			e.printStackTrace();
 		}
 		
+		testSet(new RandomizedBST<Integer>());
+		randomTestSet(new RandomizedBST<Integer>());
 		
+		
+		
+		int performanceTestSize = 2000000;
+
+		testAccessByRank(new RandomizedBST<Integer>());
+		//performanceTestSet(new RandomizedBinarySearchTree<Integer>(), performanceTestSize);
+
 		Treap<Integer> treap = new Treap<Integer>();
 		testSet(treap);
 		treap.clear();
@@ -27,13 +36,26 @@ class Main {
 		treap.clear();
 		testSortedSet(treap);
 		treap.clear();
-		int performanceTestSize = 1000000;
-		performanceTestSet(treap, performanceTestSize);
-		performanceTestSet(new HashSet<Integer>(), performanceTestSize);
-		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
+		
+		//performanceTestSet(treap, performanceTestSize);
+		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
+		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
 		
 	}
 	
+	
+	public static void testAccessByRank(RandomizedBST<Integer> set)
+	{
+		int testSize = 100000;
+		Date start = new Date();
+		for (int i=0; i < testSize; i++) {
+			set.add(i);
+			if (set.get(i) != i) throw new Error();
+			if (set.indexOf(i) != i) throw new Error();
+		}
+		Date end = new Date();
+		System.out.println("testAccessByRank done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+	}
 	
 	public static void randomTestSet(Set<Integer> set)
 	{
@@ -102,7 +124,8 @@ class Main {
 		
 	}
 	
-	public static void testSet(Set<Integer> set)
+	
+	public static void basicTestSet(Set<Integer> set)
 	{
 		Set<Integer> controlSet = new HashSet<Integer>();
 		
@@ -113,6 +136,30 @@ class Main {
 		for (int i=0; i<testSize; i++) {
 			set.add(i);
 			controlSet.add(i);
+			if (!set.contains(i)) throw new Error();
+		}
+		if (set.size() != controlSet.size()) throw new Error();
+
+		set.clear();
+		if (set.size() > 0) throw new Error();
+		Date end = new Date();
+		System.out.println("test set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		
+	}
+	
+	public static void testSet(Set<Integer> set)
+	{
+		Set<Integer> controlSet = new HashSet<Integer>();
+		
+		int testSize = 1000;
+		Random random = new Random(5);
+		
+		Date start = new Date();
+		
+		for (int i=0; i<testSize; i++) {
+			if (set.add(i) == false) throw new Error();
+			controlSet.add(i);
+			if (set.add(i) != false) throw new Error();
 			if (!set.contains(i)) throw new Error();
 		}
 		if (set.size() != controlSet.size()) throw new Error();
@@ -132,6 +179,7 @@ class Main {
 			controlSet.remove(i);
 			if (set.contains(i)) throw new Error();
 		}
+		if (set.size() != controlSet.size()) throw new Error();
 		
 		for (Integer i : controlSet) {
 			if (!set.contains(i)) throw new Error();

@@ -91,18 +91,18 @@ class TreeNode<T> {
 	{
 		assert left != this && right != this;;
 		
-		leftChild = left;
-		rightChild = right;
+		setLeftChild(left);
+		setRightChild(right);
 	}
 	
 
 	public void replaceChild(TreeNode<T> oldChild, TreeNode<T> newChild) {
 		
 		if (oldChild == leftChild) {
-			leftChild = newChild;
+			setLeftChild(newChild);
 		} else {
 			assert oldChild == rightChild || this.value == null;
-			rightChild = newChild;
+			setRightChild(newChild);
 		}
 	}
 
@@ -113,8 +113,8 @@ class TreeNode<T> {
 	 */
 	public void isolate()
 	{
-		leftChild = null;
-		rightChild = null;
+		setLeftChild(null);
+		setRightChild(null);
 	}
 	
 	/////

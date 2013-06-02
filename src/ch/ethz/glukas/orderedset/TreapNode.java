@@ -1,7 +1,7 @@
 package ch.ethz.glukas.orderedset;
 
 class TreapNode <T> extends TreeNode<T> {
-	//Treap node with excplicit priority
+	//Treap node with explicit priority
 	
 	public TreapNode(T value, int nodePriority)
 	{

@@ -2,6 +2,23 @@ package ch.ethz.glukas.orderedset;
 import java.lang.reflect.Array;
 import java.util.*;
 
+
+/**
+ * 
+ * Implements a Randomized Search Tree introduced in:
+ * http://faculty.washington.edu/aragon/pubs/rst89.pdf
+ * http://faculty.washington.edu/aragon/pubs/rst96.pdf
+ * by Cecilia Aragon and Reimund Seidel
+ * 
+ * The Randomized Treap provides expected logarithmic behaviour on all inputs
+ * The random priorites are calculated from the hashcode of the values
+ * This makes the structure very space efficient, but comes with some overhead for rebalancing operations
+ * 
+ * 
+ * @author Lukas Gianinazzi
+ *
+ * @param <T>
+ */
 public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 	
 
@@ -13,6 +30,7 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 	
 	public Treap(Comparator<? super T> comparator)
 	{
+		
 		super(comparator);
 		
 	}
@@ -140,10 +158,10 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 		
 		Treap<T> treap = new Treap<T>();
 		
-		Ref<TreeNode<T>> less = new Ref<TreeNode<T>>();
-		Ref<TreeNode<T>> greater  = new Ref<TreeNode<T>>();
+		Out<TreeNode<T>> less = new Out<TreeNode<T>>();
+		Out<TreeNode<T>> greater  = new Out<TreeNode<T>>();
 		
-		TreeNode<T> equal = split(getRoot(), metaRoot, value, less, greater);
+		TreeNode<T> equal = split(value, getRoot(), less, greater);
 		
 		treap.setRoot(less.get());
 		this.setRoot(greater.get());
@@ -162,70 +180,31 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 	///IMPLEMENTATION
 	//////
 	
-	
-	/*
+
 	private boolean addTopDown(T value)
 	{
 		
-		boolean alreadyContained = true;
+		//search for the value to avoid expensive restructuring operations
+		boolean alreadyContained = internalContains(value);
 		
-		
-		Ref<TreeNode<T>> less = new Ref<TreeNode<T>>();
-		Ref<TreeNode<T>> greater = new Ref<TreeNode<T>>();
-		
-		TreeNode<T> eq = persistentSplit(metaRoot.getLeftChild(), value, less, greater);
-		
-		if (eq == null) {
-			alreadyContained = false;
-			
-			TreeNode<T> newNode = new TreeNode<T>(value);
-
-			newNode.setLeftChild(less.get());
-			newNode.setRightChild(greater.get());
-			
-			metaRoot.setLeftChild(newNode);
-			
-			rebalanceDownwards(newNode, metaRoot);
-			
-			incrementCount();
-			
-		}
-		
-		assert isInOrder();
-		assert isHeapOrdered();
-		
-		return !alreadyContained;
+		if (!alreadyContained) {
+			TreeNode<T> valueNode;
 	
-	}*/
-	
-	
-
-	
-	
-	private boolean addTopDown(T value)
-	{
-		
-
-		boolean alreadyContained = true;
-		TreeNode<T> valueNode;
-
-		Ref<TreeNode<T>> tailSet = new Ref<TreeNode<T>>();
-		Ref<TreeNode<T>> headSet = new Ref<TreeNode<T>>();
-		
-		valueNode = split(getRoot(), metaRoot, value, headSet, tailSet);
-		if (valueNode == null) {
-			alreadyContained = false;
+			Out<TreeNode<T>> tailSet = new Out<TreeNode<T>>();
+			Out<TreeNode<T>> headSet = new Out<TreeNode<T>>();
+			
+			split(value, getRoot(), headSet, tailSet);
+			
 			valueNode = new TreeNode<T>(value);
 			incrementCount();
+			
+			valueNode.setLeftChild(headSet.get());
+			valueNode.setRightChild(tailSet.get());
+			
+			setRoot(valueNode);
+			
+			rebalanceDownwards(valueNode, metaRoot);
 		}
-		
-		valueNode.setLeftChild(headSet.get());
-		valueNode.setRightChild(tailSet.get());
-		
-		setRoot(valueNode);
-		
-		rebalanceDownwards(valueNode, metaRoot);
-
 		
 		assert isInOrder();
 		assert isHeapOrdered();
@@ -342,7 +321,90 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 		}
 	}
 	
+	
+	////
+	//IMPLEMENTATION :: SPLIT
+	////
+	
+	/*
+	 * Iterative top down non-persistent split
+	 * 
+	 * returns the node that has equal value to 'value'
+	 * less and greater contain the headSet and tailSet respectively
+	 */
+	/*
+	protected TreeNode<T> split(T value, TreeNode<T> root, TreeNode<T> parent, Out<TreeNode<T>> less, Out<TreeNode<T>> greater)
+	{
+		
+		if (root == null) {
+			greater.set(null);
+			less.set(null);
+			return null;
+		}
+		
+		assert parent != null;
+		
+		TreeNode<T> equal = null;
+		
+		TreeNode<T> currentNode = root;
+		TreeNode<T> currentParent = parent;
+		
+		TreeNode<T> splitMetaRoot = new TreeNode<T>(null);
+		TreeNode<T> currentSplitNode = splitMetaRoot;
+		
+		int comparison = -1;
+		while(currentNode != null) {
+			
+			comparison = compareValues(value, currentNode.getValue());
+			
+			if (comparison > 0) {//value is greater than current node: don't include the current root, continue looking for larger values
+				currentParent = currentNode;
+				currentNode = currentNode.getRightChild();
+			} else if (comparison < 0) {//value is smaller than current node: include current node into the large value subtree, continue looking for smaller values
+				
+				//append to large value tree
+				currentSplitNode.setLeftChild(currentNode);
+				currentSplitNode = currentNode;
+				
+				//remove from small value tree
+				currentParent.replaceChild(currentNode, currentNode.getLeftChild());
+				//advance search
+				currentNode = currentNode.getLeftChild();
+				
 
+			} else if (comparison == 0) {
+				
+				equal = currentNode;
+				
+				currentSplitNode.setLeftChild(currentNode.getRightChild());
+				
+				//remove from smaller valued tree
+				currentParent.replaceChild(currentNode, currentNode.getLeftChild());
+				
+				currentNode.isolate();
+				break;
+			}
+			
+		}
+
+		if (comparison != 0) {
+			currentSplitNode.setLeftChild(null);
+		}
+		
+		
+		greater.set(splitMetaRoot.getLeftChild());
+		
+		if (compareValues(root.getValue(), parent.getValue()) < 0) {
+			less.set(parent.getLeftChild());
+			parent.setLeftChild(null);
+		} else {
+			less.set(parent.getRightChild());
+			parent.setRightChild(null);
+		}
+		
+		return equal;
+	}*/
+	
 
 	////
 	//IMPLEMENTATION : HELPERS
@@ -399,10 +461,10 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 	private int getPriorityForValue(T value)
 	{
 		int c = value.hashCode();
-		//int cc = c*c;
+		int cc = c*c;
 		//int ccc = cc*c;
 		
-		return a0+c*a1;
+		return a0+c*a1+cc*a2;
 		//return a0+c*a1+cc*a2+ccc*a3;
 	}
 

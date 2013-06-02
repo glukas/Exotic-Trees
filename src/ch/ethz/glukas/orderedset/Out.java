@@ -1,14 +1,14 @@
 package ch.ethz.glukas.orderedset;
 
-public class Ref<T> {
+public class Out<T> {
 	//Can be used to return multiple results from a method
 	
 	
-	public Ref()
+	public Out()
 	{
 	}
 	
-	public Ref(T value)
+	public Out(T value)
 	{
 		set(value);
 	}
