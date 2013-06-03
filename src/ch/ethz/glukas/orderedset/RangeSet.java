@@ -5,9 +5,10 @@ import java.util.NavigableSet;
 interface RangeSet<T> extends NavigableSet<T> {
 
 	
-	public int sizeOfRange(T lowerbound, T upperbound);
+	public int sizeOfRange(T lowerbound, T upperbound, boolean fromInclusive, boolean toInclusive);
 	
-	public void removeRange(T lowerbound, T upperbound);
+	
+	public void removeRange(T lowerbound, T upperbound, boolean fromInclusive, boolean toInclusive);
 	
 	
 }

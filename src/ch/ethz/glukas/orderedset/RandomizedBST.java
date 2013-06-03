@@ -1,7 +1,10 @@
 package ch.ethz.glukas.orderedset;
 
+import java.util.Iterator;
+import java.util.NavigableSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.SortedSet;
 
 
 /**
@@ -15,9 +18,11 @@ import java.util.Set;
  * @author Lukas Gianinazzi
  *
  */
-public class RandomizedBST<T> extends BinarySearchTree<T> {
+public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSet<T>, RangeSet<T> {
 
-	
+	///
+	//COLLECTION : Expected O(logn)
+	///
 	
 	@Override
 	public boolean add(T value)
@@ -63,7 +68,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 	
 	
 	///
-	//ACCESS BY RANK : Expected O(logn)
+	//ACCESS BY RANK 
 	///
 	
 	/**
@@ -117,7 +122,6 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 		return indexOf(value);
 	}
 	
-	
 
 	
 	////
@@ -145,6 +149,124 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 		return last;
 	}
 	
+	@Override
+	public T ceiling(T e) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public Iterator<T> descendingIterator() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public NavigableSet<T> descendingSet() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public T floor(T e) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public SortedSet<T> headSet(T toElement) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public NavigableSet<T> headSet(T toElement, boolean inclusive) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public T higher(T e) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public T lower(T e) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public NavigableSet<T> subSet(T fromElement, T toElement) {
+		return subSet(fromElement, true, toElement, false);
+	}
+
+
+	@Override
+	public NavigableSet<T> subSet(T fromElement, boolean fromInclusive,
+			T toElement, boolean toInclusive) {
+		return new SortedSubset<T>(this, fromElement, toElement, fromInclusive, toInclusive);
+	}
+
+
+	@Override
+	public SortedSet<T> tailSet(T fromElement) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public NavigableSet<T> tailSet(T fromElement, boolean inclusive) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	///
+	//RANGE SET
+	///
+	
+	
+	@Override
+	public int sizeOfRange(T lowerbound, T upperbound, boolean fromInclusive, boolean toInclusive) {
+		T lower;
+		T upper;
+		if (fromInclusive) {
+			lower = ceiling(lowerbound);
+		} else {
+			lower = higher(lowerbound);
+		}
+		if (toInclusive) {
+			upper = floor(upperbound);
+		} else {
+			upper = lower(upperbound);
+		}
+		if (compareValues(lower, upper) > 0) throw new IllegalArgumentException();
+		
+		int lowerIndex = indexOf(lower);
+		int upperIndex = indexOf(upper);
+		
+		return upperIndex-lowerIndex+1;
+	}
+
+
+	@Override
+	public void removeRange(T lowerbound, T upperbound, boolean fromInclusive, boolean toInclusive) {
+		//could be done faster
+		NavigableSet<T> subset = subSet(lowerbound, fromInclusive, upperbound, toInclusive);
+		while(subset.pollFirst() != null) {
+		}
+	}
+
 	
 	////
 	//IMPLEMENTATION
@@ -167,12 +289,10 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 		int comparison = compareValues(value, r.getValue());
 		
 		if (comparison < 0) {
-			r.setLeftChild(internalAdd(value, r.getLeftChild(),  modified));
-			
+			r.setLeftChild(internalAdd(value, r.getLeftChild(),  modified));	
 		} else if (comparison > 0) {
 			r.setRightChild(internalAdd(value, r.getRightChild(),  modified));
-			
-		} else {
+		} else {//base case: already present
 			modified.set(false);
 		}
 		
@@ -207,9 +327,10 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 	{
 		assert index < size(root);
 		
-		//base case 1
-		//base case 2
+		
 		int leftChildren = size(root.getLeftChild());
+		
+		//base case
 		if (leftChildren == index) return root;
 		
 		//recursive step
@@ -235,13 +356,11 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 		
 		if (comparison < 0) {//continue searching left
 			indexOfValue = internalIndexOf(value, current.getLeftChild());
-			
 		} else if (comparison > 0) {//continue searching right
 			indexOfValue = internalIndexOf(value, current.getRightChild());
 			if (indexOfValue != -1) {
 				indexOfValue += size(current.getLeftChild())+1;
 			}
-			
 		} else {//base case 2: found
 			assert comparison == 0;
 			indexOfValue = size(current.getLeftChild());
@@ -324,6 +443,8 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 		return consistent.get();
 	}
 	
+	
+	//count size of subtree by exhaustion, place into consistent if the values agree with the cached values
 	public int subtreeSize(TreeNode<T> node, Out<Boolean> consistent)
 	{
 		if (node == null) {
@@ -340,6 +461,9 @@ public class RandomizedBST<T> extends BinarySearchTree<T> {
 	//INSTANCE VARIABLES
 	
 	private Random random = new Random(91);
+
+
+
 	
 	
 }
