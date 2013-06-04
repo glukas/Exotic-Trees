@@ -14,10 +14,27 @@ import org.junit.Test;
 public class OrderedSetTests {
 
 
-	public static void testNavigableSet(NavigableSet<Integer> set)
+	public static void testPolling(NavigableSet<Integer> set)
 	{
 		TreeSet<Integer> control = new TreeSet<Integer>();
-		int testSize = 30;
+		int testSize = 100;
+		Random rand = new Random(294);
+		for (int i=0; i<testSize; i++) {
+			int next = rand.nextInt();
+			set.add(next);
+			control.add(next);
+		}
+		while (set.size() >= 2) {
+			assertEquals(set.pollFirst(), control.pollFirst());
+			assertEquals(set.pollLast(), control.pollLast());
+		}
+		System.out.println("OrderedSetTests: testPolling done.");
+	}
+	
+	public static void testNavigation(NavigableSet<Integer> set)
+	{
+		TreeSet<Integer> control = new TreeSet<Integer>();
+		int testSize = 100;
 		for (int i=0; i<testSize; i++) {
 			set.add(i);
 			control.add(i);
@@ -32,17 +49,17 @@ public class OrderedSetTests {
 			control.add(next);
 			testSetsReturnSameNeighborhoods(control, set, next);
 		}
+		System.out.println("OrderedSetTests: testNavigation done.");
 	}
 	
-	public static void testSetsReturnSameNeighborhoods(NavigableSet<Integer> control, NavigableSet<Integer> set, int next)
+	
+	private static void testSetsReturnSameNeighborhoods(NavigableSet<Integer> control, NavigableSet<Integer> set, int next)
 	{
 		assertEquals("floor - error at " + next, control.floor(next), set.floor(next));
 		assertEquals("higher - error at " + next, control.higher(next), set.higher(next));
 		assertEquals("ceiling - error at " + next, control.ceiling(next), set.ceiling(next));
 		assertEquals("lower - error at " + next, control.lower(next), set.lower(next));
 	}
-
-	
 
 	
 	
@@ -53,7 +70,7 @@ public class OrderedSetTests {
 		
 		Set<Integer> controlSet = new HashSet<Integer>();
 		
-		int testSize = 1000;
+		int testSize = 500;
 		int testRange = testSize/5;
 		Random random = new Random(9);
 		
@@ -73,7 +90,7 @@ public class OrderedSetTests {
 		for (Integer number : controlSet) {
 			assertFalse (!controlSet.contains(number));
 		}
-		
+		System.out.println("OrderedSetTests: randomTestSet done.");
 	}
 	
 	
@@ -82,7 +99,7 @@ public class OrderedSetTests {
 	public static void testSortedSet(SortedSet<Integer> set) {
 		SortedSet<Integer> controlSet = new TreeSet<Integer>();//golden model
 		
-		int testSize = 1000;
+		int testSize = 500;
 		int testRange = testSize/5;
 		Random random = new Random(38);
 
@@ -106,70 +123,11 @@ public class OrderedSetTests {
 		for (Integer number : controlSet) {
 			assertFalse (!controlSet.contains(number)) ;
 		}
-
+		System.out.println("OrderedSetTests: testSortedSet done.");
 	}
 	
 	
-	//basic test that can be used for early implementation testing
-	//tests add and contains
-	public static void testAddAndContainsSet(Set<Integer> set)
-	{
-		Set<Integer> controlSet = new HashSet<Integer>();//golden model
-		
-		int testSize = 1000;
-		Random random = new Random(5);
 
-		for (int i=0; i<testSize; i++) {
-			set.add(i);
-			controlSet.add(i);
-			assertFalse (!set.contains(i)) ;
-		}
-		assertFalse (set.size() != controlSet.size()) ;
 
-		set.clear();
-		assertFalse (set.size() > 0) ;
-	}
 	
-	public static void testSet(Set<Integer> set)
-	{
-		Set<Integer> controlSet = new HashSet<Integer>();//golden model
-		
-		int testSize = 1000;
-		Random random = new Random(5);
-
-		
-		for (int i=0; i<testSize; i++) {
-			assertFalse (set.add(i) == false) ;
-			controlSet.add(i);
-			assertFalse (set.add(i) != false) ;
-			assertFalse (!set.contains(i)) ;
-		}
-		assertFalse (set.size() != controlSet.size()) ;
-		
-		
-		for (int i=0; i<testSize; i++) {
-			int next = random.nextInt();
-			set.add(next);
-			controlSet.add(next);
-			assertFalse (!set.contains(next)) ;
-		}
-		for (int i=0; i<testSize; i++) {
-			assertFalse (!set.contains(i)) ;
-		}
-		for (int i=0; i<testSize; i++) {
-			set.remove(i);
-			controlSet.remove(i);
-			assertFalse (set.contains(i)) ;
-		}
-		assertFalse (set.size() != controlSet.size()) ;
-		
-		for (Integer i : controlSet) {
-			assertFalse (!set.contains(i)) ;
-		}
-		set.clear();
-		assertFalse (set.size() > 0) ;
-		
-	}
-
-
 }

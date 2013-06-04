@@ -16,13 +16,13 @@ class Main {
 			e.printStackTrace();
 		}
 
-		OrderedSetTests.testSet(new RandomizedBST<Integer>());
+		SetTests.testSet(new RandomizedBST<Integer>());
 		OrderedSetTests.randomTestSet(new RandomizedBST<Integer>());
-		OrderedSetTests.testNavigableSet(new RandomizedBST<Integer>());
+		OrderedSetTests.testNavigation(new RandomizedBST<Integer>());
+		OrderedSetTests.testSortedSet(new RandomizedBST<Integer>());
 		
-		
-		int performanceTestSize = 2000000;
-		performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
+		//int performanceTestSize = 2000000;
+		//performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
 		//performanceTestSet(treap, performanceTestSize);
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
 		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);

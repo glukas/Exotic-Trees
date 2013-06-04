@@ -9,7 +9,7 @@ import java.util.NavigableSet;
 
 class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 
-	
+	//TODO: Implement unbounded ranges
 	public SortedSubset(RangeSet<T> constitutingSuperset, T lowerbound, T upperbound, boolean fromInclusive, boolean toInclusive)
 	{
 		init(constitutingSuperset, lowerbound, upperbound, fromInclusive, toInclusive);

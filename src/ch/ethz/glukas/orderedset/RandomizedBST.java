@@ -24,7 +24,7 @@ import java.util.SortedSet;
 public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSet<T>, RangeSet<T> {
 
 	///
-	//COLLECTION : Expected O(logn)
+	//COLLECTION
 	///
 	
 	@Override
@@ -40,7 +40,8 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		
 		assert subtreeSizeConsistent(getRoot());
 		assert isInOrder();
-		
+		assert contains(value);
+	
 		return modified.get();
 	}
 	
@@ -48,6 +49,9 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	@Override
 	public boolean remove(Object arg0)
 	{
+		assert isInOrder();
+		assert subtreeSizeConsistent(getRoot());
+		
 		if (arg0 == null) return false;
 		
 		@SuppressWarnings("unchecked")
@@ -58,6 +62,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 
 		assert subtreeSizeConsistent(getRoot());
 		assert isInOrder();
+		assert (!contains(value));
 		
 		return modified.get();
 	}
@@ -71,6 +76,8 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	@Override
 	public void clear() {
 		metaRoot = new RankedTreeNode<T>(null);
+		
+		assert (isEmpty());
 	}
 	
 	
@@ -105,6 +112,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		if (value != null) {
 			modified = true;
 			remove(value);
+			assert (!contains(value));
 		}
 		return modified;
 	}
