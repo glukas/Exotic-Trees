@@ -39,6 +39,12 @@ public class RandomizedBSTTest {
 	 {
 		 OrderedSetTests.testSubsets(new RandomizedBST<Integer>());
 	 }
+	 
+	 @Test
+	 public void testSubsetModification()
+	 {
+		 OrderedSetTests.testSubsetModification(new RandomizedBST<Integer>());
+	 }
 
 	 @Test
 	 public void testSet()

@@ -30,7 +30,43 @@ public class OrderedSetTests {
 			}
 		}
 		
+
 		System.out.println("OrderedSetTests: testSubsets done.");
+	}
+	
+	public static void testSubsetModification(NavigableSet<Integer> set)
+	{
+		TreeSet<Integer> control = new TreeSet<Integer>();
+		int testSize = 50;
+		int testRange = 3*testSize;
+		SetTests.randomAdd(set, control, testSize, testRange);
+		
+		//test clear operation for subsets
+		SortedSet<Integer> subset = set.subSet(testSize/4, testSize/2);
+		SortedSet<Integer> controlSubset = control.subSet(testSize/4, testSize/2);
+		subset.clear();
+		controlSubset.clear();
+		SetTests.assertEqualSets(subset, controlSubset);
+		SetTests.assertEqualSets(set, control);
+		
+		//test add operation
+		for (int i=testSize/4; i<testSize/2; i++) {
+			assertTrue(subset.add(i) == controlSubset.add(i));
+			assertTrue(subset.add(i) == controlSubset.add(i));
+		}
+		SetTests.assertEqualSets(subset, controlSubset);
+		SetTests.assertEqualSets(set, control);
+		
+		//test remove operation
+		subset = set.subSet(testSize/5, testSize/2);
+		controlSubset = control.subSet(testSize/5, testSize/2);
+		for (int i=0; i<testRange; i++) {
+			assertTrue(subset.remove(i) == controlSubset.remove(i));
+		}
+		SetTests.assertEqualSets(subset, controlSubset);
+		SetTests.assertEqualSets(set, control);
+		
+		System.out.println("OrderedSetTests: testSubsetModification done.");
 	}
 	
 	private static void assertSubsetsEqual(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper)

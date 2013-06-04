@@ -130,14 +130,13 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 
 	@Override
 	public T first() {
-		T found = null;
+		T found;
 		if (fromInclusive) {
 			found = superset.ceiling(lower);
 		} else {
 			found = superset.higher(lower);
 		}
-		if (isInsideRange(found)) return found;
-		return null;
+		return nullIfOutOfBounds(found);
 	}
 
 	@Override
@@ -147,14 +146,13 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 
 	@Override
 	public T last() {
-		T found = null;
+		T found;
 		if (toInclusive) {
 			found = superset.floor(upper);
 		} else {
 			found = superset.lower(upper);
 		}
-		if (isInsideRange(found)) return found;
-		return null;
+		return nullIfOutOfBounds(found);
 	}
 
 	@Override
@@ -181,80 +179,60 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 	public T ceiling(T e) {
 		T found = null;
 		if (isBelowRange(e)) {
-			if (fromInclusive) {
-				found = superset.ceiling(lower);
-			} else {
-				found = superset.higher(lower);
-			}
+			found = first();
 		} else if (!isAboveRange(e)) {
-			if (!fromInclusive && comparator().compare(e, lower) == 0) {
-				found = superset.higher(e);
-			} else {
-				found= superset.ceiling(e);
-			}
+			found = superset.ceiling(e);
 		}
-		if (found == null || !isInsideRange(found)) return null;
-		return found;
+		
+		return nullIfOutOfBounds(found);
 	}
+	
 
 	@Override
 	public T floor(T e) {
 		T found = null;
 		if (isAboveRange(e)) {
-			if (toInclusive) {
-				found = superset.floor(upper);
-			} else {
-				found = superset.lower(upper);
-			}
+			found = last();
 		} else if (!isBelowRange(e)) {
-			if (!toInclusive && comparator().compare(e, upper) == 0) {
-				found = superset.lower(e);
-			} else {
-				found = superset.floor(e);
-			}
+			found = superset.floor(e);
 		}
 		
-		if (found == null || !isInsideRange(found)) return null;
-		return found;
+		return nullIfOutOfBounds(found);
 	}
-
-
 
 	@Override
 	public T higher(T e) {
 
 		T found = null;
 		if (isBelowRange(e)) {
-			if (fromInclusive) {
-				found = superset.ceiling(lower);
-			} else {
-				found = superset.higher(lower);
-			}
+			found = first();
 		} else if (!isAboveRange(e)) {
 			found = superset.higher(e);
 		}
 		
-		if (found == null || !isInsideRange(found)) return null;
-		return found;
+		return nullIfOutOfBounds(found);
 	}
 
 	@Override
 	public T lower(T e) {
 		T found = null;
 		if (isAboveRange(e)) {
-			if (toInclusive) {
-				found = superset.floor(upper);
-			} else {
-				found = superset.lower(upper);
-			}
+			found = last();
 		} else if (!isBelowRange(e)) {
 			found = superset.lower(e);
 		}
 		
-		if (found == null || !isInsideRange(found)) return null;
-		return found;
+		return nullIfOutOfBounds(found);
 	}
 
+	public T nullIfOutOfBounds(T value)
+	{
+		if (value == null || !isInsideRange(value)) return null;
+		return value;
+	}
+	
+	
+	
 	@Override
 	public T pollFirst() {
 		T first = first();
