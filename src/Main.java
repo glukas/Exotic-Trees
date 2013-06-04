@@ -16,14 +16,19 @@ class Main {
 			e.printStackTrace();
 		}
 
-		SetTests.testSet(new RandomizedBST<Integer>());
+		/*SetTests.testSet(new RandomizedBST<Integer>());
 		OrderedSetTests.randomTestSet(new RandomizedBST<Integer>());
 		OrderedSetTests.testNavigation(new RandomizedBST<Integer>());
 		OrderedSetTests.testSortedSet(new RandomizedBST<Integer>());
 		OrderedSetTests.testSubsets(new RandomizedBST<Integer>());
+		*/
 		
-		//int performanceTestSize = 2000000;
+		
+		int performanceTestSize = 1000000;
 		//performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
+		
+		performanceTestNavigableSet(new RandomizedBST<Integer>(), performanceTestSize);
+		performanceTestNavigableSet(new TreeSet<Integer>(), performanceTestSize);
 		//performanceTestSet(treap, performanceTestSize);
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
 		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
@@ -62,6 +67,22 @@ class Main {
 		}
 		Date end = new Date();
 		System.out.println("randomized performance test set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+	}
+	
+	static void performanceTestNavigableSet(NavigableSet<Integer> set, int testSize)
+	{
+		for (int i=0; i<testSize; i++) {
+			set.add(i);
+		}
+		Date start = new Date();
+		for (int i=0; i<testSize; i++) {
+			set.floor(i);
+			set.ceiling(i);
+			set.higher(i);
+			set.lower(i);
+		}
+		Date end = new Date();
+		System.out.println("test navigation done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 	}
 
 }

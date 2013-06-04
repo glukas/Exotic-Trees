@@ -183,7 +183,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		
 		Out<T> greater = new Out<T>();
 		Out<T> smaller = new Out<T>();
-		T equal = getNeighborhood(e, greater, smaller);
+		T equal = getNeighborhood(e, smaller, greater);
 
 		if (equal != null) return equal;
 		return smaller.get();
@@ -194,7 +194,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	public T lower(T e) {
 		Out<T> greater = new Out<T>();
 		Out<T> smaller = new Out<T>();
-		T equal = getNeighborhood(e, greater, smaller);
+		T equal = getNeighborhood(e, smaller, greater);
 
 		return smaller.get();
 	}
@@ -204,7 +204,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	public T ceiling(T e) {
 		Out<T> greater =new Out<T>();
 		Out<T> smaller = new Out<T>();
-		T equal = getNeighborhood(e, greater, smaller);
+		T equal = getNeighborhood(e, smaller, greater);
 
 		if (equal != null) return equal;
 		return greater.get();
@@ -214,7 +214,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	public T higher(T e) {
 		Out<T> greater =new Out<T>();
 		Out<T> smaller = new Out<T>();
-		T equal = getNeighborhood(e, greater, smaller);
+		T equal = getNeighborhood(e, smaller, greater);
 
 		return greater.get();
 	}
@@ -284,13 +284,49 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	
 	public RandomizedBST<T> cutHeadSet(T toElement, boolean inclusive)
 	{
-		return null;
+		//partition the tree around the value
+		Out<TreeNode<T>> smaller = new Out<TreeNode<T>>();
+		Out<TreeNode<T>> greater = new Out<TreeNode<T>>();
+		TreeNode<T> equal = split(toElement, getRoot(), smaller, greater);
+		
+		//create the new set
+		RandomizedBST<T> headSet = new RandomizedBST<T>();
+		
+		//assign the partitions of the split
+		headSet.setRoot(smaller.get());
+		setRoot(greater.get());
+		if (equal != null) {
+			if (inclusive) {
+				headSet.add(equal.getValue());
+			} else {
+				add(equal.getValue());
+			}
+		}
+		return headSet;
 	}
 	
 	
 	public RandomizedBST<T> cutTailSet(T fromElement, boolean inclusive)
 	{
-		return null;
+		//partition the tree around the value
+		Out<TreeNode<T>> smaller = new Out<TreeNode<T>>();
+		Out<TreeNode<T>> greater = new Out<TreeNode<T>>();
+		TreeNode<T> equal = split(fromElement, getRoot(), smaller, greater);
+		
+		//create the new set
+		RandomizedBST<T> tailSet = new RandomizedBST<T>();
+		
+		//assign the partitions of the split
+		tailSet.setRoot(greater.get());
+		setRoot(smaller.get());
+		if (equal != null) {
+			if (inclusive) {
+				tailSet.add(equal.getValue());
+			} else {
+				add(equal.getValue());
+			}
+		}
+		return tailSet;
 	}
 	
 	
@@ -437,7 +473,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 
 	//returns the value if it is contained in the structure, sets 'greater' to the next highest and 'smaller' to the next lowest value contained in the tree
 	//Algorithm: split around the value and join the subtrees back
-	public T getNeighborhood(T value, Out<T> greater, Out<T> smaller) {
+	public T getNeighborhood(T value, Out<T> smaller, Out<T> greater) {
 		//partition tree around the value e
 		Out<TreeNode<T>> greaterTree = new Out<TreeNode<T>>();
 		Out<TreeNode<T>> smallerTree = new Out<TreeNode<T>>();

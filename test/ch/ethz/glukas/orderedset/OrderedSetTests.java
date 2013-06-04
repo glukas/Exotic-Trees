@@ -18,7 +18,7 @@ public class OrderedSetTests {
 	public static void testSubsets(NavigableSet<Integer> set)
 	{
 		TreeSet<Integer> control = new TreeSet<Integer>();
-		int testSize = 30;
+		int testSize = 20;
 		int testRange = 3*testSize;
 		SetTests.sequenceAdd(set, control, testSize);
 		SetTests.randomAdd(set, control, testSize, testRange);
@@ -26,7 +26,7 @@ public class OrderedSetTests {
 		//exhaustively test all possible subsets
 		for (int lower = 0; lower<=testRange+2; lower++) {
 			for (int upper=lower+1; upper<=testRange+2; upper++) {
-				assertSubsetsEqual(set, control, lower, upper);
+				assertEqualSubsets(set, control, lower, upper);
 			}
 		}
 		
@@ -69,7 +69,7 @@ public class OrderedSetTests {
 		System.out.println("OrderedSetTests: testSubsetModification done.");
 	}
 	
-	private static void assertSubsetsEqual(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper)
+	private static void assertEqualSubsets(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper)
 	{
 		//test sorted set interface subsets
 		SortedSet<Integer> subset = set.subSet(lower, upper);
@@ -195,8 +195,8 @@ public class OrderedSetTests {
 	{
 		assertTrue(set.size() == controlSet.size());
 		if (controlSet.size() > 0) {
-			assertTrue (set.first().equals(controlSet.first())) ;
-			assertTrue (set.last().equals(controlSet.last())) ;
+			assertTrue(set.first().equals(controlSet.first())) ;
+			assertTrue(set.last().equals(controlSet.last())) ;
 		}
 	}
 

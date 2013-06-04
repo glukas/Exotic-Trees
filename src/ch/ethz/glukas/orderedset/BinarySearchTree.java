@@ -326,7 +326,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	}
 	
 	//wraps the comparator to make it partially null-safe: null is interpreted as +infinity
-	//if both arguments are 0 the value is undefined
+	//if both arguments are 0 the precondition is violated
 	protected int compareValues(T v1 ,T v2) {
 		assert v1 != null || v2 != null;
 		if (v2 == null) return -1;
