@@ -67,8 +67,9 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 		
 		superset.removeRange(lower, upper, fromInclusive, toInclusive);
 		
-		while (pollFirst() != null) {
-		}
+		//Alternative direct implementation:
+		//while (pollFirst() != null) {
+		//}
 		
 	}
 
@@ -222,13 +223,14 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 	 * Throws an exception if the new bounds exceed the bounds of this set
 	 */
 	public NavigableSet<T> subSet(T fromElement, boolean fromInclusive, T toElement, boolean toInclusive) {
+		//check bounds
 		int fromComparison = comparator().compare(fromElement, lower);
 		int toComparison = comparator().compare(toElement, upper);
 		if (fromComparison < 0) throw new IllegalArgumentException();
 		if (fromInclusive && !this.fromInclusive && fromComparison == 0) throw new IllegalArgumentException();
 		if (toComparison > 0) throw new IllegalArgumentException();
 		if (toInclusive && !this.toInclusive && toComparison == 0) throw new IllegalArgumentException();
-		
+		//get a subset from the superset
 		return superset.subSet(fromElement, fromInclusive, toElement, toInclusive);
 	}
 

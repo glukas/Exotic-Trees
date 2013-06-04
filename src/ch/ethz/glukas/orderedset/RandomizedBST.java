@@ -12,8 +12,11 @@ import java.util.SortedSet;
  * Implements a randomized sorted set structure introduced by Conrado Martinez and Salvador Roura:
  * http://www.cis.temple.edu/~wolfgang/cis551/martinez.pdf
  * 
+ * This class conforms to the java.util.NavigableSet interface. It is thus very similar in behavior to java.util.TreeSet, but it is more space efficient and provides access by rank.
+ * 
  * Expected add, contains and remove performance is O(logn) for all input distributions
  * In addition to access by key, the structure provides O(logn) access and deletion by rank
+ * 
  * 
  * @author Lukas Gianinazzi
  *
@@ -27,6 +30,10 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	@Override
 	public boolean add(T value)
 	{
+		assert isInOrder();
+		
+		if (value == null) throw new NullPointerException();
+		
 		Out<Boolean> modified = new Out<Boolean>();
 
 		setRoot(internalAdd(value, getRoot(), modified));
@@ -149,12 +156,56 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		return last;
 	}
 	
+	
+	
+	//NAVIGATE:
+	//the algorithms are based on split and join operations
+	//this gives them O(log n) expected performance
+	//Discussion: other methods such as threading or parent pointers might increase the performance, but increase complexity and overhead for other methods
+	
+	@Override
+	public T floor(T e) {
+		
+		Out<T> greater = new Out<T>();
+		Out<T> smaller = new Out<T>();
+		T equal = getNeighborhood(e, greater, smaller);
+
+		if (equal != null) return equal;
+		return smaller.get();
+	}
+	
+
+	@Override
+	public T lower(T e) {
+		Out<T> greater = new Out<T>();
+		Out<T> smaller = new Out<T>();
+		T equal = getNeighborhood(e, greater, smaller);
+
+		return smaller.get();
+	}
+	
+	
 	@Override
 	public T ceiling(T e) {
-		// TODO Auto-generated method stub
-		return null;
+		Out<T> greater =new Out<T>();
+		Out<T> smaller = new Out<T>();
+		T equal = getNeighborhood(e, greater, smaller);
+
+		if (equal != null) return equal;
+		return greater.get();
 	}
 
+	@Override
+	public T higher(T e) {
+		Out<T> greater =new Out<T>();
+		Out<T> smaller = new Out<T>();
+		T equal = getNeighborhood(e, greater, smaller);
+
+		return greater.get();
+	}
+	
+	
+	//reverse order
 
 	@Override
 	public Iterator<T> descendingIterator() {
@@ -170,38 +221,32 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	}
 
 
-	@Override
-	public T floor(T e) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 
+	
+	//Non-destructive subset methods : returned sets are backed by this set so changes in one set are reflected in the other set
+
 	@Override
-	public SortedSet<T> headSet(T toElement) {
-		// TODO Auto-generated method stub
-		return null;
+	public NavigableSet<T> headSet(T toElement) {
+		return headSet(toElement, false);
 	}
 
 
 	@Override
 	public NavigableSet<T> headSet(T toElement, boolean inclusive) {
-		// TODO Auto-generated method stub
-		return null;
+		return new SortedSubset<T>(this, null, toElement, false, inclusive);
+	}
+	
+	
+	@Override
+	public NavigableSet<T> tailSet(T fromElement) {
+		return tailSet(fromElement, true);
 	}
 
 
 	@Override
-	public T higher(T e) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	public T lower(T e) {
-		// TODO Auto-generated method stub
-		return null;
+	public NavigableSet<T> tailSet(T fromElement, boolean inclusive) {
+		return new SortedSubset<T>(this, fromElement, null, inclusive, false);
 	}
 
 
@@ -212,24 +257,27 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 
 
 	@Override
-	public NavigableSet<T> subSet(T fromElement, boolean fromInclusive,
-			T toElement, boolean toInclusive) {
+	public NavigableSet<T> subSet(T fromElement, boolean fromInclusive, T toElement, boolean toInclusive) {
 		return new SortedSubset<T>(this, fromElement, toElement, fromInclusive, toInclusive);
 	}
 
 
-	@Override
-	public SortedSet<T> tailSet(T fromElement) {
-		// TODO Auto-generated method stub
+	///
+	//DESTRUCTIVE SUBSET METHODS
+	///
+	
+	
+	public RandomizedBST<T> cutHeadSet(T toElement, boolean inclusive)
+	{
 		return null;
 	}
-
-
-	@Override
-	public NavigableSet<T> tailSet(T fromElement, boolean inclusive) {
-		// TODO Auto-generated method stub
+	
+	
+	public RandomizedBST<T> cutTailSet(T fromElement, boolean inclusive)
+	{
 		return null;
 	}
+	
 	
 	///
 	//RANGE SET
@@ -342,6 +390,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	}
 	
 	
+	//returns the index of the value relative to the current node, or -1 if the value is not present
 	private int internalIndexOf(T value, TreeNode<T> current)
 	{
 		//base case 1 : not found
@@ -358,7 +407,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 			indexOfValue = internalIndexOf(value, current.getLeftChild());
 		} else if (comparison > 0) {//continue searching right
 			indexOfValue = internalIndexOf(value, current.getRightChild());
-			if (indexOfValue != -1) {
+			if (indexOfValue != -1) {//the index is relative to the index of the child: calculate index relative to the current node
 				indexOfValue += size(current.getLeftChild())+1;
 			}
 		} else {//base case 2: found
@@ -369,6 +418,36 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		return indexOfValue;
 	}
 
+	//returns the value if it is contained in the structure, sets 'greater' to the next highest and 'smaller' to the next lowest value contained in the tree
+	//Algorithm: split around the value and join the subtrees back
+	public T getNeighborhood(T value, Out<T> greater, Out<T> smaller) {
+		//partition tree around the value e
+		Out<TreeNode<T>> greaterTree = new Out<TreeNode<T>>();
+		Out<TreeNode<T>> smallerTree = new Out<TreeNode<T>>();
+		TreeNode<T> equal = split(value, getRoot(), smallerTree, greaterTree);
+
+		//extract result values
+		if (greaterTree.get() != null) {
+			greater.set(findFirst(greaterTree.get()).getValue());
+		}
+		if (smallerTree.get() != null) {
+			smaller.set(findLast(smallerTree.get()).getValue());
+		}
+		
+		//restore the tree
+		TreeNode<T> newRoot = join(smallerTree.get(), greaterTree.get());
+		setRoot(newRoot);
+		if (equal != null) {
+			add(value);
+		}
+		
+		assert isInOrder();
+		assert subtreeSizeConsistent(getRoot());
+		return equal.getValue();
+	}
+	
+
+	
 	//insert the value here: restructure the subtree rooted at 'r' so that value is the the root of this subtree, return the new root
 	//if the value was already present, modified will be set to false, else if will be set to true
 	private TreeNode<T> insertAtRoot(T value, TreeNode<T> r, Out<Boolean> modified)
@@ -435,6 +514,8 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 
 	
 	//INVARIANTS
+	
+
 	
 	public boolean subtreeSizeConsistent(TreeNode<T> node)
 	{

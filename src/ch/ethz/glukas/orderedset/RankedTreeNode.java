@@ -30,12 +30,16 @@ class RankedTreeNode<T> extends TreeNode<T> {
 		}	
 	}
 	
+	//precondition: node.size is consistent, getRightChild.size is consistent
+	//postcondition: this.size is consistent
 	public void setLeftChild(TreeNode<T> node)
 	{
 		super.setLeftChild(node);
 		adjustSize();
 	}
 	
+	//precondition: node.size is consistent, getLeftChild.size is consistent
+	//postcondition: this.size is consistent
 	public void setRightChild(TreeNode<T> node)
 	{
 		super.setRightChild(node);

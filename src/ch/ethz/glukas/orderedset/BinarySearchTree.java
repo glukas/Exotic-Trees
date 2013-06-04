@@ -90,6 +90,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		return node.getValue();
 	}
 	
+	//TODO : comparator should return null if instanciated using the natural ordering
 	public Comparator<? super T> comparator() {
 		return internalComparator;
 	}
@@ -263,8 +264,10 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 	protected TreeNode<T> split(T value, TreeNode<T> r, Out<TreeNode<T>> less, Out<TreeNode<T>> greater)
 	{
+		assert isInOrder(r);
 		
-		if (r == null) {//base case
+		
+		if (r == null) {//base case 1
 			less.set(null);
 			greater.set(null);
 			return null;
@@ -286,12 +289,17 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 			r.setRightChild(less.get());
 			less.set(r);
 			
-		} else {
+		} else {//base case 2
 			equal = r;
 			less.set(r.getLeftChild());
 			greater.set(r.getRightChild());
 		}
 		
+		
+		assert descendantsAreSmaller(less.get(), value);
+		assert descendantsAreGreater(greater.get(), value);
+		assert isInOrder(less.get());
+		assert isInOrder(greater.get());
 		return equal;
 	}
 	
@@ -321,19 +329,50 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	}
 	
 	
+	protected int compareValues(TreeNode<T> n1, TreeNode<T> n2) {
+		return compareValues(n1.getValue(), n2.getValue());
+	}
+	
 	///
-	//INVARIANT
+	//INVARIANTS & ASSERTIONS
 	///
 	
+	private boolean descendantsAreSmaller(TreeNode<T> node, T value)
+	{
+		if (node == null) return true;
+		boolean result = compareValues(node.getValue(), value) < 0 && descendantsAreSmaller(node.getLeftChild(), value) && descendantsAreSmaller(node.getRightChild(), value);
+		assert result;//fail fast
+		return result;
+	}
+	
+	private boolean descendantsAreGreater(TreeNode<T> node, T value)
+	{
+		if (node == null) return true;
+		boolean result = compareValues(node.getValue(), value) > 0 && descendantsAreGreater(node.getLeftChild(), value) && descendantsAreGreater(node.getRightChild(), value);
+		assert result;//fail fast
+		return result;
+	}
+	
+	protected boolean isInOrder(TreeNode<T> node)
+	{
+		if (node == null) return true;
+		
+		
+		boolean result = true;
+		if (node.getLeftChild() != null) {
+			result = result && compareValues(node.getLeftChild(), node) < 0 && isInOrder(node.getLeftChild());
+			assert result;
+		}
+		if (node.getRightChild() != null) {
+			result = result && compareValues(node.getRightChild(), node) > 0 && isInOrder(node.getRightChild());
+			assert result;
+		}
+		return result;
+	}
 	
 	protected boolean isInOrder()
 	{
-		@SuppressWarnings("unchecked")
-		T[] sorted = (T[]) toArray();
-		for (int i=1; i<sorted.length; i++) {
-			if (compareValues(sorted[i], sorted[i-1]) < 0) return false;
-		}
-		return true;
+		return isInOrder(getRoot());
 	}
 	
 	
