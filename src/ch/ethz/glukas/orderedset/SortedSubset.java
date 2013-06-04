@@ -7,6 +7,12 @@ import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.NavigableSet;
 
+/*
+ * Provides a general implementation for subsets to a navigable set
+ * The navigable set has to implement some additional methods "sizeOfRange" and "removeRange"
+ * Remove range may be implemented by subsequently polling from a SortedSubset.
+ */
+
 class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 
 	//TODO: Implement unbounded ranges
@@ -44,20 +50,31 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 	
 	public boolean isInsideRange(T e)
 	{
-		boolean result = true;
+		return !isBelowRange(e) && !isAboveRange(e);
+	}
+
+	public boolean isBelowRange(T e)
+	{
+		boolean result;
 		if (fromInclusive) {
-			result = result && comparator().compare(e, lower) >= 0;
+			result = comparator().compare(e, lower) < 0;
 		} else {
-			result = result && comparator().compare(e, lower) > 0;
-		}
-		if (toInclusive) {
-			result = result && comparator().compare(e, upper) <= 0;
-		} else {
-			result = result && comparator().compare(e, upper) < 0;
+			result = comparator().compare(e, lower) <= 0;
 		}
 		return result;
 	}
-
+	
+	public boolean isAboveRange(T e)
+	{
+		boolean result;
+		if (toInclusive) {
+			result = comparator().compare(e, upper) > 0;
+		} else {
+			result = comparator().compare(e, upper) >= 0;
+		}
+		return result;
+	}
+	
 	///
 	//SORTED SET
 	///
@@ -119,8 +136,8 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 		} else {
 			found = superset.higher(lower);
 		}
-		if (!isInsideRange(found)) found = null;
-		return found;
+		if (isInsideRange(found)) return found;
+		return null;
 	}
 
 	@Override
@@ -136,8 +153,8 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 		} else {
 			found = superset.lower(upper);
 		}
-		if (!isInsideRange(found)) found = null;
-		return found;
+		if (isInsideRange(found)) return found;
+		return null;
 	}
 
 	@Override
@@ -157,51 +174,85 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 	
 	///
 	//NAVIGABLE SET
+	//Operations rely on the superset implementation. All they do is bounds checking.
 	///
 	
 	@Override
 	public T ceiling(T e) {
-		T found = superset.ceiling(e);
-		if (isInsideRange(found)) return found;
-		return null;
-	}
-
-	@Override
-	public Iterator<T> descendingIterator() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public NavigableSet<T> descendingSet() {
-		// TODO Auto-generated method stub
-		return null;
+		T found = null;
+		if (isBelowRange(e)) {
+			if (fromInclusive) {
+				found = superset.ceiling(lower);
+			} else {
+				found = superset.higher(lower);
+			}
+		} else if (!isAboveRange(e)) {
+			if (!fromInclusive && comparator().compare(e, lower) == 0) {
+				found = superset.higher(e);
+			} else {
+				found= superset.ceiling(e);
+			}
+		}
+		if (found == null || !isInsideRange(found)) return null;
+		return found;
 	}
 
 	@Override
 	public T floor(T e) {
-		T found = superset.floor(e);
-		if (isInsideRange(found)) return found;
-		return null;
+		T found = null;
+		if (isAboveRange(e)) {
+			if (toInclusive) {
+				found = superset.floor(upper);
+			} else {
+				found = superset.lower(upper);
+			}
+		} else if (!isBelowRange(e)) {
+			if (!toInclusive && comparator().compare(e, upper) == 0) {
+				found = superset.lower(e);
+			} else {
+				found = superset.floor(e);
+			}
+		}
+		
+		if (found == null || !isInsideRange(found)) return null;
+		return found;
 	}
 
-	@Override
-	public NavigableSet<T> headSet(T toElement, boolean inclusive) {
-		return subSet(lower, fromInclusive, toElement, inclusive);
-	}
+
 
 	@Override
 	public T higher(T e) {
-		T found = superset.higher(e);
-		if (isInsideRange(found)) return found;
-		return null;
+
+		T found = null;
+		if (isBelowRange(e)) {
+			if (fromInclusive) {
+				found = superset.ceiling(lower);
+			} else {
+				found = superset.higher(lower);
+			}
+		} else if (!isAboveRange(e)) {
+			found = superset.higher(e);
+		}
+		
+		if (found == null || !isInsideRange(found)) return null;
+		return found;
 	}
 
 	@Override
 	public T lower(T e) {
-		T found = superset.lower(e);
-		if (isInsideRange(found)) return found;
-		return null;
+		T found = null;
+		if (isAboveRange(e)) {
+			if (toInclusive) {
+				found = superset.floor(upper);
+			} else {
+				found = superset.lower(upper);
+			}
+		} else if (!isBelowRange(e)) {
+			found = superset.lower(e);
+		}
+		
+		if (found == null || !isInsideRange(found)) return null;
+		return found;
 	}
 
 	@Override
@@ -218,6 +269,26 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 		return last;
 	}
 
+	
+	
+	@Override
+	public NavigableSet<T> headSet(T toElement, boolean inclusive) {
+		return subSet(lower, fromInclusive, toElement, inclusive);
+	}
+
+	@Override
+	public Iterator<T> descendingIterator() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public NavigableSet<T> descendingSet() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	
 	@Override
 	/**
 	 * Throws an exception if the new bounds exceed the bounds of this set

@@ -13,61 +13,52 @@ public class SetTests {
 	{
 		Set<Integer> controlSet = new HashSet<Integer>();//golden model
 		
-		int testSize = 500;
-		Random random = new Random(5);
-
+		int testSize = 300;
 		
+		//sequence test
 		for (int i=0; i<testSize; i++) {
-			assertFalse (set.add(i) == false) ;
-			controlSet.add(i);
-			assertFalse (set.add(i) != false) ;
-			assertFalse (!set.contains(i)) ;
+			assertTrue (set.add(i) == controlSet.add(i)) ;
+			assertTrue (set.add(i) == controlSet.add(i)) ;
+			assertEqualSets(set, controlSet);
 		}
-		assertFalse (set.size() != controlSet.size()) ;
 		
-		
+		//randomized test
+		Random random = new Random(5);
 		for (int i=0; i<testSize; i++) {
 			int next = random.nextInt();
-			set.add(next);
-			controlSet.add(next);
-			assertFalse (!set.contains(next)) ;
+			assertTrue(set.add(next) == controlSet.add(next));
+			assertEqualSets(set, controlSet);
 		}
-		for (int i=0; i<testSize; i++) {
-			assertFalse (!set.contains(i)) ;
-		}
-		for (int i=0; i<testSize; i++) {
-			set.remove(i);
-			controlSet.remove(i);
-			assertFalse (set.contains(i)) ;
-		}
-		assertFalse (set.size() != controlSet.size()) ;
 		
-		for (Integer i : controlSet) {
-			assertFalse (!set.contains(i)) ;
+		//removal test
+		for (int i=0; i<testSize; i++) {
+			assertTrue(set.remove(i) == controlSet.remove(i));
+			assertEqualSets(set, controlSet);
 		}
+		
 		set.clear();
-		assertFalse (set.size() > 0) ;
+		controlSet.clear();
+		
+		assertTrue (set.size() == 0) ;
 		System.out.println("SetTests: testSet done.");
 	}
 
 	//basic test that can be used for early implementation testing
-	//tests add and contains
+	//tests add and contains, also makes sure that size is 0 after clear
 	public static void testAddAndContains(Set<Integer> set)
 	{
 		Set<Integer> controlSet = new HashSet<Integer>();//golden model
 		
-		int testSize = 500;
-		Random random = new Random(8);
+		int testSize = 310;
 
-		for (int i=0; i<testSize; i++) {
-			set.add(i);
-			controlSet.add(i);
-			assertFalse (!set.contains(i)) ;
-		}
-		assertFalse (set.size() != controlSet.size()) ;
-
+		sequenceAdd(set, controlSet, testSize);
+		assertEqualSets(set, controlSet);
 		set.clear();
-		assertFalse (set.size() > 0) ;
+		controlSet.clear();
+		assertTrue (set.size() == 0) ;
+		randomAdd(set, controlSet, testSize);
+		assertEqualSets(set, controlSet);
+		
 		System.out.println("SetTests: testAddAndContains done.");
 	}
 	
@@ -84,14 +75,20 @@ public class SetTests {
 		}
 	}
 	
-	public static void randomAdd(Set<Integer> set1, Set<Integer> set2, int testSize)
+	public static void randomAdd(Set<Integer> set1, Set<Integer> set2, int testSize, int upperbound)
 	{
 		Random rand = new Random(testSize);
 		for (int i=0; i<testSize; i++) {
-			int next = rand.nextInt();
+			int next = rand.nextInt(upperbound);
 			set1.add(next);
 			set2.add(next);
 		}
+	}
+	
+	
+	public static void randomAdd(Set<Integer> set1, Set<Integer> set2, int testSize)
+	{
+		randomAdd(set1, set2, testSize, Integer.MAX_VALUE);
 	}
 	
 	public static void assertEqualSets(Set<Integer> set, Set<Integer> control)

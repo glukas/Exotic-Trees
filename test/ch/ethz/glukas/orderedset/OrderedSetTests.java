@@ -18,22 +18,46 @@ public class OrderedSetTests {
 	public static void testSubsets(NavigableSet<Integer> set)
 	{
 		TreeSet<Integer> control = new TreeSet<Integer>();
-		int testSize = 200;
-		SetTests.randomAdd(set, control, testSize);
+		int testSize = 30;
+		int testRange = 3*testSize;
+		SetTests.sequenceAdd(set, control, testSize);
+		SetTests.randomAdd(set, control, testSize, testRange);
 		
-		for (int i=1; i<testSize; i++) {
-			assertSubsetsEqual(set, control, 0, i);
+		//exhaustively test all possible subsets
+		for (int lower = 0; lower<=testRange+2; lower++) {
+			for (int upper=lower+1; upper<=testRange+2; upper++) {
+				assertSubsetsEqual(set, control, lower, upper);
+			}
 		}
+		
 		System.out.println("OrderedSetTests: testSubsets done.");
 	}
 	
 	private static void assertSubsetsEqual(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper)
 	{
+		//test sorted set interface subsets
 		SortedSet<Integer> subset = set.subSet(lower, upper);
 		SortedSet<Integer> controlSubset = control.subSet(lower, upper);
 		SetTests.assertEqualSets(subset, controlSubset);
+		assertEqualFirstAndLast(subset, controlSubset);
+		
+		//test navigable set interface subsets
+		testSubsetsEqual(set, control, lower, upper, false, false);
+		testSubsetsEqual(set, control, lower, upper, false, true);
+		testSubsetsEqual(set, control, lower, upper, true, false);
+		testSubsetsEqual(set, control, lower, upper, true, true);
 	}
 	
+	public static void testSubsetsEqual(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper, boolean fromInclusive, boolean toInclusive)
+	{
+		NavigableSet<Integer> subset = set.subSet(lower, fromInclusive, upper, toInclusive);
+		NavigableSet<Integer> controlSubset = control.subSet(lower, fromInclusive, upper, toInclusive);
+		SetTests.assertEqualSets(subset, controlSubset);
+		assertEqualFirstAndLast(subset, controlSubset);
+		for (int i=lower-5; i<upper+5; i++) {
+			testSetsReturnSameNeighborhoods(controlSubset, subset, i);
+		}
+	}
 	
 	public static void testPolling(NavigableSet<Integer> set)
 	{
@@ -123,10 +147,7 @@ public class OrderedSetTests {
 				controlSet.remove(nextNumber);
 				set.remove(nextNumber);
 			}
-			if (controlSet.size() > 0) {
-				assertFalse (!set.first().equals(controlSet.first())) ;
-				assertFalse (!set.last().equals(controlSet.last())) ;
-			}
+			assertEqualFirstAndLast(set, controlSet);
 		}
 		
 		SetTests.assertEqualSets(set, controlSet);
@@ -134,7 +155,14 @@ public class OrderedSetTests {
 	}
 	
 	
-
+	public static void assertEqualFirstAndLast(SortedSet<Integer> set, SortedSet<Integer> controlSet)
+	{
+		assertTrue(set.size() == controlSet.size());
+		if (controlSet.size() > 0) {
+			assertTrue (set.first().equals(controlSet.first())) ;
+			assertTrue (set.last().equals(controlSet.last())) ;
+		}
+	}
 
 	
 }
