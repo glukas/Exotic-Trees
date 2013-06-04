@@ -20,6 +20,7 @@ class Main {
 		OrderedSetTests.randomTestSet(new RandomizedBST<Integer>());
 		OrderedSetTests.testNavigation(new RandomizedBST<Integer>());
 		OrderedSetTests.testSortedSet(new RandomizedBST<Integer>());
+		OrderedSetTests.testSubsets(new RandomizedBST<Integer>());
 		
 		//int performanceTestSize = 2000000;
 		//performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);

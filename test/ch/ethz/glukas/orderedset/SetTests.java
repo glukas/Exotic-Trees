@@ -1,6 +1,7 @@
 package ch.ethz.glukas.orderedset;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
 import java.util.Random;
@@ -68,5 +69,36 @@ public class SetTests {
 		set.clear();
 		assertFalse (set.size() > 0) ;
 		System.out.println("SetTests: testAddAndContains done.");
+	}
+	
+	
+	////
+	//HELPERS
+	////
+	
+	public static void sequenceAdd(Set<Integer> set1, Set<Integer> set2, int testSize)
+	{
+		for (int i=0; i<testSize; i++) {
+			set1.add(i);
+			set2.add(i);
+		}
+	}
+	
+	public static void randomAdd(Set<Integer> set1, Set<Integer> set2, int testSize)
+	{
+		Random rand = new Random(testSize);
+		for (int i=0; i<testSize; i++) {
+			int next = rand.nextInt();
+			set1.add(next);
+			set2.add(next);
+		}
+	}
+	
+	public static void assertEqualSets(Set<Integer> set, Set<Integer> control)
+	{
+		assertTrue(set.size() == control.size());
+		for (Integer value : control) {
+			assertTrue(set.contains(value));
+		}
 	}
 }

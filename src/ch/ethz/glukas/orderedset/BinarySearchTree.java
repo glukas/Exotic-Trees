@@ -90,7 +90,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		return node.getValue();
 	}
 	
-	//TODO : comparator should return null if instanciated using the natural ordering
+	//TODO : comparator should return null if instanciated using the natural ordering?
 	public Comparator<? super T> comparator() {
 		return internalComparator;
 	}
@@ -146,6 +146,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 	/**
 	 * Returns the node with the smallest value (the leftmost node in the subtree rooted at 'node')
+	 * precondition: node != null
 	 */
 	protected TreeNode<T> findFirst(TreeNode<T> node)
 	{
@@ -157,6 +158,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 	/**
 	 * Returns the node with the largest value (the rightmost node in the subtree rooted at 'node')
+	 * precondition: node != null
 	 */
 	protected TreeNode<T> findLast(TreeNode<T> node)
 	{
@@ -307,7 +309,11 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	//IMPLEMENTATION : HELPER METHODS
 	/////
 	
-
+	protected T valueOrNull(TreeNode<T> node)
+	{
+		if (node == null) return null;
+		return node.getValue();
+	}
 	
 	protected TreeNode<T> getRoot()
 	{
@@ -337,17 +343,17 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	//INVARIANTS & ASSERTIONS
 	///
 	
-	private boolean descendantsAreSmaller(TreeNode<T> node, T value)
+	protected boolean descendantsAreSmaller(TreeNode<T> node, T value)
 	{
-		if (node == null) return true;
+		if (value == null || node == null) return true;
 		boolean result = compareValues(node.getValue(), value) < 0 && descendantsAreSmaller(node.getLeftChild(), value) && descendantsAreSmaller(node.getRightChild(), value);
 		assert result;//fail fast
 		return result;
 	}
 	
-	private boolean descendantsAreGreater(TreeNode<T> node, T value)
+	protected boolean descendantsAreGreater(TreeNode<T> node, T value)
 	{
-		if (node == null) return true;
+		if (value == null || node == null) return true;
 		boolean result = compareValues(node.getValue(), value) > 0 && descendantsAreGreater(node.getLeftChild(), value) && descendantsAreGreater(node.getRightChild(), value);
 		assert result;//fail fast
 		return result;

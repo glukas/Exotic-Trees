@@ -14,16 +14,32 @@ import org.junit.Test;
 public class OrderedSetTests {
 
 
+	
+	public static void testSubsets(NavigableSet<Integer> set)
+	{
+		TreeSet<Integer> control = new TreeSet<Integer>();
+		int testSize = 200;
+		SetTests.randomAdd(set, control, testSize);
+		
+		for (int i=1; i<testSize; i++) {
+			assertSubsetsEqual(set, control, 0, i);
+		}
+		System.out.println("OrderedSetTests: testSubsets done.");
+	}
+	
+	private static void assertSubsetsEqual(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper)
+	{
+		SortedSet<Integer> subset = set.subSet(lower, upper);
+		SortedSet<Integer> controlSubset = control.subSet(lower, upper);
+		SetTests.assertEqualSets(subset, controlSubset);
+	}
+	
+	
 	public static void testPolling(NavigableSet<Integer> set)
 	{
 		TreeSet<Integer> control = new TreeSet<Integer>();
 		int testSize = 100;
-		Random rand = new Random(294);
-		for (int i=0; i<testSize; i++) {
-			int next = rand.nextInt();
-			set.add(next);
-			control.add(next);
-		}
+		SetTests.randomAdd(set, control, testSize);
 		while (set.size() >= 2) {
 			assertEquals(set.pollFirst(), control.pollFirst());
 			assertEquals(set.pollLast(), control.pollLast());
@@ -35,10 +51,7 @@ public class OrderedSetTests {
 	{
 		TreeSet<Integer> control = new TreeSet<Integer>();
 		int testSize = 100;
-		for (int i=0; i<testSize; i++) {
-			set.add(i);
-			control.add(i);
-		}
+		SetTests.sequenceAdd(set, control, testSize);
 		for (int i=0; i<testSize; i++) {
 			testSetsReturnSameNeighborhoods(control, set, i);
 		}
@@ -86,10 +99,7 @@ public class OrderedSetTests {
 			}
 		}
 		
-		assertFalse (controlSet.size() != set.size());
-		for (Integer number : controlSet) {
-			assertFalse (!controlSet.contains(number));
-		}
+		SetTests.assertEqualSets(set, controlSet);
 		System.out.println("OrderedSetTests: randomTestSet done.");
 	}
 	
@@ -119,10 +129,7 @@ public class OrderedSetTests {
 			}
 		}
 		
-		assertFalse (controlSet.size() != set.size()) ;
-		for (Integer number : controlSet) {
-			assertFalse (!controlSet.contains(number)) ;
-		}
+		SetTests.assertEqualSets(set, controlSet);
 		System.out.println("OrderedSetTests: testSortedSet done.");
 	}
 	

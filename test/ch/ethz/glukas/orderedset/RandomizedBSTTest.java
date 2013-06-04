@@ -34,6 +34,11 @@ public class RandomizedBSTTest {
 		 OrderedSetTests.testNavigation(new RandomizedBST<Integer>());
 	 }
 	 
+	 @Test
+	 public void testSubsets()
+	 {
+		 OrderedSetTests.testSubsets(new RandomizedBST<Integer>());
+	 }
 
 	 @Test
 	 public void testSet()
@@ -74,9 +79,18 @@ public class RandomizedBSTTest {
 			 assertEquals(set.indexOf(i), i);
 		 }
 		 for (int i=0; i< testSize; i++) {
-			 assertFalse (set.remove(0) == false);
+			 assertTrue(set.poll(0) == i);
 		 }
 		 assertFalse (set.isEmpty() == false);
+		 
+		 set.add(1);
+		 set.add(4);
+		 set.add(6);
+		 set.add(100);
+		 assertTrue(set.poll(2) == 6);
+		 assertTrue(set.poll(1) == 4);
+		 assertTrue(set.poll(1) == 100);
+		 assertTrue(set.poll(0) == 1);
 	 }
 	
 }

@@ -77,7 +77,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	public void clear() {
 		metaRoot = new RankedTreeNode<T>(null);
 		
-		assert (isEmpty());
+		assert isEmpty();
 	}
 	
 	
@@ -100,22 +100,29 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	}
 	
 	/**
+	 * Retrieves and removes the k'th smallest element from the set
+	 * @param index
+	 * @return  the value that has been removed
+	 * @throws IndexOutOfBoundsException
+	 */
+	public T poll(int index)
+	{
+		T value = get(index);
+		remove(value);
+		assert (!contains(value));
+		return value;
+	}
+	
+	/**
 	 * Removes the k'th smallest element from the set
 	 * @param index
-	 * @return  true if the set has been modified, false otherwise
+	 * @throws IndexOutOfBoundsException
 	 */
-	public boolean remove(int index)
+	public void remove(int index)
 	{
-		
-		T value = get(index);
-		boolean modified = false;
-		if (value != null) {
-			modified = true;
-			remove(value);
-			assert (!contains(value));
-		}
-		return modified;
+		poll(index);
 	}
+	
 	
 	/**
 	 * If 'value' is the k'th smallest element in the set, this method returns 'k'
@@ -168,7 +175,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	
 	//NAVIGATE:
 	//the algorithms are based on split and join operations
-	//this gives them O(log n) expected performance
+	//this maintains randomness and gives them O(log n) expected performance
 	//Discussion: other methods such as threading or parent pointers might increase the performance, but increase complexity and overhead for other methods
 	
 	@Override
@@ -294,6 +301,8 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	
 	@Override
 	public int sizeOfRange(T lowerbound, T upperbound, boolean fromInclusive, boolean toInclusive) {
+		if (compareValues(lowerbound, upperbound) > 0) throw new IllegalArgumentException();
+		
 		T lower;
 		T upper;
 		if (fromInclusive) {
@@ -306,7 +315,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		} else {
 			upper = lower(upperbound);
 		}
-		if (compareValues(lower, upper) > 0) throw new IllegalArgumentException();
+		if (compareValues(lower, upper) > 0) return 0;
 		
 		int lowerIndex = indexOf(lower);
 		int upperIndex = indexOf(upper);
@@ -451,9 +460,10 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		
 		assert isInOrder();
 		assert subtreeSizeConsistent(getRoot());
-		return equal.getValue();
+		return valueOrNull(equal);
 	}
 	
+
 
 	
 	//insert the value here: restructure the subtree rooted at 'r' so that value is the the root of this subtree, return the new root
@@ -490,6 +500,9 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	//randomized join operation
 	private TreeNode<T> join(TreeNode<T> L, TreeNode<T> R)
 	{
+		assert descendantsAreSmaller(L, valueOrNull(R));
+		assert descendantsAreGreater(R, valueOrNull(L));
+		
 		int sizeL = size(L);
 		int sizeR = size(R);
 		int total = sizeL+sizeR;
@@ -520,9 +533,9 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	
 	
 
-	
+	///
 	//INVARIANTS
-	
+	///
 
 	
 	public boolean subtreeSizeConsistent(TreeNode<T> node)
@@ -547,8 +560,10 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		return total;
 	}
 	
-	//INSTANCE VARIABLES
 	
+	///
+	//INSTANCE VARIABLES
+	///
 	private Random random = new Random(91);
 
 
