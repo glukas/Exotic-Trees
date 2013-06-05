@@ -37,6 +37,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		Out<Boolean> modified = new Out<Boolean>();
 
 		setRoot(internalAdd(value, getRoot(), modified));
+		//internalAdd(value);
 		
 		assert subtreeSizeConsistent(getRoot());
 		assert isInOrder();
@@ -180,42 +181,29 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	
 	@Override
 	public T floor(T e) {
-		
-		Out<T> greater = new Out<T>();
-		Out<T> smaller = new Out<T>();
-		T equal = getNeighborhood(e, smaller, greater);
-
-		if (equal != null) return equal;
-		return smaller.get();
+		if (contains(e)) return e;
+		return lower(e);
 	}
 	
 
 	@Override
 	public T lower(T e) {
-		Out<T> greater = new Out<T>();
 		Out<T> smaller = new Out<T>();
-		T equal = getNeighborhood(e, smaller, greater);
-
+		getNeighborhood(e, smaller, null);
 		return smaller.get();
 	}
 	
 	
 	@Override
 	public T ceiling(T e) {
-		Out<T> greater =new Out<T>();
-		Out<T> smaller = new Out<T>();
-		T equal = getNeighborhood(e, smaller, greater);
-
-		if (equal != null) return equal;
-		return greater.get();
+		if (contains(e)) return e;
+		return higher(e);
 	}
 
 	@Override
 	public T higher(T e) {
-		Out<T> greater =new Out<T>();
-		Out<T> smaller = new Out<T>();
-		T equal = getNeighborhood(e, smaller, greater);
-
+		Out<T> greater = new Out<T>();
+		getNeighborhood(e, null, greater);
 		return greater.get();
 	}
 	
@@ -377,10 +365,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	{
 		int size = size(r);
 
-		int rand = 0;
-		if (size > 0) {
-			rand = random.nextInt(size+1);
-		}
+		int rand = random.nextInt(size+1);
 		
 		
 		if (size == rand) {//base case: insert here, restructure r
@@ -399,6 +384,48 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		
 		return r;
 	}
+	
+	
+
+	//precondition: !contains(value)
+	/*
+	private void internalAdd(T value)
+	{
+		assert !contains(value);
+		
+		TreeNode<T> parent = metaRoot;
+		TreeNode<T> current = getRoot();
+		int rand = 0;
+		int currentSize = 0;
+		while (true) {
+			
+			currentSize = size(current);
+			rand = random.nextInt(currentSize+1);
+			
+			if (currentSize == rand) break;
+			
+			
+			int comparison = compareValues(value, current.getValue());
+			//update size
+			((RankedTreeNode<T>)current).setSize(currentSize + 1);
+			//advance pointers
+			parent = current;
+			if (comparison < 0) {
+				current = current.getLeftChild();
+			} else if (comparison > 0) {
+				current = current.getRightChild();
+			}
+			
+		}
+		assert parent != current;
+		Out<Boolean> modified = new Out<Boolean>();
+		TreeNode<T> newNode = insertAtRoot(value, current, modified);
+		
+		parent.replaceChild(current, newNode);
+		assert contains(value);
+		assert subtreeSizeConsistent(getRoot());
+	}*/
+	
 	
 	private TreeNode<T> internalRemove(T value, TreeNode<T> r, Out<Boolean> modified)
 	{
@@ -472,6 +499,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	}
 
 	//returns the value if it is contained in the structure, sets 'greater' to the next highest and 'smaller' to the next lowest value contained in the tree
+	//smaller and greater can be null
 	//Algorithm: split around the value and join the subtrees back
 	public T getNeighborhood(T value, Out<T> smaller, Out<T> greater) {
 		//partition tree around the value e
@@ -479,11 +507,11 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		Out<TreeNode<T>> smallerTree = new Out<TreeNode<T>>();
 		TreeNode<T> equal = split(value, getRoot(), smallerTree, greaterTree);
 
-		//extract result values
-		if (greaterTree.get() != null) {
+		//extract result values if needed
+		if (greaterTree.get() != null && greater != null) {
 			greater.set(findFirst(greaterTree.get()).getValue());
 		}
-		if (smallerTree.get() != null) {
+		if (smallerTree.get() != null && smaller != null) {
 			smaller.set(findLast(smallerTree.get()).getValue());
 		}
 		

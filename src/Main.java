@@ -24,14 +24,14 @@ class Main {
 		*/
 		
 		
-		int performanceTestSize = 1000000;
-		//performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
+		int performanceTestSize = 600000;
+		performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
+		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
 		
 		performanceTestNavigableSet(new RandomizedBST<Integer>(), performanceTestSize);
 		performanceTestNavigableSet(new TreeSet<Integer>(), performanceTestSize);
-		//performanceTestSet(treap, performanceTestSize);
+		//performanceTestSet(new Treap<Integer>(), performanceTestSize);
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
-		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
 		
 	}
 	
@@ -75,7 +75,7 @@ class Main {
 			set.add(i);
 		}
 		Date start = new Date();
-		for (int i=0; i<testSize; i++) {
+		for (int i=-testSize; i<2*testSize; i++) {
 			set.floor(i);
 			set.ceiling(i);
 			set.higher(i);
