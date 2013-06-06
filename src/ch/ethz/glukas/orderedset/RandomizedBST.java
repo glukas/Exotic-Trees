@@ -1,6 +1,7 @@
 package ch.ethz.glukas.orderedset;
 
 import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.NavigableSet;
 import java.util.Random;
 import java.util.Set;
@@ -82,69 +83,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	}
 	
 	
-	///
-	//ACCESS BY RANK 
-	///
-	
-	/**
-	 * Returns the k'th-smallest element from the set
-	 */
-	public T get(int index)
-	{
-		if (index < 0) throw new IndexOutOfBoundsException();
-		if (index >= size()) throw new IndexOutOfBoundsException();
-		
-		
-		TreeNode<T> result = getByRank(getRoot(), index);
-		if (result == null) return null;
-		return result.getValue();
-	}
-	
-	/**
-	 * Retrieves and removes the k'th smallest element from the set
-	 * @param index
-	 * @return  the value that has been removed
-	 * @throws IndexOutOfBoundsException
-	 */
-	public T poll(int index)
-	{
-		T value = get(index);
-		remove(value);
-		assert (!contains(value));
-		return value;
-	}
-	
-	/**
-	 * Removes the k'th smallest element from the set
-	 * @param index
-	 * @throws IndexOutOfBoundsException
-	 */
-	public void remove(int index)
-	{
-		poll(index);
-	}
-	
-	
-	/**
-	 * If 'value' is the k'th smallest element in the set, this method returns 'k'
-	 * @param value
-	 * @return the rank of 'value'
-	 */
-	public int indexOf(T value)
-	{
-		return internalIndexOf(value, getRoot());
-	}
-	
-	/**
-	 * Since values are unique, this method is equivalent to indexOf
-	 * @param value
-	 * @return the rank of 'value'
-	 */
-	public int lastIndexOf(T value)
-	{
-		return indexOf(value);
-	}
-	
+
 
 	
 	////
@@ -212,8 +151,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 
 	@Override
 	public Iterator<T> descendingIterator() {
-		// TODO Auto-generated method stub
-		return null;
+		return descendingSet().iterator();
 	}
 
 
@@ -224,9 +162,6 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	}
 
 
-
-
-	
 	//Non-destructive subset methods : returned sets are backed by this set so changes in one set are reflected in the other set
 
 	@Override
@@ -266,7 +201,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 
 
 	///
-	//DESTRUCTIVE SUBSET METHODS
+	//DESTRUCTIVE SUBSET METHODS : elements are removed from this set and added to a new set
 	///
 	
 	
@@ -319,8 +254,68 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	
 	
 	///
-	//RANGE SET
+	//RANGE SET / LIST
 	///
+	
+	/**
+	 * Returns the k'th-smallest element from the set
+	 */
+	public T get(int index)
+	{
+		if (index < 0) throw new IndexOutOfBoundsException();
+		if (index >= size()) throw new IndexOutOfBoundsException();
+		
+		
+		TreeNode<T> result = getByRank(getRoot(), index);
+		if (result == null) return null;
+		return result.getValue();
+	}
+	
+	/**
+	 * Retrieves and removes the k'th smallest element from the set
+	 * @param index
+	 * @return  the value that has been removed
+	 * @throws IndexOutOfBoundsException
+	 */
+	public T poll(int index)
+	{
+		T value = get(index);
+		remove(value);
+		assert (!contains(value));
+		return value;
+	}
+	
+	/**
+	 * Removes the k'th smallest element from the set
+	 * @param index
+	 * @throws IndexOutOfBoundsException
+	 */
+	public void remove(int index)
+	{
+		poll(index);
+	}
+	
+	
+	/**
+	 * If 'value' is the k'th smallest element in the set, this method returns 'k'
+	 * @param value
+	 * @return the rank of 'value'
+	 */
+	public int indexOf(T value)
+	{
+		return internalIndexOf(value, getRoot());
+	}
+	
+	/**
+	 * Since values are unique, this method is equivalent to indexOf
+	 * @param value
+	 * @return the rank of 'value'
+	 */
+	public int lastIndexOf(T value)
+	{
+		return indexOf(value);
+	}
+	
 	
 	
 	@Override
@@ -356,6 +351,18 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		}
 	}
 
+	
+	
+	public ListIterator<T> listIterator()
+	{
+		return listIterator(0);
+	}
+	
+	public ListIterator<T> listIterator(int index)
+	{
+		if (index >= size()) return  new RangeSetIterator<T>();
+		return new RangeSetIterator<T>(this, get(index), last());
+	}
 	
 	////
 	//IMPLEMENTATION

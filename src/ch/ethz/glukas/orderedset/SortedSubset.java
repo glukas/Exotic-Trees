@@ -10,7 +10,8 @@ import java.util.NavigableSet;
 /*
  * Provides a general implementation for subsets to a navigable set
  * The navigable set has to implement some additional methods "sizeOfRange" and "removeRange"
- * Remove range may be implemented by subsequently polling from a SortedSubset.
+ * Remove range may be implemented by subsequently polling from a SortedSubset: polling does not depend on removeRange.
+ * Null bounds are interpreted as unbounded. There is no difference between an inclusive or exclusive null bound.
  */
 
 class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
@@ -21,6 +22,9 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 		init(constitutingSuperset, lowerbound, upperbound, fromInclusive, toInclusive);
 	}
 	
+	/*
+	 * lowerbound inclusive, upperbound exclusive
+	 */
 	public SortedSubset(RangeSet<T> constitutingSuperset, T lowerbound, T upperbound)
 	{
 		init(constitutingSuperset, lowerbound, upperbound, true, false);
@@ -34,8 +38,7 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 		this.fromInclusive = lowerboundInclusive;
 		this.toInclusive = upperboundInclusive;
 	}
-
-
+	
 	
 	@Override
 	/**
@@ -44,7 +47,9 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 	public boolean add(T e) {
 		if (!isInsideRange(e)) throw new IllegalArgumentException();
 		
-		return superset.add(e);
+		boolean modified = superset.add(e);
+		assert (contains(e));
+		return modified;
 	}
 
 	
@@ -118,8 +123,8 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 
 	@Override
 	public Iterator<T> iterator() {
-		// TODO Auto-generated method stub
-		return null;
+		if (isEmpty()) return new NavigableSetIterator<T>();
+		return new NavigableSetIterator<T>(this, first(), last());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -128,6 +133,7 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 		if (o != null && isInsideRange((T)o)) {
 			return superset.remove(o);
 		}
+		assert (!contains(o));
 		return false;
 	}
 	
