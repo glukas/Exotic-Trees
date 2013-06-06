@@ -34,6 +34,29 @@ public class OrderedSetTests {
 		System.out.println("OrderedSetTests: testSubsets done.");
 	}
 	
+	public static void testTailSets(NavigableSet<Integer> set)
+	{
+		TreeSet<Integer> control = new TreeSet<Integer>();
+		int testSize = 20;
+		int testRange = 3*testSize;
+		SetTests.sequenceAdd(set, control, testSize);
+		SetTests.randomAdd(set, control, testSize, testRange);
+		
+		for (int upper=-5; upper<testRange+5; upper++) {
+			SortedSet<Integer> subset = set.tailSet(upper);
+			SortedSet<Integer> controlSubset = control.tailSet(upper);
+			assertEqualSortedSets(subset, controlSubset);
+			
+			NavigableSet<Integer> nvSubset = set.tailSet(upper, true);
+			NavigableSet<Integer> nvControlSubset = control.tailSet(upper, true);
+			assertEqualNavigableSets(nvSubset, nvControlSubset);
+			
+			nvSubset = set.tailSet(upper, false);
+			 nvControlSubset = control.tailSet(upper, false);
+			assertEqualNavigableSets(nvSubset, nvControlSubset);
+		}
+	}
+	
 	public static void testSubsetModification(NavigableSet<Integer> set)
 	{
 		TreeSet<Integer> control = new TreeSet<Integer>();
@@ -69,31 +92,7 @@ public class OrderedSetTests {
 		System.out.println("OrderedSetTests: testSubsetModification done.");
 	}
 	
-	private static void assertEqualSubsets(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper)
-	{
-		//test sorted set interface subsets
-		SortedSet<Integer> subset = set.subSet(lower, upper);
-		SortedSet<Integer> controlSubset = control.subSet(lower, upper);
-		SetTests.assertEqualSets(subset, controlSubset);
-		assertEqualFirstAndLast(subset, controlSubset);
-		
-		//test navigable set interface subsets
-		testSubsetsEqual(set, control, lower, upper, false, false);
-		testSubsetsEqual(set, control, lower, upper, false, true);
-		testSubsetsEqual(set, control, lower, upper, true, false);
-		testSubsetsEqual(set, control, lower, upper, true, true);
-	}
 	
-	public static void testSubsetsEqual(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper, boolean fromInclusive, boolean toInclusive)
-	{
-		NavigableSet<Integer> subset = set.subSet(lower, fromInclusive, upper, toInclusive);
-		NavigableSet<Integer> controlSubset = control.subSet(lower, fromInclusive, upper, toInclusive);
-		SetTests.assertEqualSets(subset, controlSubset);
-		assertEqualFirstAndLast(subset, controlSubset);
-		for (int i=lower-5; i<upper+5; i++) {
-			testSetsReturnSameNeighborhoods(controlSubset, subset, i);
-		}
-	}
 	
 	public static void testPolling(NavigableSet<Integer> set)
 	{
@@ -112,9 +111,8 @@ public class OrderedSetTests {
 		TreeSet<Integer> control = new TreeSet<Integer>();
 		int testSize = 100;
 		SetTests.sequenceAdd(set, control, testSize);
-		for (int i=0; i<testSize; i++) {
-			testSetsReturnSameNeighborhoods(control, set, i);
-		}
+		testSetsReturnSameNeighborhoods(set, control);
+		
 		Random rand = new Random(0);
 		for (int i=0; i<testSize; i++) {
 			int next = rand.nextInt();
@@ -123,44 +121,6 @@ public class OrderedSetTests {
 			testSetsReturnSameNeighborhoods(control, set, next);
 		}
 		System.out.println("OrderedSetTests: testNavigation done.");
-	}
-	
-	
-	private static void testSetsReturnSameNeighborhoods(NavigableSet<Integer> control, NavigableSet<Integer> set, int next)
-	{
-		assertEquals("floor - error at " + next, control.floor(next), set.floor(next));
-		assertEquals("higher - error at " + next, control.higher(next), set.higher(next));
-		assertEquals("ceiling - error at " + next, control.ceiling(next), set.ceiling(next));
-		assertEquals("lower - error at " + next, control.lower(next), set.lower(next));
-	}
-
-	
-	
-	//tests add, contains, remove and size
-	//uses a proven java.util set as golden model
-	public static void randomTestSet(Set<Integer> set)
-	{
-		
-		Set<Integer> controlSet = new HashSet<Integer>();
-		
-		int testSize = 500;
-		int testRange = testSize/5;
-		Random random = new Random(9);
-		
-		for (int i=0; i< testSize; i++) {
-			int nextOperation = random.nextInt(3);
-			int nextNumber = random.nextInt(testRange);
-			if (nextOperation > 0) {
-				controlSet.add(nextNumber);
-				set.add(nextNumber);
-			} else {
-				controlSet.remove(nextNumber);
-				set.remove(nextNumber);
-			}
-		}
-		
-		SetTests.assertEqualSets(set, controlSet);
-		System.out.println("OrderedSetTests: randomTestSet done.");
 	}
 	
 	
@@ -200,5 +160,60 @@ public class OrderedSetTests {
 		}
 	}
 
+	
+	//SUBSETS HELPERS
+	
+	private static void assertEqualSubsets(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper)
+	{
+		//test sorted set interface subsets
+		SortedSet<Integer> subset = set.subSet(lower, upper);
+		SortedSet<Integer> controlSubset = control.subSet(lower, upper);
+		SetTests.assertEqualSets(subset, controlSubset);
+		assertEqualFirstAndLast(subset, controlSubset);
+		
+		//test navigable set interface subsets
+		testSubsetsEqual(set, control, lower, upper, false, false);
+		testSubsetsEqual(set, control, lower, upper, false, true);
+		testSubsetsEqual(set, control, lower, upper, true, false);
+		testSubsetsEqual(set, control, lower, upper, true, true);
+	}
+	
+	private static void testSubsetsEqual(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper, boolean fromInclusive, boolean toInclusive)
+	{
+		NavigableSet<Integer> subset = set.subSet(lower, fromInclusive, upper, toInclusive);
+		NavigableSet<Integer> controlSubset = control.subSet(lower, fromInclusive, upper, toInclusive);
+		assertEqualNavigableSets(subset, controlSubset);
+	}
+	
+	
+	private static void assertEqualSortedSets(SortedSet<Integer> set, SortedSet<Integer> control)
+	{
+		SetTests.assertEqualSets(set, control);
+		assertEqualFirstAndLast(set, control);
+	}
+	
+	private static void assertEqualNavigableSets(NavigableSet<Integer> set, NavigableSet<Integer> control)
+	{
+		assertEqualSortedSets(set, control);
+		testSetsReturnSameNeighborhoods(set, control);
+	}
+	
+	
+	private static void testSetsReturnSameNeighborhoods(NavigableSet<Integer> set, NavigableSet<Integer> control)
+	{
+		if (control.isEmpty() && set.isEmpty()) return;
+		for (int i=control.first()-5; i<control.last()+5; i++) {
+			testSetsReturnSameNeighborhoods(control, set, i);
+		}
+	}
+	
+	
+	private static void testSetsReturnSameNeighborhoods(NavigableSet<Integer> control, NavigableSet<Integer> set, int next)
+	{
+		assertEquals("floor - error at " + next, control.floor(next), set.floor(next));
+		assertEquals("higher - error at " + next, control.higher(next), set.higher(next));
+		assertEquals("ceiling - error at " + next, control.ceiling(next), set.ceiling(next));
+		assertEquals("lower - error at " + next, control.lower(next), set.lower(next));
+	}
 	
 }

@@ -9,6 +9,34 @@ import java.util.Set;
 
 public class SetTests {
 
+	
+	//tests add, contains, remove and size
+	//uses a proven java.util set as golden model
+	public static void randomTestSet(Set<Integer> set)
+	{
+		
+		Set<Integer> controlSet = new HashSet<Integer>();
+		
+		int testSize = 500;
+		int testRange = testSize/5;
+		Random random = new Random(9);
+		
+		for (int i=0; i< testSize; i++) {
+			int nextOperation = random.nextInt(3);
+			int nextNumber = random.nextInt(testRange);
+			if (nextOperation > 0) {
+				controlSet.add(nextNumber);
+				set.add(nextNumber);
+			} else {
+				controlSet.remove(nextNumber);
+				set.remove(nextNumber);
+			}
+		}
+		
+		SetTests.assertEqualSets(set, controlSet);
+		System.out.println("OrderedSetTests: randomTestSet done.");
+	}
+	
 	public static void testSet(Set<Integer> set)
 	{
 		Set<Integer> controlSet = new HashSet<Integer>();//golden model

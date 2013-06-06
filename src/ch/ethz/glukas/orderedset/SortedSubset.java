@@ -15,7 +15,7 @@ import java.util.NavigableSet;
 
 class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 
-	//TODO: Implement unbounded ranges
+	
 	public SortedSubset(RangeSet<T> constitutingSuperset, T lowerbound, T upperbound, boolean fromInclusive, boolean toInclusive)
 	{
 		init(constitutingSuperset, lowerbound, upperbound, fromInclusive, toInclusive);
@@ -53,8 +53,20 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 		return !isBelowRange(e) && !isAboveRange(e);
 	}
 
+	public boolean headIsUnbounded()
+	{
+		return lower == null;
+	}
+	
+	public boolean tailIsUnbounded()
+	{
+		return upper == null;
+	}
+	
 	public boolean isBelowRange(T e)
 	{
+		if (headIsUnbounded()) return false;
+		
 		boolean result;
 		if (fromInclusive) {
 			result = comparator().compare(e, lower) < 0;
@@ -66,6 +78,8 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 	
 	public boolean isAboveRange(T e)
 	{
+		if (tailIsUnbounded()) return false;
+		
 		boolean result;
 		if (toInclusive) {
 			result = comparator().compare(e, upper) > 0;
@@ -254,10 +268,10 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 		return subSet(lower, fromInclusive, toElement, inclusive);
 	}
 
+	
 	@Override
 	public Iterator<T> descendingIterator() {
-		// TODO Auto-generated method stub
-		return null;
+		return descendingSet().iterator();
 	}
 
 	@Override
@@ -287,6 +301,10 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 	public NavigableSet<T> tailSet(T fromElement, boolean inclusive) {
 		return subSet(fromElement, inclusive, upper, toInclusive);
 	}
+	
+	////
+	///HELPERS
+	///
 	
 	
 	///

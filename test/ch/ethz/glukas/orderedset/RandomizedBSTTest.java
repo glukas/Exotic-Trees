@@ -41,6 +41,12 @@ public class RandomizedBSTTest {
 	 }
 	 
 	 @Test
+	 public void testTailsets()
+	 {
+		 OrderedSetTests.testTailSets(new RandomizedBST<Integer>());
+	 }
+	 
+	 @Test
 	 public void testSubsetModification()
 	 {
 		 OrderedSetTests.testSubsetModification(new RandomizedBST<Integer>());
@@ -67,7 +73,7 @@ public class RandomizedBSTTest {
 	 @Test
 	 public void testSetRandomized()
 	 {
-		 OrderedSetTests.randomTestSet(new RandomizedBST<Integer>());
+		 SetTests.randomTestSet(new RandomizedBST<Integer>());
 	 }
 	 
 	 @Test
