@@ -95,21 +95,34 @@ public class SetTests {
 	//HELPERS
 	////
 	
+	public static void sequenceAdd(Set<Integer> set1, int testSize)
+	{
+		sequenceAdd(set1, null, testSize);
+	}
+	
 	public static void sequenceAdd(Set<Integer> set1, Set<Integer> set2, int testSize)
 	{
 		for (int i=0; i<testSize; i++) {
 			set1.add(i);
-			set2.add(i);
+			if (set2 != null) set2.add(i);
 		}
 	}
 	
+	
+	public static void randomAdd(Set<Integer> set, int testSize, int upperbound)
+	{
+		randomAdd(set, null, testSize, upperbound);
+	}
+	
+	
+	//second parameter may be null
 	public static void randomAdd(Set<Integer> set1, Set<Integer> set2, int testSize, int upperbound)
 	{
 		Random rand = new Random(testSize);
 		for (int i=0; i<testSize; i++) {
 			int next = rand.nextInt(upperbound);
 			set1.add(next);
-			set2.add(next);
+			if (set2 != null) set2.add(next);
 		}
 	}
 	

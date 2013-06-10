@@ -121,31 +121,58 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	@Override
 	public T floor(T e) {
 		if (contains(e)) return e;
-		return lower(e);
+		return internalLower(e);
 	}
 	
 
 	@Override
 	public T lower(T e) {
-		Out<T> smaller = new Out<T>();
-		getNeighborhood(e, smaller, null);
-		return smaller.get();
+		if (contains(e)) {
+			int index = indexOf(e);
+			if (!isEmpty() && index > 0) {
+				return get(index-1);
+			} else {
+				return null;
+			}
+		} else {
+			return internalLower(e);
+		}
 	}
 	
 	
 	@Override
 	public T ceiling(T e) {
 		if (contains(e)) return e;
-		return higher(e);
+		return internalHigher(e);
 	}
 
 	@Override
 	public T higher(T e) {
+		if (contains(e)) {
+			int index = indexOf(e);
+			if (index < size()-1) {
+				return get(index+1);
+			} else {
+				return null;
+			}
+		} else {
+			return internalHigher(e);
+		}
+	}
+	
+	private T internalLower(T e)
+	{
+		Out<T> smaller = new Out<T>();
+		getNeighborhood(e, smaller, null);
+		return smaller.get();
+	}
+	
+	private T internalHigher(T e)
+	{
 		Out<T> greater = new Out<T>();
 		getNeighborhood(e, null, greater);
 		return greater.get();
 	}
-	
 	
 	//reverse order
 
@@ -254,7 +281,7 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 	
 	
 	///
-	//RANGE SET / LIST
+	//RANGE SET
 	///
 	
 	/**
@@ -351,7 +378,6 @@ public class RandomizedBST<T> extends BinarySearchTree<T> implements NavigableSe
 		}
 	}
 
-	
 	
 	public ListIterator<T> listIterator()
 	{
