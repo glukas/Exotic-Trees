@@ -40,7 +40,7 @@ public class ImmutableOrderedSet {
 	}
 	
 	
-	//T(K^2) = KT(K) + O(1)
+	//T(K^2) = KT(K) + O(1) = O(logK)
 	//returns the index of the leaf the search ended in (with respect to the given subtree at rootIndex of size numberOfNodes(rank)
 	//the value of this leaf is put into 'foundvalue'
 	private int find(int value, int rootIndex, int rank)
@@ -69,7 +69,14 @@ public class ImmutableOrderedSet {
 		return (bottomTreeIndex*numberOfLeaves(subrank))+bottomFoundIndex;
 	}
 
-	//T(K^2) = KT(K) + O(K)
+	
+	//T(K^2) = KT(K) + O(K) = O(K^2)
+	//proof: assume P(K^2): T(K^2)<=c1*K^2-c2
+	//we know T(K^2) = KT(K) + c0*K and T(1) = c3
+	//P(1) holds for c1-c2>=c3
+	//P(k^2) implies P(k^4):
+	//T(k^4) = K^2T(k^2)+c0K <= K^2(c1K^2-c2)-c0*K = c1*K^4-c2*K^2+c0*K = c1*K^4-c2-(c2+c2*K^2-c0*K) <= c1*K^4-c2 for c2<=c0, k>=1
+	
 	//returns the minimum value in the subtree
 	//lower denotes the first value of the minimumSubtreeValues array that are relevant for the current step
 	//the end of the relevant part is implicit in the rank of the current subtree
@@ -131,7 +138,7 @@ public class ImmutableOrderedSet {
 	
 	
 	//a base case of this size is needed for performance reasons
-	//a binary search is performed
+	//a two level search is performed
 	private int baseCase16Find(int value, int rootIndex)
 	{
 		int current = rootIndex+3;
