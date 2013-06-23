@@ -63,7 +63,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 
 	@Override
 	public Iterator<T> iterator() {
-		return new BinarySearchTreeIterator<T>(metaRoot.getLeftChild());
+		return new BinarySearchTreeIterator<T>(metaRoot.leftChild);
 	}
 	
 	
@@ -81,14 +81,14 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	public T first() {
 		if (isEmpty()) throw new NoSuchElementException();
 		TreeNode<T> node = findFirst(getRoot());
-		return node.getValue();
+		return node.value;
 	}
 	
 	
 	public T last() {
 		if (isEmpty()) throw new NoSuchElementException();
 		TreeNode<T> node = findLast(getRoot());
-		return node.getValue();
+		return node.value;
 	}
 	
 	//TODO : comparator should return null if instantiated using the natural ordering?
@@ -103,13 +103,13 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 	protected void treeRotateLeft(TreeNode<T> child, TreeNode<T> parent)
 	{
-		parent.setRightChild(child.getLeftChild());
+		parent.setRightChild(child.leftChild);
 		child.setLeftChild(parent);
 	}
 	
 	protected void treeRotateRight(TreeNode<T> child, TreeNode<T> parent)
 	{
-		parent.setLeftChild(child.getRightChild());
+		parent.setLeftChild(child.rightChild);
 		child.setRightChild(parent);
 	}
 	
@@ -119,16 +119,16 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		assert parent != grandmother;
 		
 		grandmother.replaceChild(parent, child);
-		if (parent.getLeftChild() == child) {
+		if (parent.leftChild == child) {
 			treeRotateRight(child, parent);
 		} else {
-			assert parent.getRightChild() == child;
+			assert parent.rightChild == child;
 			treeRotateLeft(child, parent);
 		}
 		
-		assert child.getLeftChild() != child.getRightChild();
-		assert grandmother.getLeftChild() == child || grandmother.getRightChild() == child;
-		assert child.getLeftChild() == parent || child.getRightChild() == parent;
+		assert child.leftChild != child.rightChild;
+		assert grandmother.leftChild == child || grandmother.rightChild == child;
+		assert child.leftChild == parent || child.rightChild == parent;
 	}
 	
 	
@@ -151,8 +151,8 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	 */
 	protected TreeNode<T> findFirst(TreeNode<T> node)
 	{
-		while (node.getLeftChild() != null) {
-			node = node.getLeftChild();
+		while (node.leftChild != null) {
+			node = node.leftChild;
 		}
 		return node;
 	}
@@ -163,8 +163,8 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	 */
 	protected TreeNode<T> findLast(TreeNode<T> node)
 	{
-		while (node.getRightChild() != null) {
-			node = node.getRightChild();
+		while (node.rightChild != null) {
+			node = node.rightChild;
 		}
 		return node;
 	}
@@ -187,11 +187,11 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	{
 		int comparison = -1;
 		while (currentNode != null) {
-			comparison = compareValues(valueToFind, currentNode.getValue());
+			comparison = compareValues(valueToFind, currentNode.value);
 			if (comparison < 0) {
-				currentNode = currentNode.getLeftChild();
+				currentNode = currentNode.leftChild;
 			} else if (comparison > 0) {
-				currentNode = currentNode.getRightChild();
+				currentNode = currentNode.rightChild;
 			} else {
 				break;
 			}
@@ -203,9 +203,9 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	//result contains 2 elements: the successors parent at 0 and the successor at 1
 	protected Buffer<TreeNode<T>> findSuccessor(TreeNode<T> node)
 	{
-		assert node.getRightChild() != null;
+		assert node.rightChild != null;
 		
-		Buffer<TreeNode<T>> trace = traceNodeWithValueStartingFrom(node.getRightChild(), node.getValue(), 2);
+		Buffer<TreeNode<T>> trace = traceNodeWithValueStartingFrom(node.rightChild, node.value, 2);
 		if (trace.numberOfUsedSlots() == 1) {//if the successor is the immediate right child, the node will need to be added to the trace
 			TreeNode<T> successor = trace.get(0);
 			trace.add(node);
@@ -229,11 +229,11 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		while (currentNode != null) {
 			trace.add(currentNode);
 			
-			comparison = compareValues(valueToFind, currentNode.getValue());
+			comparison = compareValues(valueToFind, currentNode.value);
 			if (comparison < 0) {
-				currentNode = currentNode.getLeftChild();
+				currentNode = currentNode.leftChild;
 			} else if (comparison > 0) {
-				currentNode = currentNode.getRightChild();
+				currentNode = currentNode.rightChild;
 			} else {
 				break;
 			}
@@ -251,11 +251,11 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		int comparison = -1;
 		while (currentNode != null) {
 			trace.add(currentNode);
-			comparison = compareValues(valueToFind, currentNode.getValue());
+			comparison = compareValues(valueToFind, currentNode.value);
 			if (comparison < 0) {
-				currentNode = currentNode.getLeftChild();
+				currentNode = currentNode.leftChild;
 			} else if (comparison > 0) {
-				currentNode = currentNode.getRightChild();
+				currentNode = currentNode.rightChild;
 			} else {
 				break;
 			}
@@ -280,25 +280,25 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		}
 		
 		
-		int comparison = compareValues(value, r.getValue());
+		int comparison = compareValues(value, r.value);
 		
 		TreeNode<T> equal = null;
 		
 		if (comparison < 0) {
 			
-			equal = split(value, r.getLeftChild(), less, greater);
+			equal = split(value, r.leftChild, less, greater);
 			r.setLeftChild(greater.get());
 			greater.set(r);
 			
 		} else if (comparison > 0) {
-			equal = split(value, r.getRightChild(), less, greater);
+			equal = split(value, r.rightChild, less, greater);
 			r.setRightChild(less.get());
 			less.set(r);
 			
 		} else {//base case 2
 			equal = r;
-			less.set(r.getLeftChild());
-			greater.set(r.getRightChild());
+			less.set(r.leftChild);
+			greater.set(r.rightChild);
 		}
 		
 		
@@ -316,12 +316,12 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	protected T valueOrNull(TreeNode<T> node)
 	{
 		if (node == null) return null;
-		return node.getValue();
+		return node.value;
 	}
 	
 	protected TreeNode<T> getRoot()
 	{
-		return metaRoot.getLeftChild();
+		return metaRoot.leftChild;
 	}
 	
 	protected void setRoot(TreeNode<T> root)
@@ -341,7 +341,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 	
 	protected int compareValues(TreeNode<T> n1, TreeNode<T> n2) {
-		return compareValues(n1.getValue(), n2.getValue());
+		return compareValues(n1.value, n2.value);
 	}
 	
 	//swaps the elements at index1 and index2 of a list
@@ -360,7 +360,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	protected boolean descendantsAreSmaller(TreeNode<T> node, T value)
 	{
 		if (value == null || node == null) return true;
-		boolean result = compareValues(node.getValue(), value) < 0 && descendantsAreSmaller(node.getLeftChild(), value) && descendantsAreSmaller(node.getRightChild(), value);
+		boolean result = compareValues(node.value, value) < 0 && descendantsAreSmaller(node.leftChild, value) && descendantsAreSmaller(node.rightChild, value);
 		assert result;//fail fast
 		return result;
 	}
@@ -368,7 +368,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	protected boolean descendantsAreGreater(TreeNode<T> node, T value)
 	{
 		if (value == null || node == null) return true;
-		boolean result = compareValues(node.getValue(), value) > 0 && descendantsAreGreater(node.getLeftChild(), value) && descendantsAreGreater(node.getRightChild(), value);
+		boolean result = compareValues(node.value, value) > 0 && descendantsAreGreater(node.leftChild, value) && descendantsAreGreater(node.rightChild, value);
 		assert result;//fail fast
 		return result;
 	}
@@ -379,12 +379,12 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		
 		
 		boolean result = true;
-		if (node.getLeftChild() != null) {
-			result = result && compareValues(node.getLeftChild(), node) < 0 && isInOrder(node.getLeftChild());
+		if (node.leftChild != null) {
+			result = result && compareValues(node.leftChild, node) < 0 && isInOrder(node.leftChild);
 			assert result;
 		}
-		if (node.getRightChild() != null) {
-			result = result && compareValues(node.getRightChild(), node) > 0 && isInOrder(node.getRightChild());
+		if (node.rightChild != null) {
+			result = result && compareValues(node.rightChild, node) > 0 && isInOrder(node.rightChild);
 			assert result;
 		}
 		return result;
@@ -407,7 +407,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	protected int exhaustiveCount(TreeNode<T> node)
 	{
 		if (node == null) return 0;
-		return exhaustiveCount(node.getLeftChild()) + exhaustiveCount(node.getRightChild()) + 1;
+		return exhaustiveCount(node.leftChild) + exhaustiveCount(node.rightChild) + 1;
 	}
 	
 	

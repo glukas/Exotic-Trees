@@ -195,7 +195,6 @@ public class SplayTree<E> extends BinarySearchTree <E> {
 		//perform zig-zig and zig-zags
 		int current = trace.size()-1;
 		
-		
 		for (; current >= 3; current-=2) {
 
 			TreeNode<E>	parent = trace.get(current-1);
