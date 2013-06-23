@@ -215,10 +215,13 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	}
 	
 	
+	//Every call to this method invalidates all previous traces
+	//TODO: this is potentially dangerous
 	protected ArrayList<TreeNode<T>> traceNodeWithValueStartingFrom(TreeNode<T> startingNode, T valueToFind)
 	{
-		ArrayList<TreeNode<T>> trace = new ArrayList<TreeNode<T>>();
-
+		//ArrayList<TreeNode<T>> trace = new ArrayList<TreeNode<T>>();
+		ArrayList<TreeNode<T>> trace = reusableTrace;
+		trace.clear();
 		TreeNode<T> currentNode = startingNode;
 		
 		int comparison = -1;
@@ -414,7 +417,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 
 	
-
+	private ArrayList<TreeNode<T>> reusableTrace = new ArrayList<TreeNode<T>>();
 	private Comparator<? super T> internalComparator;
 	protected TreeNode<T> metaRoot;
 }

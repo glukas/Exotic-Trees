@@ -121,8 +121,8 @@ class TreeNode<T> {
 	//INSTANCE VARIABLES
 	/////
 	
-	private TreeNode<T>leftChild;
-	private TreeNode<T>rightChild;
+	TreeNode<T>leftChild;
+	TreeNode<T>rightChild;
 	
-	private T value;
+	T value;
 }

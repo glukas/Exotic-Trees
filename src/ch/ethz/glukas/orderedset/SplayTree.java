@@ -27,7 +27,7 @@ public class SplayTree<E> extends BinarySearchTree <E> {
 			
 			//do the insertion
 			TreeNode<E> node = new TreeNode<E>(val);
-			TreeNode<E> tail = splitOffTail(val);
+			TreeNode<E> tail = splitOffTail(val, false);//we just splayed, no need to splay again
 			node.setRightChild(tail);
 			node.setLeftChild(getRoot());
 			setRoot(node);
@@ -53,10 +53,10 @@ public class SplayTree<E> extends BinarySearchTree <E> {
 		boolean modified = false;
 		if (tail != null) {
 				//the values is greater than any value in the tree. do nothing
-			 if (compareValues(tail.getValue(), value) == 0) {
-				assert tail.getLeftChild() == null;
+			 if (compareValues(tail.value, value) == 0) {
+				assert tail.leftChild == null;
 				
-				joinIn(tail.getRightChild());
+				joinIn(tail.rightChild);
 				modified = true;
 				decrementCount();
 			} else {
@@ -98,7 +98,7 @@ public class SplayTree<E> extends BinarySearchTree <E> {
 		if (isEmpty()) return false;
 		//splaying moves an element to the root of the tree
 		splay(val);
-		return compareValues(val, getRoot().getValue()) == 0;
+		return compareValues(val, getRoot().value) == 0;
 	}
 	
 	
@@ -131,42 +131,48 @@ public class SplayTree<E> extends BinarySearchTree <E> {
 		assert compareValues(findLast(getRoot()), findFirst(r)) < 0;
 		
 		TreeNode<E> largest = findLast(getRoot());
-		splay(largest.getValue());
+		splay(largest.value);
 		//since the largest element is now at the root, its right child is null
-		assert getRoot().getRightChild() == null;
+		assert getRoot().rightChild == null;
 
 		getRoot().setRightChild(r);
+		
 		assert checkInvariants();
 	}
 	
+	protected TreeNode<E> splitOffTail(E val)
+	{
+		return splitOffTail(val, true);
+	}
 	//returns the root of the subtree containg values greater than or equal to val and removes it from this tree
 	//if val is contained in the tree, it will be the root of the result
-	protected TreeNode<E> splitOffTail(E val)
+	protected TreeNode<E> splitOffTail(E val, boolean shouldSplay)
 	{
 		assert sizeIsConsistent();
 		if (isEmpty()) return null;
-		int countBefore = size();
+		//int countBefore = size();
 		
 		TreeNode<E> result;
-
-		splay(val);
+		if (shouldSplay) {
+			splay(val);
+		}
 		
 		//if the value is not contained in the tree, it is not clear if the root is now bigger or smaller than 'val'
 		//we need to handle those cases seperately
-		if (compareValues(getRoot().getValue(), val) >= 0) {
+		if (compareValues(getRoot().value, val) >= 0) {
 			result = getRoot();
-			setRoot(getRoot().getLeftChild());
+			setRoot(getRoot().leftChild);
 			result.setLeftChild(null);
 		} else {
-			result = getRoot().getRightChild();
+			result = getRoot().rightChild;
 			getRoot().setRightChild(null);
 		}
 
 		assert getRoot() != result;
 		assert getRoot() == null || compareValues(last(), val) < 0;//the remaining values are smaller
-		assert result == null || compareValues(findFirst(result).getValue(), val) >= 0;//the resulting values are larger
-		assert result == null || (countBefore -= exhaustiveCount(result)) > -1;
-		assert getRoot() == null || (countBefore -= exhaustiveCount(getRoot())) == 0; 
+		assert result == null || compareValues(findFirst(result).value, val) >= 0;//the resulting values are larger
+		//assert result == null || (countBefore -= exhaustiveCount(result)) > -1;
+		//assert getRoot() == null || (countBefore -= exhaustiveCount(getRoot())) == 0; 
 		return result;
 	}
 	
@@ -188,6 +194,7 @@ public class SplayTree<E> extends BinarySearchTree <E> {
 		
 		//perform zig-zig and zig-zags
 		int current = trace.size()-1;
+		
 		
 		for (; current >= 3; current-=2) {
 
@@ -229,70 +236,90 @@ public class SplayTree<E> extends BinarySearchTree <E> {
 		assert checkInvariants();
 	}
 	
+	
 	//double rotation: brings up the current and sets its parent and grandparent as children
+	
+	//        z                  x
+	//     x      --->        y    z
+	//        y
 	private void zigZag(TreeNode<E> x, TreeNode<E> y, TreeNode<E> z, TreeNode<E> ggp)
 	{
-		assert z.getLeftChild() == y;
-		assert y.getRightChild() == x;
+		assert z.leftChild == y;
+		assert y.rightChild == x;
 		
 		ggp.replaceChild(z, x);
-		y.setRightChild(x.getLeftChild());
-		z.setLeftChild(x.getRightChild());
+		y.setRightChild(x.leftChild);
+		z.setLeftChild(x.rightChild);
 		x.setLeftChild(y);
 		x.setRightChild(z);
 		
-		assert x.getLeftChild() == y;
-		assert x.getRightChild() == z;
+		assert x.leftChild == y;
+		assert x.rightChild == z;
 	}
 	
+	
 	//symmetric to zigZag
+	
+	//     z                    x
+	//        x  --->        z     y
+	//     y
 	private void zagZig(TreeNode<E> x, TreeNode<E> y, TreeNode<E> z, TreeNode<E> ggp)
 	{
-		assert z.getRightChild() == y;
-		assert y.getLeftChild() == x;
+		assert z.rightChild == y;
+		assert y.leftChild == x;
 		
 		ggp.replaceChild(z, x);
-		y.setLeftChild(x.getRightChild());
-		z.setRightChild(x.getLeftChild());
+		y.setLeftChild(x.rightChild);
+		z.setRightChild(x.leftChild);
 		x.setRightChild(y);
 		x.setLeftChild(z);
 
-		assert x.getRightChild() == y;
-		assert x.getLeftChild() == z;
+		assert x.rightChild == y;
+		assert x.leftChild == z;
 	}
 	
 	
+	//Two rotations leftwards:
+	
+	//	z                   x
+	//    y    --->       y
+	//      x           z
 	private void zigZigLeftwards(TreeNode<E> x, TreeNode<E> y, TreeNode<E> z, TreeNode<E> ggp)
 	{
-		assert z.getRightChild() == y;
-		assert y.getRightChild() == x;
+		assert z.rightChild == y;
+		assert y.rightChild == x;
 		
 		ggp.replaceChild(z, x);
-		y.setRightChild(x.getLeftChild());
+		y.setRightChild(x.leftChild);
 		x.setLeftChild(y);
-		z.setRightChild(y.getLeftChild());
+		z.setRightChild(y.leftChild);
 		y.setLeftChild(z);
 		
-		assert x.getLeftChild() == y;
-		assert y.getLeftChild() == z;
+		assert x.leftChild == y;
+		assert y.leftChild == z;
 	}
 	
+	//two rotations rightwards:
+	
+	//      z         x
+	//    y    --->     y
+	//  x                 z
 	private void zigZigRightwards(TreeNode<E> x, TreeNode<E> y, TreeNode<E> z, TreeNode<E> ggp)
 	{
-		assert z.getLeftChild() == y;
-		assert y.getLeftChild() == x;
+		assert z.leftChild == y;
+		assert y.leftChild == x;
 		
 		ggp.replaceChild(z, x);
-		y.setLeftChild(x.getRightChild());
+		y.setLeftChild(x.rightChild);
 		x.setRightChild(y);
-		z.setLeftChild(y.getRightChild());
+		z.setLeftChild(y.rightChild);
 		y.setRightChild(z);
 		
-		assert x.getRightChild() == y;
-		assert y.getRightChild() == z;
+		assert x.rightChild == y;
+		assert y.rightChild == z;
 	}
 	
-	
+	//single rotation 'upwards'
 	private void zig(TreeNode<E> child, TreeNode<E> parent, TreeNode<E> grandparent)
 	{
 		treeRotateUp(child, parent, grandparent);
@@ -303,10 +330,10 @@ public class SplayTree<E> extends BinarySearchTree <E> {
 	//returns 0 if left child, 1 if right child
 	private int childDirection(TreeNode<E> child, TreeNode<E> parent)
 	{
-		if (parent.getLeftChild() == child) {
+		if (parent.leftChild == child) {
 			return 0;
 		} else {
-			assert parent.getRightChild() == child;
+			assert parent.rightChild == child;
 			return 1;
 		}
 	}
@@ -320,7 +347,7 @@ public class SplayTree<E> extends BinarySearchTree <E> {
 	{
 		boolean isInOrder =  isInOrder();
 		assert isInOrder;
-		assert metaRoot.getRightChild() == null;
+		assert metaRoot.rightChild == null;
 		return isInOrder;
 	}
 	
@@ -328,9 +355,9 @@ public class SplayTree<E> extends BinarySearchTree <E> {
 	protected boolean treeIsSplayedAroundValue(TreeNode<E> root, E val)
 	{
 		if (root == null) return true;
-		boolean leftsmaller =  root.getLeftChild() == null || compareValues(val, findLast(root.getLeftChild()).getValue()) > 0;
+		boolean leftsmaller =  root.leftChild == null || compareValues(val, findLast(root.leftChild).value) > 0;
 		assert leftsmaller;
-		boolean rightsmaller = root.getRightChild() == null || compareValues(val, findFirst(root.getRightChild()).getValue()) < 0;
+		boolean rightsmaller = root.rightChild == null || compareValues(val, findFirst(root.rightChild).value) < 0;
 		assert rightsmaller;
 		return leftsmaller && rightsmaller;
 	}

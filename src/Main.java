@@ -27,14 +27,13 @@ class Main {
 		SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);
 		
 		int performanceTestSize = 1000000;
-		//performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
-		
-		performanceTestRepeatedAccess(new TreeSet<Integer>(), performanceTestSize);
+		performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
+		//performanceTestRepeatedAccess(new TreeSet<Integer>(), performanceTestSize);
 		performanceTestRepeatedAccess(new SplayTree<Integer>(), performanceTestSize);
+		
 		//testImmutableSet();
 		//performanceTestImmutableSet();
 		
-		//
 		//performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
 		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
 		
@@ -145,8 +144,11 @@ class Main {
 		
 		Date start = new Date();
 		for (int i=0; i<testSize; i++) {
-			for (int j=0; j<50; j++) {
+			for (int j=0; j<30; j++) {
 				set.contains(i);
+			}
+			for (int j=0; j<10; j++) {
+				set.contains(i-1);
 			}
 		}
 		Date end = new Date();
