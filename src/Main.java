@@ -23,10 +23,18 @@ class Main {
 		OrderedSetTests.testSubsets(new RandomizedBST<Integer>());
 		*/
 		
-		testImmutableSet();
-		performanceTestImmutableSet();
+		SetTests.testSet(new SplayTree<Integer>());
+		SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);
 		
-		//int performanceTestSize = 1000000;
+		int performanceTestSize = 1000000;
+		//performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
+		
+		performanceTestRepeatedAccess(new TreeSet<Integer>(), performanceTestSize);
+		performanceTestRepeatedAccess(new SplayTree<Integer>(), performanceTestSize);
+		//testImmutableSet();
+		//performanceTestImmutableSet();
+		
+		//
 		//performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
 		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
 		
@@ -100,7 +108,7 @@ class Main {
 	static void performanceTestSet(Set<Integer> set, int testSize)
 	{
 		int testRange = testSize/5;
-		Random random = new Random();
+		Random random = new Random(2);
 		Date start = new Date();
 		
 		
@@ -128,6 +136,21 @@ class Main {
 		}
 		Date end = new Date();
 		System.out.println("randomized performance test set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+	}
+
+	
+	static void performanceTestRepeatedAccess(Set<Integer> set, int testSize)
+	{
+		SetTests.sequenceAdd(set, testSize);
+		
+		Date start = new Date();
+		for (int i=0; i<testSize; i++) {
+			for (int j=0; j<50; j++) {
+				set.contains(i);
+			}
+		}
+		Date end = new Date();
+		System.out.println("performance test repeated access set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 	}
 	
 	static void performanceTestNavigableSet(NavigableSet<Integer> set, int testSize)

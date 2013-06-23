@@ -3,6 +3,7 @@ package ch.ethz.glukas.orderedset;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -69,6 +70,25 @@ public class SetTests {
 		
 		assertTrue (set.size() == 0) ;
 		System.out.println("SetTests: testSet done.");
+	}
+	
+	public static void randomizedTestSet(Set<Integer> set, int testSize)
+	{
+		int testRange = testSize/5;
+		Random random = new Random(2);
+		Set<Integer> control = new HashSet<Integer>();//golden model
+		
+		for (int i=0; i< testSize; i++) {
+			int nextOperation = random.nextInt(10);
+			int nextNumber = random.nextInt(testRange);
+			if (nextOperation < 5) {
+				assert(set.add(nextNumber) == control.add(nextNumber));
+			} else if (nextOperation < 7) {
+				assert(set.remove(nextNumber) == control.remove(nextNumber));
+			} else {
+				assert(set.contains(nextNumber) == control.contains(nextNumber));
+			}
+		}
 	}
 
 	//basic test that can be used for early implementation testing

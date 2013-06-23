@@ -437,13 +437,7 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 		return min;
 	}
 	
-	private <S> void swap(List<S> list, int index1, int index2)
-	{
-		S temp = list.get(index1);
-		list.set(index1, list.get(index2));
-		list.set(index2, temp);
-	}
-	
+
 	
 	private int getPriorityForNode(TreeNode<T> node)
 	{
@@ -453,6 +447,7 @@ public class Treap<T> extends BinarySearchTree<T> implements SortedSet<T>{
 	
 	private int getPriorityForValue(T value)
 	{
+		//use a random polynomial of the hashcode to get a priority
 		int c = value.hashCode();
 		int cc = c*c;
 		//int ccc = cc*c;

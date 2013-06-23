@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -23,7 +24,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 	///
 	//CONSTRUCTION
-	//clear() is guaranteed to be called by the constructors and can be used for initialization
+	//clear() is guaranteed to be called by the constructors
 	///
 	
 	protected BinarySearchTree(Comparator<? super T> comparator)
@@ -90,7 +91,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		return node.getValue();
 	}
 	
-	//TODO : comparator should return null if instanciated using the natural ordering?
+	//TODO : comparator should return null if instantiated using the natural ordering?
 	public Comparator<? super T> comparator() {
 		return internalComparator;
 	}
@@ -322,6 +323,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 	protected void setRoot(TreeNode<T> root)
 	{
+		assert isInOrder(root);
 		metaRoot.setLeftChild(root);
 	}
 	
@@ -338,6 +340,15 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	protected int compareValues(TreeNode<T> n1, TreeNode<T> n2) {
 		return compareValues(n1.getValue(), n2.getValue());
 	}
+	
+	//swaps the elements at index1 and index2 of a list
+	protected <S> void swap(List<S> list, int index1, int index2)
+	{
+		S temp = list.get(index1);
+		list.set(index1, list.get(index2));
+		list.set(index2, temp);
+	}
+	
 	
 	///
 	//INVARIANTS & ASSERTIONS
@@ -379,6 +390,21 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	protected boolean isInOrder()
 	{
 		return isInOrder(getRoot());
+	}
+
+	
+	protected boolean sizeIsConsistent()
+	{
+		int actualSize = exhaustiveCount(getRoot());
+		boolean result = size() == actualSize;
+		assert result;
+		return result;
+	}
+	
+	protected int exhaustiveCount(TreeNode<T> node)
+	{
+		if (node == null) return 0;
+		return exhaustiveCount(node.getLeftChild()) + exhaustiveCount(node.getRightChild()) + 1;
 	}
 	
 	
