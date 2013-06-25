@@ -27,7 +27,7 @@ class Main {
 		SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);
 		
 		int performanceTestSize = 1000000;
-		performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
+		/*performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
 		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
 		performanceTestRepeatedAccess(new SplayTree<Integer>(), performanceTestSize);
 		performanceTestRepeatedAccess(new TreeSet<Integer>(), performanceTestSize);
@@ -39,7 +39,7 @@ class Main {
 		//performanceTestNavigableSet(new RandomizedBST<Integer>(), performanceTestSize);
 		performanceTestNavigableSet(new SplayTree<Integer>(), performanceTestSize);
 		performanceTestNavigableSet(new TreeSet<Integer>(), performanceTestSize);
-		
+		*/
 		
 		//performanceTestSet(new Treap<Integer>(), performanceTestSize);
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);

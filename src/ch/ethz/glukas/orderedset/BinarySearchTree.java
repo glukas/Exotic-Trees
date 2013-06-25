@@ -80,15 +80,13 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 	public T first() {
 		if (isEmpty()) throw new NoSuchElementException();
-		TreeNode<T> node = findFirst(getRoot());
-		return node.getValue();
+		return internalFirst(getRoot());
 	}
 	
 	
 	public T last() {
 		if (isEmpty()) throw new NoSuchElementException();
-		TreeNode<T> node = findLast(getRoot());
-		return node.getValue();
+		return internalLast(getRoot());
 	}
 	
 	//TODO : comparator should return null if instantiated using the natural ordering?
@@ -101,16 +99,12 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	//IMPLEMENTATION :: TREE ROTATIONS
 	/////
 	
-	protected void treeRotateLeft(TreeNode<T> child, TreeNode<T> parent)
+	protected void treeRotate(TreeNode<T> child, TreeNode<T> parent, int parity)
 	{
-		parent.setRightChild(child.getLeftChild());
-		child.setLeftChild(parent);
-	}
-	
-	protected void treeRotateRight(TreeNode<T> child, TreeNode<T> parent)
-	{
-		parent.setLeftChild(child.getRightChild());
-		child.setRightChild(parent);
+		assert parent.childDirection(child) == parity;
+		
+		parent.setChild(parity, child.getChild(-parity));
+		child.setChild(-parity, parent);
 	}
 	
 	protected void treeRotateUp(TreeNode<T> child, TreeNode<T> parent, TreeNode<T> grandmother)
@@ -119,12 +113,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		assert parent != grandmother;
 		
 		grandmother.replaceChild(parent, child);
-		if (parent.getLeftChild() == child) {
-			treeRotateRight(child, parent);
-		} else {
-			assert parent.getRightChild() == child;
-			treeRotateLeft(child, parent);
-		}
+		treeRotate(child, parent, parent.childDirection(child));
 		
 		assert child.getLeftChild() != child.getRightChild();
 		assert grandmother.getLeftChild() == child || grandmother.getRightChild() == child;
@@ -143,6 +132,20 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	protected boolean internalContains(T value)
 	{
 		return findNodeWithValueStartingFrom(metaRoot, value) != null;
+	}
+	
+	//nullsafe: if node==null, returns null
+	protected T internalLast(TreeNode<T> node)
+	{
+		if (node == null) return null;
+		return findLast(node).getValue();
+	}
+	
+	//nullsafe: if node==null, returns null
+	protected T internalFirst(TreeNode<T> node)
+	{
+		if (node == null) return null;
+		return findFirst(node).getValue();
 	}
 	
 	/**
@@ -168,6 +171,18 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		}
 		return node;
 	}
+	
+	protected TreeNode<T> successor(TreeNode<T> node)
+	{
+		return findFirst(node.getRightChild());
+	}
+	
+	protected TreeNode<T> predecessor(TreeNode<T> node)
+	{
+		return findLast(node.getLeftChild());
+	}
+	
+	
 	
 	
 	//the first element of the list is always the metaRoot
@@ -334,14 +349,18 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	}
 	
 	protected int compareValues(T v, TreeNode<T> n) {
+		if (n == null) return -1;
 		return compareValues(v, n.getValue());
 	}
 	
 	protected int compareValues(TreeNode<T> n, T v) {
+		if (n == null) return +1;
 		return compareValues(n.getValue(), v);
 	}
 	
 	protected int compareValues(TreeNode<T> n1, TreeNode<T> n2) {
+		if (n2 == null) return -1;
+		if (n1 == null) return +1;
 		return compareValues(n1.getValue(), n2.getValue());
 	}
 	

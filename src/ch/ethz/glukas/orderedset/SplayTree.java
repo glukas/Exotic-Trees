@@ -25,29 +25,13 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 		boolean modified = false;
 		
 		TreeNode<E> tail = splitOffTail(val);
-		if (tail == null || compareValues(tail, val) != 0) {
+		if (compareValues(tail, val) != 0) {//if tail is null, the comparison will return +1
 			tail = prepend(tail, val);
 			modified = true;
 			count++;
 		}
 		tail.setLeftChild(getRoot());
 		setRoot(tail);
-		
-		/*equivalently:
-		if (!internalContains(val)) {
-		//we assume that the tree is splayed around val by the internalContains call
-		assert treeIsSplayedAroundValue(getRoot(), val);
-		
-		//do the insertion
-		TreeNode<E> node = new TreeNode<E>(val);
-		TreeNode<E> tail = splitOffTail(val, false);//we just splayed, no need to splay again
-		node.setRightChild(tail);
-		node.setLeftChild(getRoot());
-		setRoot(node);
-		
-		incrementCount();
-		modified = true;
-		}*/
 		
 		assert sizeIsConsistent();
 		assert contains(val);
@@ -73,17 +57,15 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 		
 		TreeNode<E> tail = splitOffTail(value);
 		
-		if (tail != null) {
-			if (compareValues(tail, value) == 0) {
-				assert tail.getLeftChild() == null;
-				//the root of the tail has 'val' at the root. cut it off by not joining it back in.
-				tail = tail.getRightChild();
-				modified = true;
-				count--;
-			}
-			//reassemble
-			joinIn(tail);
+		if (compareValues(tail, value) == 0) {//if tail is null, the comparison will return +1
+			assert tail.getLeftChild() == null;
+			//the root of the tail has 'val' at the root. cut it off by not joining it back in.
+			tail = tail.getRightChild();
+			modified = true;
+			count--;
 		}
+		//reassemble
+		joinIn(tail);
 		
 		assert sizeIsConsistent();
 		assert checkInvariants();
@@ -219,9 +201,7 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 		E result = null;
 		if (!inclusive && compareValues(tail, value) == 0) {//the value might be part of the tail, but not wanted
 			assert tail.getLeftChild() == null;
-			if (tail.getRightChild() != null) {
-				result = findFirst(tail.getRightChild()).getValue();
-			}
+			result = internalFirst(tail.getRightChild());
 		} else {
 			result = tail.getValue();
 		}
@@ -235,10 +215,10 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 		E result = null;
 		
 		TreeNode<E> tail = splitOffTail(value);
-		if (inclusive && tail != null && compareValues(tail, value) == 0) {//the value, if present is always part of the tail
+		if (inclusive && compareValues(tail, value) == 0) {//the value, if present is always part of the tail
 			result = tail.getValue();
-		} else if (getRoot()!= null) {
-			result = last();
+		} else {
+			result = internalLast(getRoot());
 		}
 		joinIn(tail);//reassmble
 		
@@ -262,11 +242,13 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 			return;
 		}
 		
+		assert isInOrder(r);
 		assert compareValues(findLast(getRoot()), findFirst(r)) < 0;
+		
 		splay(last());
+		
 		//since the largest element is now at the root, its right child is null
 		assert getRoot().getRightChild() == null;
-
 		getRoot().setRightChild(r);
 		
 		assert checkInvariants();
@@ -353,8 +335,8 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 			//if the direction sum is 3 the current and parent are both right children of their parents
 			zigZig(current, parent, grandparent, grandgrandparent, directionSum);
 		} else {
-			//if the direction sum is 1, the current node is the left child of its parent and the parent is the right child of the grandparent
-			//if the direction sum is -1, the current node is the right child of its parent and the parent is the left child of the grandparent
+			//if the direction sum is -1, the current node is the left child of its parent and the parent is the right child of the grandparent
+			//if the direction sum is 1, the current node is the right child of its parent and the parent is the left child of the grandparent
 			zigZag(current, parent, grandparent, grandgrandparent, directionSum);
 		}
 	}
@@ -429,7 +411,7 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 	
 	private boolean checkInvariants()
 	{
-		boolean isInOrder =  isInOrder();
+		boolean isInOrder = isInOrder();
 		assert isInOrder;
 		assert metaRoot.getRightChild() == null;
 		return isInOrder;
@@ -439,9 +421,9 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 	protected boolean treeIsSplayedAroundValue(TreeNode<E> root, E val)
 	{
 		if (root == null) return true;
-		boolean leftsmaller =  root.getLeftChild() == null || compareValues(val, findLast(root.getLeftChild())) > 0;
+		boolean leftsmaller =  root.getLeftChild() == null || compareValues(val, predecessor(root)) > 0;
 		assert leftsmaller;
-		boolean rightsmaller = root.getRightChild() == null || compareValues(val, findFirst(root.getRightChild())) < 0;
+		boolean rightsmaller = root.getRightChild() == null || compareValues(val, successor(root)) < 0;
 		assert rightsmaller;
 		return leftsmaller && rightsmaller;
 	}
