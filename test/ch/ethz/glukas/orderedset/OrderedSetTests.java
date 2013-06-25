@@ -149,7 +149,9 @@ public class OrderedSetTests {
 		SetTests.assertEqualSets(set, controlSet);
 		System.out.println("OrderedSetTests: testSortedSet done.");
 	}
+
 	
+	//SUBSETS HELPERS
 	
 	public static void assertEqualFirstAndLast(SortedSet<Integer> set, SortedSet<Integer> controlSet)
 	{
@@ -159,9 +161,6 @@ public class OrderedSetTests {
 			assertTrue(set.last().equals(controlSet.last())) ;
 		}
 	}
-
-	
-	//SUBSETS HELPERS
 	
 	private static void assertEqualSubsets(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper)
 	{

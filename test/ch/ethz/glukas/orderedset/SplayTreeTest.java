@@ -10,7 +10,31 @@ public class SplayTreeTest {
 	public void testSet()
 	{
 		SetTests.testSet(new SplayTree<Integer>());
+	}
+	
+	@Test
+	public void randomizedTestSet()
+	{
 		SetTests.randomizedTestSet(new SplayTree<Integer>(), 2000);
 	}
+	
+	@Test
+	public void navigationTest()
+	{
+		OrderedSetTests.testNavigation(new SplayTree<Integer>());
+	}
+	
+	@Test
+	public void testSortedSet()
+	{
+		OrderedSetTests.testSortedSet(new SplayTree<Integer>());
+	}
+	
+	@Test
+	public void testPolling()
+	{
+		OrderedSetTests.testPolling(new SplayTree<Integer>());
+	}
+	
 	
 }

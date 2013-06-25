@@ -45,6 +45,28 @@ class TreeNode<T> {
 		return value;
 	}
 	
+	
+	
+	//if the argument is negative, the leftChild is returned, else the right child is returned
+	public TreeNode<T> getChild(int parity)
+	{
+		if (parity < 0) {
+			return leftChild;
+		} else {
+			return rightChild;
+		}
+	}
+	
+	public void setChild(int parity, TreeNode<T> child)
+	{
+		if (parity < 0) {
+			leftChild = child;
+		} else {
+			rightChild = child;
+		}
+	}
+	
+	
 	public TreeNode<T> getLeftChild()
 	{
 		return leftChild;
@@ -106,6 +128,18 @@ class TreeNode<T> {
 		}
 	}
 
+	//precondition: child is a child of parent
+	//returns -1 if left child, 1 if right child
+	public int childDirection(TreeNode<T> child)
+	{
+		if (leftChild == child) {
+			return -1;
+		} else {
+			assert rightChild == child;
+			return 1;
+		}
+	}
+	
 	
 	/**
 	 * removes children and parent relationship
@@ -121,8 +155,8 @@ class TreeNode<T> {
 	//INSTANCE VARIABLES
 	/////
 	
-	TreeNode<T>leftChild;
-	TreeNode<T>rightChild;
+	private TreeNode<T>leftChild;
+	private TreeNode<T>rightChild;
 	
-	T value;
+	private T value;
 }

@@ -89,6 +89,7 @@ public class SetTests {
 				assert(set.contains(nextNumber) == control.contains(nextNumber));
 			}
 		}
+		System.out.println("SetTests: randomizedTestSet done.");
 	}
 
 	//basic test that can be used for early implementation testing
