@@ -16,7 +16,7 @@ import java.util.SortedSet;
  */
 
 
-public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E> {
+public class SplayTree<E> extends RankedTree <E> implements NavigableSet<E> {
 
 	@Override
 	public boolean add(E val)
@@ -30,21 +30,14 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 			modified = true;
 			count++;
 		}
-		tail.setLeftChild(getRoot());
-		setRoot(tail);
+
+		joinUp(tail);
 		
 		assert sizeIsConsistent();
 		assert contains(val);
 		assert checkInvariants();
 		
 		return modified;
-	}
-	
-	protected TreeNode<E> prepend(TreeNode<E> subtree, E newValue)
-	{
-		TreeNode<E> node = new TreeNode<E>(newValue);
-		node.setRightChild(subtree);
-		return node;
 	}
 	
 	@Override
@@ -151,42 +144,6 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public SortedSet<E> headSet(E arg0) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public NavigableSet<E> headSet(E arg0, boolean arg1) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public SortedSet<E> subSet(E arg0, E arg1) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public NavigableSet<E> subSet(E arg0, boolean arg1, E arg2, boolean arg3) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public SortedSet<E> tailSet(E arg0) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public NavigableSet<E> tailSet(E arg0, boolean arg1) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 	////
 	//IMPLEMENTATION :: NAVIGATION
@@ -196,14 +153,13 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 	public E succedingValue(E value, boolean inclusive)
 	{
 		TreeNode<E> tail = splitOffTail(value);
-		if (tail == null) return null;
 		
 		E result = null;
 		if (!inclusive && compareValues(tail, value) == 0) {//the value might be part of the tail, but not wanted
 			assert tail.getLeftChild() == null;
 			result = internalFirst(tail.getRightChild());
 		} else {
-			result = tail.getValue();
+			result = valueOrNull(tail);
 		}
 		joinIn(tail);
 		
@@ -228,6 +184,25 @@ public class SplayTree<E> extends BinarySearchTree <E> implements NavigableSet<E
 	////
 	//IMPLEMENTATION : SPLITS & JOINS
 	////
+	
+	
+	protected TreeNode<E> prepend(TreeNode<E> subtree, E newValue)
+	{
+		assert compareValues(subtree, newValue) > 0;
+		
+		TreeNode<E> node = new RankedTreeNode<E>(newValue);
+		node.setRightChild(subtree);
+		return node;
+	}
+	
+	protected void joinUp(TreeNode<E> tail)
+	{
+		assert tail.getLeftChild() == null;
+		assert getRoot() == null || compareValues(last(), tail) < 0;
+		
+		tail.setLeftChild(getRoot());
+		setRoot(tail);
+	}
 	
 	//precondition: all elements in r are larger than all elements in this tree
 	//the subtrees rooted at r2 and r1 must not share nodes, meaning r2 is not a subtree of r1 and vice versa

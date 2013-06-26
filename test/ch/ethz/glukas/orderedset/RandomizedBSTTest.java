@@ -79,30 +79,8 @@ public class RandomizedBSTTest {
 	 @Test
 	 public void testAccessByRank()
 	 {
-		 int testSize = 1000;
-		 RandomizedBST<Integer> set = new RandomizedBST<Integer>();
-			
-		 for (int i=0; i < testSize; i++) {
-			 set.add(i);
-		 }
-		
-		 for (int i=0; i < testSize; i++) {
-			 assertTrue(set.get(i) == i);
-			 assertEquals(set.indexOf(i), i);
-		 }
-		 for (int i=0; i< testSize; i++) {
-			 assertTrue(set.poll(0) == i);
-		 }
-		 assertFalse (set.isEmpty() == false);
-		 
-		 set.add(1);
-		 set.add(4);
-		 set.add(6);
-		 set.add(100);
-		 assertTrue(set.poll(2) == 6);
-		 assertTrue(set.poll(1) == 4);
-		 assertTrue(set.poll(1) == 100);
-		 assertTrue(set.poll(0) == 1);
+		 RangeSetTest.testRangeSet(new RandomizedBST<Integer>());
+		 RangeSetTest.testPolling(new RandomizedBST<Integer>());
 	 }
 	
 }

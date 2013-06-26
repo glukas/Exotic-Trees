@@ -23,88 +23,28 @@ class Main {
 		OrderedSetTests.testSubsets(new RandomizedBST<Integer>());
 		*/
 		
-		SetTests.testSet(new SplayTree<Integer>());
-		SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);
+		//SetTests.testSet(new SplayTree<Integer>());
+		//SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);
 		
 		int performanceTestSize = 1000000;
-		/*performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
-		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
-		performanceTestRepeatedAccess(new SplayTree<Integer>(), performanceTestSize);
-		performanceTestRepeatedAccess(new TreeSet<Integer>(), performanceTestSize);
+		//performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
+		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
+		//performanceTestRepeatedAccess(new SplayTree<Integer>(), performanceTestSize);
+		//performanceTestRepeatedAccess(new TreeSet<Integer>(), performanceTestSize);
 		
 		//testImmutableSet();
 		//performanceTestImmutableSet();
 		
 		//performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
 		//performanceTestNavigableSet(new RandomizedBST<Integer>(), performanceTestSize);
-		performanceTestNavigableSet(new SplayTree<Integer>(), performanceTestSize);
-		performanceTestNavigableSet(new TreeSet<Integer>(), performanceTestSize);
-		*/
+		//performanceTestNavigableSet(new SplayTree<Integer>(), performanceTestSize);
+		//performanceTestNavigableSet(new TreeSet<Integer>(), performanceTestSize);
 		
 		//performanceTestSet(new Treap<Integer>(), performanceTestSize);
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
-		
 	}
 	
-	static void performanceTestImmutableSet()
-	{
-		TreeSet<Integer> control = new TreeSet<Integer>();
-		int testMagnitude = 4;
-		int testSize = (int)Math.pow(2, Math.pow(2, testMagnitude))/2;
-		
-		int[] input = new int[testSize];
-		int testRange = 2*testSize;
-		Random random = new Random();
-		
-		for (int i=0; i<testSize; i++) {
-			input[i] = random.nextInt(testRange);
-			control.add(input[i]);
-		}
-		
-		
-		Date cstart = new Date();
-		for (int j=0; j<400; j++) {
-			for (int i=0; i<testRange; i++) {
-				control.contains(i);
-			}
-		}
-		Date cend = new Date();
-		System.out.println("test control set done!" + " took " + (cend.getTime()-cstart.getTime())/ 1000.0 + " s");
-		
-		
-		ImmutableOrderedSet corona = new ImmutableOrderedSet(input);
-		Date start = new Date();
-		for (int j=0; j<400; j++) {
-			for (int i=0; i<testRange; i++) {
-				corona.contains(i);
-			}
-		}
-		Date end = new Date();
-		System.out.println("test immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
-		
 
-	}
-	
-	static void testImmutableSet()
-	{
-		TreeSet<Integer> control = new TreeSet<Integer>();
-		int testMagnitude = 2;
-		int testSize = (int)Math.pow(2, Math.pow(2, testMagnitude))/2;
-		int testRange = testSize*5;
-		Random random = new Random(1);
-		int[] input = new int[testSize];
-		
-		for (int i=0; i<testSize; i++) {
-			input[i] = random.nextInt(testRange);
-			control.add(input[i]);
-		}
-		
-		ImmutableOrderedSet corona = new ImmutableOrderedSet(input);
-		for (int i=0; i<testRange; i++) {
-			if (corona.contains(i) != control.contains(i)) throw new Error();
-		}
-	}
-	
 	
 	static void performanceTestSet(Set<Integer> set, int testSize)
 	{
@@ -172,5 +112,66 @@ class Main {
 		Date end = new Date();
 		System.out.println("test navigation done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 	}
+	
+	/*
+	static void performanceTestImmutableSet()
+	{
+		TreeSet<Integer> control = new TreeSet<Integer>();
+		int testMagnitude = 4;
+		int testSize = (int)Math.pow(2, Math.pow(2, testMagnitude))/2;
+		
+		int[] input = new int[testSize];
+		int testRange = 2*testSize;
+		Random random = new Random();
+		
+		for (int i=0; i<testSize; i++) {
+			input[i] = random.nextInt(testRange);
+			control.add(input[i]);
+		}
+		
+		
+		Date cstart = new Date();
+		for (int j=0; j<400; j++) {
+			for (int i=0; i<testRange; i++) {
+				control.contains(i);
+			}
+		}
+		Date cend = new Date();
+		System.out.println("test control set done!" + " took " + (cend.getTime()-cstart.getTime())/ 1000.0 + " s");
+		
+		
+		ImmutableOrderedSet corona = new ImmutableOrderedSet(input);
+		Date start = new Date();
+		for (int j=0; j<400; j++) {
+			for (int i=0; i<testRange; i++) {
+				corona.contains(i);
+			}
+		}
+		Date end = new Date();
+		System.out.println("test immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		
+
+	}
+	
+	static void testImmutableSet()
+	{
+		TreeSet<Integer> control = new TreeSet<Integer>();
+		int testMagnitude = 2;
+		int testSize = (int)Math.pow(2, Math.pow(2, testMagnitude))/2;
+		int testRange = testSize*5;
+		Random random = new Random(1);
+		int[] input = new int[testSize];
+		
+		for (int i=0; i<testSize; i++) {
+			input[i] = random.nextInt(testRange);
+			control.add(input[i]);
+		}
+		
+		ImmutableOrderedSet corona = new ImmutableOrderedSet(input);
+		for (int i=0; i<testRange; i++) {
+			if (corona.contains(i) != control.contains(i)) throw new Error();
+		}
+	}
+	*/
 
 }

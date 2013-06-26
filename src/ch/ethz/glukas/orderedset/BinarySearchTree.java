@@ -181,10 +181,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	{
 		return findLast(node.getLeftChild());
 	}
-	
-	
-	
-	
+
 	//the first element of the list is always the metaRoot
 	//else if the value is present in the collection, the last element of the returned list is the node containing the value
 	//else the last element of the list is the next highest node
@@ -287,12 +284,10 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 			greater.set(null);
 			return null;
 		}
-		
-		
+
 		int comparison = compareValues(value, r);
 		
 		TreeNode<T> equal = null;
-		
 		if (comparison < 0) {
 			
 			equal = split(value, r.getLeftChild(), less, greater);
@@ -309,7 +304,6 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 			less.set(r.getLeftChild());
 			greater.set(r.getRightChild());
 		}
-		
 		
 		assert descendantsAreSmaller(less.get(), value);
 		assert descendantsAreGreater(greater.get(), value);

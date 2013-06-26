@@ -45,7 +45,7 @@ class TreeNode<T> {
 		return value;
 	}
 	
-	
+
 	
 	//if the argument is negative, the leftChild is returned, else the right child is returned
 	public TreeNode<T> getChild(int parity)
@@ -57,6 +57,7 @@ class TreeNode<T> {
 		}
 	}
 	
+	//if the argument is negative, the leftChild is set, else the right child is set
 	public void setChild(int parity, TreeNode<T> child)
 	{
 		if (parity < 0) {

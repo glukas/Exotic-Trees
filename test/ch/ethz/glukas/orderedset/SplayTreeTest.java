@@ -36,5 +36,13 @@ public class SplayTreeTest {
 		OrderedSetTests.testPolling(new SplayTree<Integer>());
 	}
 	
+	@Test
+	public void testAccessByRank()
+	{
+		RangeSetTest.testRangeSet(new RandomizedBST<Integer>());
+		RangeSetTest.testPolling(new RandomizedBST<Integer>());
+	}
+	
+	
 	
 }
