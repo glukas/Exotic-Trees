@@ -45,6 +45,11 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		};
 	}
 	
+	protected TreeNode<T> newNode(T val)
+	{
+		return new TreeNode<T>(val);
+	}
+	
 	
 	/////
 	//ABSTRACT COLLECTION
@@ -69,7 +74,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 	@Override
 	public void clear() {
-		metaRoot = new TreeNode<T>(null);
+		metaRoot = newNode(null);
 	}
 	
 	
@@ -112,8 +117,9 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		assert child != parent;
 		assert parent != grandmother;
 		
-		grandmother.replaceChild(parent, child);
+		
 		treeRotate(child, parent, parent.childDirection(child));
+		grandmother.replaceChild(parent, child);
 		
 		assert child.getLeftChild() != child.getRightChild();
 		assert grandmother.getLeftChild() == child || grandmother.getRightChild() == child;

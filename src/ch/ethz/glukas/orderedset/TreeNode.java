@@ -51,9 +51,9 @@ class TreeNode<T> {
 	public TreeNode<T> getChild(int parity)
 	{
 		if (parity < 0) {
-			return leftChild;
+			return getLeftChild();
 		} else {
-			return rightChild;
+			return getRightChild();
 		}
 	}
 	
@@ -61,9 +61,9 @@ class TreeNode<T> {
 	public void setChild(int parity, TreeNode<T> child)
 	{
 		if (parity < 0) {
-			leftChild = child;
+			setLeftChild(child);
 		} else {
-			rightChild = child;
+			setRightChild(child);
 		}
 	}
 	

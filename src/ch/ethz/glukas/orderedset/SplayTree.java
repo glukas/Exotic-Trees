@@ -16,7 +16,7 @@ import java.util.SortedSet;
  */
 
 
-public class SplayTree<E> extends RankedTree <E> implements NavigableSet<E> {
+public class SplayTree<E> extends RankedTree <E> {
 
 	@Override
 	public boolean add(E val)
@@ -190,7 +190,7 @@ public class SplayTree<E> extends RankedTree <E> implements NavigableSet<E> {
 	{
 		assert compareValues(subtree, newValue) > 0;
 		
-		TreeNode<E> node = new RankedTreeNode<E>(newValue);
+		TreeNode<E> node = newNode(newValue);
 		node.setRightChild(subtree);
 		return node;
 	}
@@ -319,13 +319,13 @@ public class SplayTree<E> extends RankedTree <E> implements NavigableSet<E> {
 	
 	//if parity > 0:
 	//        z                  x
-	//     x      --->        y    z
-	//        y
+	//     y      --->        y    z
+	//        x
 	
 	//if parity < 0:
 	//     z                    x
-	//        x  --->        z     y
-	//     y
+	//        y  --->        z     y
+	//     x
 	
 	//gpp must be the parent of z
 	private void zigZag(TreeNode<E> x, TreeNode<E> y, TreeNode<E> z, TreeNode<E> ggp, int parity)
@@ -335,14 +335,15 @@ public class SplayTree<E> extends RankedTree <E> implements NavigableSet<E> {
 		assert z.getChild(antiparity) == y;
 		assert y.getChild(parity) == x;
 		
-		ggp.replaceChild(z, x);
 		y.setChild(parity, x.getChild(antiparity));
 		z.setChild(antiparity, x.getChild(parity));
 		x.setChild(antiparity, y);
 		x.setChild(parity, z);
+		ggp.replaceChild(z, x);
 		
 		assert x.getChild(antiparity) == y;
 		assert x.getChild(parity) == z;
+		assert subtreeSizeConsistent(x);
 	}
 	
 	//if parity > 0:
@@ -363,20 +364,22 @@ public class SplayTree<E> extends RankedTree <E> implements NavigableSet<E> {
 		assert z.getChild(parity) == y;
 		assert y.getChild(parity) == x;
 		
-		ggp.replaceChild(z, x);
 		y.setChild(parity, x.getChild(antiparity));
-		x.setChild(antiparity, y);
 		z.setChild(parity, y.getChild(antiparity));
 		y.setChild(antiparity, z);
+		x.setChild(antiparity, y);
+		ggp.replaceChild(z, x);
 		
 		assert x.getChild(antiparity) == y;
 		assert y.getChild(antiparity) == z;
+		assert subtreeSizeConsistent(x);
 	}
 	
 	//single rotation 'upwards'
 	private void zig(TreeNode<E> child, TreeNode<E> parent, TreeNode<E> grandparent)
 	{
 		treeRotateUp(child, parent, grandparent);
+		assert subtreeSizeConsistent(child);
 	}
 	
 	
@@ -389,6 +392,7 @@ public class SplayTree<E> extends RankedTree <E> implements NavigableSet<E> {
 		boolean isInOrder = isInOrder();
 		assert isInOrder;
 		assert metaRoot.getRightChild() == null;
+		assert subtreeSizesConsistent();
 		return isInOrder;
 	}
 	

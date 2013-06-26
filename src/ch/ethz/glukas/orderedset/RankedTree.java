@@ -10,6 +10,12 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	//all nodes are assumed to conform to RankedTreeNode
 	
 	
+	@Override
+	protected TreeNode<T> newNode(T val)
+	{
+		return new RankedTreeNode<T>(val);
+	}
+	
 	/**
 	 * Returns the k'th-smallest element from the set
 	 */
@@ -17,7 +23,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	{
 		if (index < 0) throw new IndexOutOfBoundsException();
 		if (index >= size()) throw new IndexOutOfBoundsException();
-		
+		assert subtreeSizesConsistent();
 		
 		TreeNode<T> result = getByRank(getRoot(), index);
 		if (result == null) return null;
@@ -32,6 +38,8 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	 */
 	public T poll(int index)
 	{
+		assert subtreeSizesConsistent();
+		
 		T value = get(index);
 		remove(value);
 		assert (!contains(value));
@@ -74,6 +82,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	@Override
 	public int sizeOfRange(T lowerbound, T upperbound, boolean fromInclusive, boolean toInclusive) {
 		if (compareValues(lowerbound, upperbound) > 0) throw new IllegalArgumentException();
+		assert subtreeSizesConsistent();
 		
 		T lower;
 		T upper;
@@ -98,7 +107,9 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 
 	@Override
 	public void removeRange(T lowerbound, T upperbound, boolean fromInclusive, boolean toInclusive) {
+		assert subtreeSizesConsistent();
 		//could be done faster, but this is easy
+		
 		NavigableSet<T> subset = subSet(lowerbound, fromInclusive, upperbound, toInclusive);
 		while(subset.pollFirst() != null) {
 		}
@@ -112,6 +123,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	
 	public ListIterator<T> listIterator(int index)
 	{
+		assert subtreeSizesConsistent();
 		if (index >= size()) return  new RangeSetIterator<T>();
 		return new RangeSetIterator<T>(this, get(index), last());
 	}
@@ -166,6 +178,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	//index is 0 based: smallest element has index '0'
 	protected TreeNode<T> getByRank(TreeNode<T> root, int index)
 	{
+		assert subtreeSizesConsistent();
 		assert index < size(root);
 		
 		
@@ -186,6 +199,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	//returns the index of the value relative to the current node, or -1 if the value is not present
 	protected int internalIndexOf(T value, TreeNode<T> current)
 	{
+		assert subtreeSizesConsistent();
 		//base case 1 : not found
 		if (current == null) 
 		{
@@ -219,11 +233,29 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 		return ((RankedTreeNode<T>)node).size();
 	}
 	
+	@Override
+	protected void treeRotate(TreeNode<T> child, TreeNode<T> parent, int parity)
+	{
+		super.treeRotate(child, parent, parity);
+		assert subtreeSizeConsistent(child);
+	}
 	
+	@Override
+	protected void treeRotateUp(TreeNode<T> child, TreeNode<T> parent, TreeNode<T> grandmother)
+	{
+		super.treeRotateUp(child, parent, grandmother);
+		assert subtreeSizeConsistent(grandmother);
+	}
 
 	///
 	//INVARIANTS
 	///
+	
+	protected boolean subtreeSizesConsistent()
+	{
+		if (getRoot() == null) return true;
+		return subtreeSizeConsistent(getRoot());
+	}
 
 	protected boolean subtreeSizeConsistent(TreeNode<T> node)
 	{
@@ -243,7 +275,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 		
 		int total = 1 + subtreeSize(node.getLeftChild(), consistent) + subtreeSize(node.getRightChild(), consistent);
 		consistent.set(consistent.get() && total == size(node));		
-		
+		assert consistent.get();
 		return total;
 	}
 	

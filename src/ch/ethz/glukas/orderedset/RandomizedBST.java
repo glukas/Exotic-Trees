@@ -22,7 +22,7 @@ import java.util.SortedSet;
  * @author Lukas Gianinazzi
  *
  */
-public class RandomizedBST<T> extends RankedTree<T> implements NavigableSet<T>, RangeSet<T> {
+public class RandomizedBST<T> extends RankedTree<T>{
 
 	///
 	//COLLECTION

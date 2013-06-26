@@ -39,10 +39,28 @@ public class SplayTreeTest {
 	@Test
 	public void testAccessByRank()
 	{
-		RangeSetTest.testRangeSet(new RandomizedBST<Integer>());
-		RangeSetTest.testPolling(new RandomizedBST<Integer>());
+		RangeSetTest.testRangeSet(new SplayTree<Integer>());
+		RangeSetTest.testPolling(new SplayTree<Integer>());
 	}
 	
+	
+	 @Test
+	 public void testSubsets()
+	 {
+		 OrderedSetTests.testSubsets(new SplayTree<Integer>());
+	 }
+	 
+	 @Test
+	 public void testTailsets()
+	 {
+		 OrderedSetTests.testTailSets(new SplayTree<Integer>());
+	 }
+	 
+	 @Test
+	 public void testSubsetModification()
+	 {
+		 OrderedSetTests.testSubsetModification(new SplayTree<Integer>());
+	 }
 	
 	
 }

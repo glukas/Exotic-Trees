@@ -23,8 +23,8 @@ class Main {
 		OrderedSetTests.testSubsets(new RandomizedBST<Integer>());
 		*/
 		
-		//SetTests.testSet(new SplayTree<Integer>());
-		//SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);
+		SetTests.testSet(new SplayTree<Integer>());
+		SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);
 		
 		int performanceTestSize = 1000000;
 		//performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
