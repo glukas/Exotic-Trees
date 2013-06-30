@@ -101,17 +101,16 @@ public class SplayTree<E> extends RankedTree <E> {
 
 	public E lower(E value)
 	{
-		E lo = precedingValue(value, false);
+		E lo = precedingValue(value);
 		E hilo = null;
-		assert lo == null || (hilo = succedingValue(lo, false)) == null || true;
+		assert lo == null || (hilo = succedingValue(lo)) == null || true;
 		assert hilo == null || compareValues(hilo, value) == 0;
 		return lo;
 	}
 	
 	public E higher(E value)
 	{
-		E hi = succedingValue(value, false);
-		
+		E hi = succedingValue(value);
 		return hi;
 	}
 	
@@ -152,38 +151,48 @@ public class SplayTree<E> extends RankedTree <E> {
 	////
 
 	
-	public E succedingValue(E value, boolean inclusive)
+	//not inclusive
+	public E succedingValue(E value)
 	{
-		
-		TreeNode<E> tail = splitOffTail(value);
-		
-		E result = null;
-		if (!inclusive && compareValues(tail, value) == 0) {//the value might be part of the tail, but not wanted
-			assert tail.getLeftChild() == null;
-			result = internalFirst(tail.getRightChild());
-		} else {
-			result = valueOrNull(tail);
-		}
-		joinIn(tail);
-		
-		
-		/*TreeNode<E> equal = split(value, lower, higher);
+		assert getRoot() != null;
 		E result;
-		if (inclusive && equal != null) {
-			result = equal.getValue();
-		} else {
-			result = internalFirst(higher.get());
-		}*/
 		
-		assert !(tail == null && result != null);
-		assert result == null || compareValues(result, value) >= 0;
-		assert result == null || inclusive || compareValues(result, value) > 0;
-		assert result != null || getRoot() == null || (inclusive && compareValues(value, last()) > 0) || compareValues(value, last()) >= 0;
+		splay(value);
+		if (compareValues(getRoot(), value) > 0) {
+			result = getRoot().getValue();
+		} else {
+			result = valueOrNull(successor(getRoot()));
+		}
+		
+		assert result == null || compareValues(result, value) > 0;
+		assert result != null || getRoot() == null || compareValues(value, last()) >= 0;
 		
 		assert checkInvariants();
 		return result;
 	}
 	
+	
+	//not inclusive
+	protected E precedingValue(E value)
+	{
+		assert getRoot() != null;
+		E result;
+		
+		splay(value);
+		if (compareValues(getRoot(), value) < 0) {
+			result = getRoot().getValue();
+		} else {
+			result = valueOrNull(predecessor(getRoot()));
+		}
+		
+		assert result == null || compareValues(result, value) < 0;
+		assert result != null || getRoot() == null || compareValues(value, first()) <= 0;
+		
+		assert checkInvariants();
+		return result;
+	}
+	
+	/*
 	protected E precedingValue(E value, boolean inclusive)
 	{	
 		E result = null;
@@ -203,7 +212,30 @@ public class SplayTree<E> extends RankedTree <E> {
 		
 		assert checkInvariants();
 		return result;
-	}
+	}*/
+	
+	/*
+	public E succedingValue(E value, boolean inclusive)
+	{
+		
+		TreeNode<E> tail = splitOffTail(value);
+		
+		E result = null;
+		if (!inclusive && compareValues(tail, value) == 0) {//the value might be part of the tail, but not wanted
+			assert tail.getLeftChild() == null;
+			result = internalFirst(tail.getRightChild());
+		} else {
+			result = valueOrNull(tail);
+		}
+		joinIn(tail);
+		
+		assert !(tail == null && result != null);
+		assert result == null || inclusive || compareValues(result, value) > 0;
+		assert result != null || getRoot() == null || (inclusive && compareValues(value, last()) > 0) || compareValues(value, last()) >= 0;
+		
+		assert checkInvariants();
+		return result;
+	}*/
 	
 	////
 	//IMPLEMENTATION : SPLITS & JOINS
