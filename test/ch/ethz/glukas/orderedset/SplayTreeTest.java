@@ -41,26 +41,33 @@ public class SplayTreeTest {
 	{
 		RangeSetTest.testRangeSet(new SplayTree<Integer>());
 		RangeSetTest.testPolling(new SplayTree<Integer>());
+		RangeSetTest.testRangeSizes(new SplayTree<Integer>());
+	}
+	
+	@Test
+	public void testIterator()
+	{
+		OrderedSetTests.testIterator(new SplayTree<Integer>());
 	}
 	
 	
-	 @Test
-	 public void testSubsets()
-	 {
-		 OrderedSetTests.testSubsets(new SplayTree<Integer>());
-	 }
+	@Test
+	public void testSubsets()
+	{
+		OrderedSetTests.testSubsets(new SplayTree<Integer>());
+	}
 	 
-	 @Test
-	 public void testTailsets()
-	 {
-		 OrderedSetTests.testTailSets(new SplayTree<Integer>());
-	 }
+	@Test
+	public void testTailsets()
+	{
+		OrderedSetTests.testTailSets(new SplayTree<Integer>());
+	}
 	 
-	 @Test
-	 public void testSubsetModification()
-	 {
-		 OrderedSetTests.testSubsetModification(new SplayTree<Integer>());
-	 }
+	@Test
+	public void testSubsetModification()
+	{
+		OrderedSetTests.testSubsetModification(new SplayTree<Integer>());
+	}
 	
 	
 }

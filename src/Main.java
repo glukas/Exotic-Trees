@@ -15,16 +15,24 @@ class Main {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		/*SetTests.testSet(new RandomizedBST<Integer>());
-		OrderedSetTests.randomTestSet(new RandomizedBST<Integer>());
+		/*
+		SetTests.testSet(new RandomizedBST<Integer>());
 		OrderedSetTests.testNavigation(new RandomizedBST<Integer>());
 		OrderedSetTests.testSortedSet(new RandomizedBST<Integer>());
 		OrderedSetTests.testSubsets(new RandomizedBST<Integer>());
+		RangeSetTest.testRangeSizes(new RandomizedBST<Integer>());
 		*/
+		/*
+		OrderedSetTests.testIterator(new SplayTree<Integer>());
+		OrderedSetTests.testIterator(new RandomizedBST<Integer>());
 		
+		RangeSetTest.testRangeSizes(new SplayTree<Integer>());
+		OrderedSetTests.testNavigation(new SplayTree<Integer>());
+		RangeSetTest.testPolling(new SplayTree<Integer>());
+		OrderedSetTests.testSubsets(new SplayTree<Integer>());
 		SetTests.testSet(new SplayTree<Integer>());
 		SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);
+		*/
 		
 		int performanceTestSize = 1000000;
 		//performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
@@ -35,12 +43,14 @@ class Main {
 		//testImmutableSet();
 		//performanceTestImmutableSet();
 		
-		//performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
+		
 		//performanceTestNavigableSet(new RandomizedBST<Integer>(), performanceTestSize);
 		//performanceTestNavigableSet(new SplayTree<Integer>(), performanceTestSize);
 		//performanceTestNavigableSet(new TreeSet<Integer>(), performanceTestSize);
 		
-		//performanceTestSet(new Treap<Integer>(), performanceTestSize);
+		performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
+		performanceTestSet(new Treap<Integer>(), performanceTestSize);
+		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
 	}
 	

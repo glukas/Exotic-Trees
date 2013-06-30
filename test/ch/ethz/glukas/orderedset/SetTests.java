@@ -1,7 +1,6 @@
 package ch.ethz.glukas.orderedset;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -112,6 +111,8 @@ public class SetTests {
 	}
 	
 	
+
+	
 	////
 	//HELPERS
 	////
@@ -155,7 +156,7 @@ public class SetTests {
 	
 	public static void assertEqualSets(Set<Integer> set, Set<Integer> control)
 	{
-		assertTrue(set.size() == control.size());
+		assertEquals(control.size(), set.size());
 		for (Integer value : control) {
 			assertTrue(set.contains(value));
 		}

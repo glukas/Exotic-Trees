@@ -18,57 +18,8 @@ import java.util.SortedSet;
 
 public class SplayTree<E> extends RankedTree <E> {
 
-	@Override
-	public boolean add(E val)
-	{
-		assert sizeIsConsistent();
-		boolean modified = false;
-		
-		TreeNode<E> tail = splitOffTail(val);
-		if (compareValues(tail, val) != 0) {//if tail is null, the comparison will return +1
-			tail = prepend(tail, val);
-			modified = true;
-			count++;
-		}
 
-		joinUp(tail);
-		
-		assert sizeIsConsistent();
-		assert contains(val);
-		assert checkInvariants();
-		
-		return modified;
-	}
-	
-	@Override
-	//throws if val == null
-	public boolean remove(Object val)
-	{
-		@SuppressWarnings("unchecked")
-		E value = (E)val;
-		boolean modified = false;
-		
-		TreeNode<E> tail = splitOffTail(value);
-		
-		if (compareValues(tail, value) == 0) {//if tail is null, the comparison will return +1
-			assert tail.getLeftChild() == null;
-			//the root of the tail has 'val' at the root. cut it off by not joining it back in.
-			tail = tail.getRightChild();
-			modified = true;
-			count--;
-		}
-		//reassemble
-		joinIn(tail);
-		
-		assert sizeIsConsistent();
-		assert checkInvariants();
-		return modified;
-	}
-	
-	@Override
-	public int size() {
-		return count;
-	}
+
 	
 	
 	/////
@@ -78,7 +29,6 @@ public class SplayTree<E> extends RankedTree <E> {
 	@Override
 	protected boolean internalContains(E val)
 	{
-		assert sizeIsConsistent();
 		if (isEmpty()) return false;
 		//splaying moves an element to the root of the tree
 		splay(val);
@@ -86,14 +36,57 @@ public class SplayTree<E> extends RankedTree <E> {
 	}
 	
 	
-	@Override
-	public void clear()
+	
+	protected boolean internalAdd(E val)
 	{
-		super.clear();
-		count = 0;
+		boolean modified = false;
+		
+		/*alternative
+		Out<TreeNode<E>> lower = new Out<TreeNode<E>>();
+		Out<TreeNode<E>> upper = new Out<TreeNode<E>>();
+		TreeNode<E> equal = split(val, lower, upper);
+		if (equal == null) {
+			TreeNode<E> node = newNode(val);
+			node.addChildren(lower.get(), upper.get());
+			setRoot(node);
+			modified = true;
+		}*/
+		
+		
+		TreeNode<E> tail = splitOffTail(val);
+		if (compareValues(tail, val) != 0) {//if tail is null, the comparison will return +1
+			tail = prepend(tail, val);
+			modified = true;
+		}
+
+		joinUp(tail);
+		
+		assert contains(val);
 		assert checkInvariants();
-		assert sizeIsConsistent();
+		
+		return modified;
 	}
+	
+	@Override
+	//throws if value == null
+	protected boolean internalRemove(E value)
+	{
+		boolean modified = false;
+		
+		TreeNode<E> tail = splitOffTail(value);
+		
+		if (compareValues(tail, value) == 0) {//if tail is null, the comparison will return +1
+			assert tail.getLeftChild() == null;
+			//the root of the tail has 'val' at the root. cut it off by not joining it back in.
+			tail = tail.getRightChild();
+			modified = true;
+		}
+		//reassemble
+		joinIn(tail);
+		
+		return modified;
+	}
+	
 	
 	/////
 	//Navigable set
@@ -101,22 +94,31 @@ public class SplayTree<E> extends RankedTree <E> {
 	
 	public E floor(E value)
 	{
-		return precedingValue(value, true);
+		if (internalContains(value)) return value;
+		E flo = lower(value);
+		return flo;
 	}
 
 	public E lower(E value)
 	{
-		return precedingValue(value, false);
+		E lo = precedingValue(value, false);
+		E hilo = null;
+		assert lo == null || (hilo = succedingValue(lo, false)) == null || true;
+		assert hilo == null || compareValues(hilo, value) == 0;
+		return lo;
 	}
 	
 	public E higher(E value)
 	{
-		return succedingValue(value, false);
+		E hi = succedingValue(value, false);
+		
+		return hi;
 	}
 	
 	public E ceiling(E value)
 	{
-		return succedingValue(value, true);
+		if (internalContains(value)) return value;
+		return higher(value);
 	}
 	
 	public E pollFirst()
@@ -152,6 +154,7 @@ public class SplayTree<E> extends RankedTree <E> {
 	
 	public E succedingValue(E value, boolean inclusive)
 	{
+		
 		TreeNode<E> tail = splitOffTail(value);
 		
 		E result = null;
@@ -163,6 +166,21 @@ public class SplayTree<E> extends RankedTree <E> {
 		}
 		joinIn(tail);
 		
+		
+		/*TreeNode<E> equal = split(value, lower, higher);
+		E result;
+		if (inclusive && equal != null) {
+			result = equal.getValue();
+		} else {
+			result = internalFirst(higher.get());
+		}*/
+		
+		assert !(tail == null && result != null);
+		assert result == null || compareValues(result, value) >= 0;
+		assert result == null || inclusive || compareValues(result, value) > 0;
+		assert result != null || getRoot() == null || (inclusive && compareValues(value, last()) > 0) || compareValues(value, last()) >= 0;
+		
+		assert checkInvariants();
 		return result;
 	}
 	
@@ -178,13 +196,18 @@ public class SplayTree<E> extends RankedTree <E> {
 		}
 		joinIn(tail);//reassmble
 		
+		
+		assert result == null || compareValues(result, value) <= 0;
+		assert result == null || inclusive || compareValues(result, value) < 0;
+		assert result != null || getRoot() == null || (inclusive && compareValues(value, first()) < 0) || compareValues(value, first()) <= 0;
+		
+		assert checkInvariants();
 		return result;
 	}
 	
 	////
 	//IMPLEMENTATION : SPLITS & JOINS
 	////
-	
 	
 	protected TreeNode<E> prepend(TreeNode<E> subtree, E newValue)
 	{
@@ -225,6 +248,7 @@ public class SplayTree<E> extends RankedTree <E> {
 		//since the largest element is now at the root, its right child is null
 		assert getRoot().getRightChild() == null;
 		getRoot().setRightChild(r);
+		((RankedTreeNode<E>)metaRoot).setSize(size(getRoot())+1);
 		
 		assert checkInvariants();
 	}
@@ -249,6 +273,7 @@ public class SplayTree<E> extends RankedTree <E> {
 		} else {
 			result = getRoot().getRightChild();
 			getRoot().setRightChild(null);
+			setRoot(getRoot());
 		}
 
 		assert getRoot() != result;
@@ -259,6 +284,36 @@ public class SplayTree<E> extends RankedTree <E> {
 		return result;
 	}
 	
+	
+	
+	//alternative split definition
+	protected TreeNode<E> split(E val, Out<TreeNode<E>> lower, Out<TreeNode<E>>upper)
+	{
+		lower.set(null);
+		upper.set(null);
+		if (getRoot() == null) return null;
+		
+		TreeNode<E> result = null;
+		
+		splay(val);
+		
+		int comparison = compareValues(getRoot(), val);
+		
+		if (comparison == 0) {
+			result = getRoot();
+			lower.set(result.getLeftChild());
+			upper.set(result.getRightChild());
+		} else if (comparison < 0) {
+			lower.set(getRoot());
+			upper.set(getRoot().getRightChild());
+		} else {
+			lower.set(getRoot().getLeftChild());
+			upper.set(getRoot());
+		}
+		
+		assert checkInvariants();
+		return result;
+	}
 
 	
 	
@@ -379,24 +434,14 @@ public class SplayTree<E> extends RankedTree <E> {
 	private void zig(TreeNode<E> child, TreeNode<E> parent, TreeNode<E> grandparent)
 	{
 		treeRotateUp(child, parent, grandparent);
-		assert subtreeSizeConsistent(child);
 	}
 	
 	
 	/////
 	//ASSERTIONS
 	/////
-	
-	private boolean checkInvariants()
-	{
-		boolean isInOrder = isInOrder();
-		assert isInOrder;
-		assert metaRoot.getRightChild() == null;
-		assert subtreeSizesConsistent();
-		return isInOrder;
-	}
-	
 
+	
 	protected boolean treeIsSplayedAroundValue(TreeNode<E> root, E val)
 	{
 		if (root == null) return true;
@@ -412,8 +457,7 @@ public class SplayTree<E> extends RankedTree <E> {
 	//INSTANCE VARIABLES
 	/////
 	
-	int count = 0;
-
-
+	Out<TreeNode<E>> lower = new Out<TreeNode<E>>();
+	Out<TreeNode<E>> higher = new Out<TreeNode<E>>();
 
 }

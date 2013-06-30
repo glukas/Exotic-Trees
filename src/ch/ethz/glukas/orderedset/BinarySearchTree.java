@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+
 /**
  * 
  * An abstract Binary Search Tree
@@ -43,6 +44,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 				return ((Comparable<T>)arg0).compareTo(arg1);
 			}
 		};
+		assert checkInvariants();
 	}
 	
 	protected TreeNode<T> newNode(T val)
@@ -57,26 +59,63 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 	
 	@Override
+	//returns false if arg0 == null
+	//to implement this method, override internalContains
 	public boolean contains(Object arg0) {
 		if (arg0 == null) return false;
-
+		
 		@SuppressWarnings("unchecked")
 		T value = (T)arg0;
-		return internalContains(value);
+		boolean contains = internalContains(value);
+		assert checkInvariants();
+		return contains;
+	}
+	
+	@Override
+	//throws if val == null
+	public boolean add(T val)
+	{
+		if (val == null) throw new IllegalArgumentException();
+		
+		boolean modified = internalAdd(val);
+		
+		assert checkInvariants();
+		assert contains(val);
+		return modified;
+	}
+	
+	
+	@Override
+	//returns null if val == null
+	//to implement this method, override internalRemove
+	public boolean remove(Object val)
+	{
+		if (val == null) return false;
+		@SuppressWarnings("unchecked")
+		T value = (T)val;
+		boolean modified = internalRemove(value);
+		
+		assert checkInvariants();
+		assert !contains(val);
+		return modified;
 	}
 	
 
+	
+
+
 	@Override
+	//fast readonly iterator
 	public Iterator<T> iterator() {
-		return new BinarySearchTreeIterator<T>(metaRoot.getLeftChild());
+		return new BinarySearchTreeIterator<T>(getRoot());
 	}
 	
 	
 	@Override
 	public void clear() {
 		metaRoot = newNode(null);
+		assert checkInvariants();
 	}
-	
 	
 	////
 	//ORDERING
@@ -99,6 +138,21 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		return internalComparator;
 	}
 
+	
+	/////
+	//IMPLEMENTATION :: MODIFY
+	////
+	
+	protected boolean internalAdd(T value) throws UnsupportedOperationException
+	{
+		throw new UnsupportedOperationException();
+	}
+	
+	protected boolean internalRemove(T value)  throws UnsupportedOperationException
+	{
+		throw new UnsupportedOperationException();
+	}
+	
 	
 	/////
 	//IMPLEMENTATION :: TREE ROTATIONS
@@ -124,6 +178,8 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 		assert child.getLeftChild() != child.getRightChild();
 		assert grandmother.getLeftChild() == child || grandmother.getRightChild() == child;
 		assert child.getLeftChild() == parent || child.getRightChild() == parent;
+		
+		assert checkInvariants();
 	}
 	
 	
@@ -180,11 +236,15 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	
 	protected TreeNode<T> successor(TreeNode<T> node)
 	{
+		if (node == null) return null;
+		if (node.getRightChild() == null) return null;
 		return findFirst(node.getRightChild());
 	}
 	
 	protected TreeNode<T> predecessor(TreeNode<T> node)
 	{
+		if (node == null) return null;
+		if (node.getLeftChild() == null) return null;
 		return findLast(node.getLeftChild());
 	}
 
@@ -283,8 +343,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	protected TreeNode<T> split(T value, TreeNode<T> r, Out<TreeNode<T>> less, Out<TreeNode<T>> greater)
 	{
 		assert isInOrder(r);
-		
-		
+
 		if (r == null) {//base case 1
 			less.set(null);
 			greater.set(null);
@@ -337,6 +396,7 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	{
 		assert isInOrder(root);
 		metaRoot.setLeftChild(root);
+		assert checkInvariants();
 	}
 	
 	//wraps the comparator to make it partially null-safe: null is interpreted as +infinity
@@ -376,6 +436,15 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	///
 	//INVARIANTS & ASSERTIONS
 	///
+	
+	protected boolean checkInvariants()
+	{
+		boolean result = isInOrder();
+		assert result;
+		result = result && sizeIsConsistent();
+		assert result;
+		return result;
+	}
 	
 	protected boolean descendantsAreSmaller(TreeNode<T> node, T value)
 	{

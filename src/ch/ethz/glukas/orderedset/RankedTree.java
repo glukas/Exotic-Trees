@@ -1,12 +1,12 @@
 package ch.ethz.glukas.orderedset;
 
+import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.NavigableSet;
 
 public abstract class RankedTree<T> extends BinarySearchTree<T> implements RangeSet<T> {
 	//Augments the binary search tree with dynamic order statistics
-	//all methods provided here are 'readonly'
-	//the implementer is responsible of mainting the tree and especially the size counts
+	//the implementer is responsible of maintaining the tree and especially the size counts
 	//all nodes are assumed to conform to RankedTreeNode
 	
 	
@@ -15,6 +15,14 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	{
 		return new RankedTreeNode<T>(val);
 	}
+	
+	@Override
+	public int size()
+	{
+		assert subtreeSizesConsistent();
+		return ((RankedTreeNode<T>) metaRoot).size()-1;
+	}
+	
 	
 	/**
 	 * Returns the k'th-smallest element from the set
@@ -26,6 +34,8 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 		assert subtreeSizesConsistent();
 		
 		TreeNode<T> result = getByRank(getRoot(), index);
+		
+		assert checkInvariants();
 		if (result == null) return null;
 		return result.getValue();
 	}
@@ -54,6 +64,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	public void remove(int index)
 	{
 		poll(index);
+		assert checkInvariants();
 	}
 	
 	
@@ -83,6 +94,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	public int sizeOfRange(T lowerbound, T upperbound, boolean fromInclusive, boolean toInclusive) {
 		if (compareValues(lowerbound, upperbound) > 0) throw new IllegalArgumentException();
 		assert subtreeSizesConsistent();
+		assert listIteratorConsistent();
 		
 		T lower;
 		T upper;
@@ -166,6 +178,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 
 	@Override
 	public NavigableSet<T> subSet(T fromElement, boolean fromInclusive, T toElement, boolean toInclusive) {
+		assert subtreeSizesConsistent();
 		return new SortedSubset<T>(this, fromElement, toElement, fromInclusive, toInclusive);
 	}
 	
@@ -193,6 +206,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 		} else {
 			return getByRank(root.getRightChild(), index-leftChildren-1);
 		}
+		
 	}
 	
 	
@@ -222,6 +236,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 			indexOfValue = size(current.getLeftChild());
 		}
 		
+		assert checkInvariants();
 		return indexOfValue;
 	}
 	
@@ -232,29 +247,42 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 		if (node == null) return 0;
 		return ((RankedTreeNode<T>)node).size();
 	}
-	
-	@Override
-	protected void treeRotate(TreeNode<T> child, TreeNode<T> parent, int parity)
-	{
-		super.treeRotate(child, parent, parity);
-		assert subtreeSizeConsistent(child);
-	}
-	
-	@Override
-	protected void treeRotateUp(TreeNode<T> child, TreeNode<T> parent, TreeNode<T> grandmother)
-	{
-		super.treeRotateUp(child, parent, grandmother);
-		assert subtreeSizeConsistent(grandmother);
-	}
 
 	///
 	//INVARIANTS
 	///
 	
+	@Override
+	protected boolean checkInvariants()
+	{
+		boolean result = super.checkInvariants();
+		result = result && subtreeSizesConsistent();
+		assert result;
+		return result;
+	}
+	
+	
+	protected boolean listIteratorConsistent()
+	{
+		ListIterator<T> listIterator = listIterator();
+		@SuppressWarnings("unchecked")
+		T[] ordered = (T[]) toArray();
+		assert ordered.length == size();
+		
+		boolean consistent = true;
+		for(int i=0; i<ordered.length; i++) {
+			T val2 = listIterator.next();
+			consistent = consistent && compareValues(ordered[i], val2) == 0;
+			assert consistent;//fail fast
+		}
+		consistent = consistent && !listIterator.hasNext();
+		assert consistent;
+		return consistent;
+	}
+	
 	protected boolean subtreeSizesConsistent()
 	{
-		if (getRoot() == null) return true;
-		return subtreeSizeConsistent(getRoot());
+		return subtreeSizeConsistent(metaRoot);
 	}
 
 	protected boolean subtreeSizeConsistent(TreeNode<T> node)

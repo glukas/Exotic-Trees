@@ -1,6 +1,7 @@
 package ch.ethz.glukas.orderedset;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.Random;
 import java.util.Set;
@@ -24,7 +25,7 @@ public class OrderedSetTests {
 		SetTests.randomAdd(set, control, testSize, testRange);
 		
 		//exhaustively test all possible subsets
-		for (int lower = 0; lower<=testRange+2; lower++) {
+		for (int lower = 20; lower<=testRange+2; lower++) {
 			for (int upper=lower+1; upper<=testRange+2; upper++) {
 				assertEqualSubsets(set, control, lower, upper);
 			}
@@ -124,6 +125,16 @@ public class OrderedSetTests {
 	}
 	
 	
+	public static void testIterator(SortedSet<Integer> set)
+	{
+		SortedSet<Integer> controlSet = new TreeSet<Integer>();//golden model
+		SetTests.randomAdd(set, controlSet, 1000);
+		Iterator<Integer> control = controlSet.iterator();
+		for (Integer value : set) {
+			assertEquals(control.next(), value);
+		}
+		assertFalse(control.hasNext());
+	}
 
 	//tests add, remove, contains and size
 	public static void testSortedSet(SortedSet<Integer> set) {
@@ -155,10 +166,10 @@ public class OrderedSetTests {
 	
 	public static void assertEqualFirstAndLast(SortedSet<Integer> set, SortedSet<Integer> controlSet)
 	{
-		assertTrue(set.size() == controlSet.size());
+		assertEquals(controlSet.size(), set.size());
 		if (controlSet.size() > 0) {
-			assertTrue(set.first().equals(controlSet.first())) ;
-			assertTrue(set.last().equals(controlSet.last())) ;
+			assertEquals(set.first(), controlSet.first()) ;
+			assertEquals(set.last(), controlSet.last()) ;
 		}
 	}
 	

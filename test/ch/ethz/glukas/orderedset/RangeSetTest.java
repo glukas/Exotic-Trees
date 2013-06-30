@@ -7,7 +7,47 @@ import java.util.Random;
 import org.junit.*;
 
 public class RangeSetTest {
-
+	
+	
+	public static void testRangeSizes(RangeSet<Integer>set)
+	{
+		set.clear();
+		
+		set.add(1);
+		set.add(4);
+		set.add(6);
+		set.add(100);
+		
+		assertTrue(set.sizeOfRange(1, 6, true, true) == 3);
+		assertTrue(set.sizeOfRange(1, 6, true, false) == 2);
+		assertTrue(set.sizeOfRange(1, 6, false, true) == 2);
+		assertTrue(set.sizeOfRange(1, 6, false, false) == 1);
+		
+		assertTrue(set.sizeOfRange(-3, 0, true, true) == 0);
+		assertTrue(set.sizeOfRange(-3, 0, false, true) == 0);
+		assertTrue(set.sizeOfRange(-3, 0, true, false) == 0);
+		assertTrue(set.sizeOfRange(-3, 0, false, false) == 0);
+		
+		assertTrue(set.sizeOfRange(0, 100, false, true) == 4);
+		assertTrue(set.sizeOfRange(0, 100, false, false) == 3);
+		assertTrue(set.sizeOfRange(0, 100, false, false) == 3);
+		assertTrue(set.sizeOfRange(0, 100, true, true) == 4);
+		
+		set.clear();
+		
+		SetTests.sequenceAdd(set, 30);
+		
+		for (int i=0; i<30; i++) {
+			for (int j=0; j<i; j++) {
+				assertTrue(set.sizeOfRange(j, i, true, true) == i-j+1);
+				assertTrue(set.sizeOfRange(j, i, true, false) == i-j);
+				assertTrue(set.sizeOfRange(j, i, false, true) == i-j);
+				//assertTrue(set.sizeOfRange(i, j, false, false) == i-j+2);
+			}
+		}
+		
+	}
+	
 	 public static void testPolling(RangeSet<Integer> set)
 	 {
 		 set.clear();
@@ -16,6 +56,8 @@ public class RangeSetTest {
 		 set.add(4);
 		 set.add(6);
 		 set.add(100);
+		 
+		 
 		 assertTrue(set.poll(2) == 6);
 		 assertTrue(!set.contains(6));
 		 assertTrue(set.poll(1) == 4);

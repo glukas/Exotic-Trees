@@ -77,10 +77,17 @@ public class RandomizedBSTTest {
 	 }
 	 
 	 @Test
+	 public void testIterator()
+	 {
+		 OrderedSetTests.testIterator(new SplayTree<Integer>());
+	 }
+	 
+	 @Test
 	 public void testAccessByRank()
 	 {
 		 RangeSetTest.testRangeSet(new RandomizedBST<Integer>());
 		 RangeSetTest.testPolling(new RandomizedBST<Integer>());
+		 RangeSetTest.testRangeSizes(new RandomizedBST<Integer>());
 	 }
 	
 }

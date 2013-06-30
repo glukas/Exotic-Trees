@@ -28,64 +28,19 @@ public class RandomizedBST<T> extends RankedTree<T>{
 	//COLLECTION
 	///
 	
-	@Override
-	public boolean add(T value)
+	protected boolean internalAdd(T value)
 	{
-		assert isInOrder();
-		
-		if (value == null) throw new NullPointerException();
-		
-		Out<Boolean> modified = new Out<Boolean>();
-
-		setRoot(internalAdd(value, getRoot(), modified));
-		//internalAdd(value);
-		
-		assert subtreeSizeConsistent(getRoot());
-		assert isInOrder();
-		assert contains(value);
-	
-		return modified.get();
+		setRoot(internalAdd(value, getRoot(), lastOperationDidModify));
+		return lastOperationDidModify.get();
 	}
 	
 	
-	@Override
-	public boolean remove(Object arg0)
+	protected boolean internalRemove(T value)
 	{
-		assert isInOrder();
-		assert subtreeSizeConsistent(getRoot());
-		
-		if (arg0 == null) return false;
-		
-		@SuppressWarnings("unchecked")
-		T value = (T)arg0;
-		Out<Boolean> modified = new Out<Boolean>();
-		
-		setRoot(internalRemove(value, getRoot(), modified));
-
-		assert subtreeSizeConsistent(getRoot());
-		assert isInOrder();
-		assert (!contains(value));
-		
-		return modified.get();
+		setRoot(internalRemove(value, getRoot(), lastOperationDidModify));
+		return lastOperationDidModify.get();
 	}
-	
-	@Override
-	public int size()
-	{
-		return ((RankedTreeNode<T>) metaRoot).size()-1;
-	}
-	
-	@Override
-	public void clear() {
-		metaRoot = new RankedTreeNode<T>(null);
-		
-		assert isEmpty();
-	}
-	
-	
 
-
-	
 	////
 	//NAVIGABLE SET
 	///
@@ -188,10 +143,6 @@ public class RandomizedBST<T> extends RankedTree<T>{
 		return null;
 	}
 
-
-	
-
-
 	///
 	//DESTRUCTIVE SUBSET METHODS : elements are removed from this set and added to a new set
 	///
@@ -217,6 +168,8 @@ public class RandomizedBST<T> extends RankedTree<T>{
 				add(equal.getValue());
 			}
 		}
+		
+		assert checkInvariants();
 		return headSet;
 	}
 	
@@ -241,6 +194,8 @@ public class RandomizedBST<T> extends RankedTree<T>{
 				add(equal.getValue());
 			}
 		}
+		
+		assert checkInvariants();
 		return tailSet;
 	}
 	
@@ -361,8 +316,7 @@ public class RandomizedBST<T> extends RankedTree<T>{
 			add(value);
 		}
 		
-		assert isInOrder();
-		assert subtreeSizeConsistent(getRoot());
+		assert checkInvariants();
 		return valueOrNull(equal);
 	}
 	
@@ -385,7 +339,7 @@ public class RandomizedBST<T> extends RankedTree<T>{
 		
 		if (equal == null) {
 			modified.set(true);
-			equal = new RankedTreeNode<T>(value);
+			equal = newNode(value);
 		} else {
 			assert equal.getValue().equals(value);
 			modified.set(false);
@@ -430,8 +384,7 @@ public class RandomizedBST<T> extends RankedTree<T>{
 	//INSTANCE VARIABLES
 	///
 	private Random random = new Random(91);
-
-
+	private Out<Boolean> lastOperationDidModify = new Out<Boolean>();
 
 	
 	
