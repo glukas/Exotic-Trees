@@ -184,6 +184,22 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	
 	
 	////
+	//DESCENDING SET
+	////
+	
+	@Override
+	public Iterator<T> descendingIterator() {
+		return descendingSet().iterator();
+	}
+
+	@Override
+	public NavigableSet<T> descendingSet() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
+	////
 	//IMPLEMENTATION
 	////
 	

@@ -42,10 +42,10 @@ public class RangeSetTest {
 				assertTrue(set.sizeOfRange(j, i, true, true) == i-j+1);
 				assertTrue(set.sizeOfRange(j, i, true, false) == i-j);
 				assertTrue(set.sizeOfRange(j, i, false, true) == i-j);
-				//assertTrue(set.sizeOfRange(i, j, false, false) == i-j+2);
+				assertTrue(set.sizeOfRange(j, i, false, false) == i-j-1);
 			}
 		}
-		
+		System.out.println("RangeSetTests: testRangeSizes done.");
 	}
 	
 	 public static void testPolling(RangeSet<Integer> set)
@@ -66,6 +66,7 @@ public class RangeSetTest {
 		 assertTrue(!set.contains(100));
 		 assertTrue(set.poll(0) == 1);
 		 assertTrue(!set.contains(1));
+		 System.out.println("RangeSetTests: testPolling done.");
 	 }
 	 
 	 
@@ -83,7 +84,11 @@ public class RangeSetTest {
 			set.add(rand.nextInt());
 			assertIsInOrder(set);
 		}
+		System.out.println("RangeSetTests: testRangeSet done.");
 	}
+	
+	
+	//helpers
 	
 	static void assertIsInOrder(RangeSet<Integer>set)
 	{

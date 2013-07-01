@@ -117,32 +117,19 @@ public class RandomizedBST<T> extends RankedTree<T>{
 	
 	private T internalLower(T e)
 	{
-		Out<T> smaller = new Out<T>();
-		getNeighborhood(e, smaller, null);
-		return smaller.get();
+		Out<T> smallerValue = new Out<T>();
+		getNeighborhood(e, smallerValue, null);
+		return smallerValue.get();
 	}
 	
 	private T internalHigher(T e)
 	{
-		Out<T> greater = new Out<T>();
-		getNeighborhood(e, null, greater);
-		return greater.get();
+		Out<T> greaterValue = new Out<T>();
+		getNeighborhood(e, null, greaterValue);
+		return greaterValue.get();
 	}
 	
-	//reverse order
-
-	@Override
-	public Iterator<T> descendingIterator() {
-		return descendingSet().iterator();
-	}
-
-
-	@Override
-	public NavigableSet<T> descendingSet() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 	///
 	//DESTRUCTIVE SUBSET METHODS : elements are removed from this set and added to a new set
 	///
@@ -201,6 +188,7 @@ public class RandomizedBST<T> extends RankedTree<T>{
 	
 	////
 	//IMPLEMENTATION
+	//TODO: reuse Out<TreeNode<T>> objects or consider simply using instance variables for multiple return values
 	////
 	
 	private TreeNode<T> internalAdd(T value, TreeNode<T> r, Out<Boolean> modified)
@@ -297,20 +285,18 @@ public class RandomizedBST<T> extends RankedTree<T>{
 	//Algorithm: split around the value and join the subtrees back
 	public T getNeighborhood(T value, Out<T> smaller, Out<T> greater) {
 		//partition tree around the value e
-		Out<TreeNode<T>> greaterTree = new Out<TreeNode<T>>();
-		Out<TreeNode<T>> smallerTree = new Out<TreeNode<T>>();
-		TreeNode<T> equal = split(value, getRoot(), smallerTree, greaterTree);
+		TreeNode<T> equal = split(value, getRoot(), lesserTree, greaterTree);
 
 		//extract result values if needed
 		if (greaterTree.get() != null && greater != null) {
 			greater.set(findFirst(greaterTree.get()).getValue());
 		}
-		if (smallerTree.get() != null && smaller != null) {
-			smaller.set(findLast(smallerTree.get()).getValue());
+		if (lesserTree.get() != null && smaller != null) {
+			smaller.set(findLast(lesserTree.get()).getValue());
 		}
 		
 		//restore the tree
-		TreeNode<T> newRoot = join(smallerTree.get(), greaterTree.get());
+		TreeNode<T> newRoot = join(lesserTree.get(), greaterTree.get());
 		setRoot(newRoot);
 		if (equal != null) {
 			add(value);
@@ -327,14 +313,10 @@ public class RandomizedBST<T> extends RankedTree<T>{
 	//if the value was already present, modified will be set to false, else if will be set to true
 	private TreeNode<T> insertAtRoot(T value, TreeNode<T> r, Out<Boolean> modified)
 	{
-
-		Out<TreeNode<T>> less = new Out<TreeNode<T>>();
-		Out<TreeNode<T>> greater = new Out<TreeNode<T>>();
+		TreeNode<T> equal = split(value, r, lesserTree, greaterTree);
 		
-		TreeNode<T> equal = split(value, r, less, greater);
-		
-		assert less.get() == null || compareValues(value, findLast(less.get()).getValue()) > 0;
-		assert greater.get() == null || compareValues(value, findFirst(greater.get()).getValue()) < 0;
+		assert lesserTree.get() == null || compareValues(value, findLast(lesserTree.get()).getValue()) > 0;
+		assert greaterTree.get() == null || compareValues(value, findFirst(greaterTree.get()).getValue()) < 0;
 		
 		
 		if (equal == null) {
@@ -345,8 +327,8 @@ public class RandomizedBST<T> extends RankedTree<T>{
 			modified.set(false);
 		}
 		
-		equal.setLeftChild(less.get());
-		equal.setRightChild(greater.get());
+		equal.setLeftChild(lesserTree.get());
+		equal.setRightChild(greaterTree.get());
 		
 		assert subtreeSizeConsistent(equal);
 		assert modified.get() != null;
@@ -385,7 +367,7 @@ public class RandomizedBST<T> extends RankedTree<T>{
 	///
 	private Random random = new Random(91);
 	private Out<Boolean> lastOperationDidModify = new Out<Boolean>();
-
-	
+	Out<TreeNode<T>> lesserTree = new Out<TreeNode<T>>();
+	Out<TreeNode<T>> greaterTree = new Out<TreeNode<T>>();
 	
 }

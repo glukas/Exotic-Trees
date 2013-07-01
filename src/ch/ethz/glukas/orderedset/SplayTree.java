@@ -5,14 +5,16 @@ import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.SortedSet;
 
-/* Implements a Splay Tree as introduced in http://www.cs.cmu.edu/~sleator/papers/self-adjusting.pdf
+/* Implements a SplayTree as introduced in http://www.cs.cmu.edu/~sleator/papers/self-adjusting.pdf
  * 
  * Guarantees O(log n) amortized performance for contains, add and delete.
  * For any input distribution, this tree is only off by a constant factor from an optimal search tree.
  * 
- * Splay trees are especially fast if some elements are accessed much more frequently than others or if elements are accessed repeatedly in a short time interval.
+ * SplayTrees are especially fast if some elements are accessed more frequently than others or if elements are accessed repeatedly in a short time interval.
  * This is because after accessing an element it will be at the root of the tree. Also, the nodes encountered on the way to the node will be much closer to the root.
  * This second fact is crucial and is what makes the trees also viable in the worst case.
+ * 
+ * As a subclass of RankedTree, this SplayTree also provides dynamic order statistics.
  */
 
 
@@ -36,22 +38,10 @@ public class SplayTree<E> extends RankedTree <E> {
 	}
 	
 	
-	
+	@Override
 	protected boolean internalAdd(E val)
 	{
 		boolean modified = false;
-		
-		/*alternative
-		Out<TreeNode<E>> lower = new Out<TreeNode<E>>();
-		Out<TreeNode<E>> upper = new Out<TreeNode<E>>();
-		TreeNode<E> equal = split(val, lower, upper);
-		if (equal == null) {
-			TreeNode<E> node = newNode(val);
-			node.addChildren(lower.get(), upper.get());
-			setRoot(node);
-			modified = true;
-		}*/
-		
 		
 		TreeNode<E> tail = splitOffTail(val);
 		if (compareValues(tail, val) != 0) {//if tail is null, the comparison will return +1
@@ -61,9 +51,6 @@ public class SplayTree<E> extends RankedTree <E> {
 
 		joinUp(tail);
 		
-		assert contains(val);
-		assert checkInvariants();
-		
 		return modified;
 	}
 	
@@ -72,9 +59,8 @@ public class SplayTree<E> extends RankedTree <E> {
 	protected boolean internalRemove(E value)
 	{
 		boolean modified = false;
-		
+
 		TreeNode<E> tail = splitOffTail(value);
-		
 		if (compareValues(tail, value) == 0) {//if tail is null, the comparison will return +1
 			assert tail.getLeftChild() == null;
 			//the root of the tail has 'val' at the root. cut it off by not joining it back in.
@@ -134,17 +120,7 @@ public class SplayTree<E> extends RankedTree <E> {
 		return last;
 	}
 	
-	@Override
-	public Iterator<E> descendingIterator() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public NavigableSet<E> descendingSet() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 	////
 	//IMPLEMENTATION :: NAVIGATION
@@ -192,50 +168,6 @@ public class SplayTree<E> extends RankedTree <E> {
 		return result;
 	}
 	
-	/*
-	protected E precedingValue(E value, boolean inclusive)
-	{	
-		E result = null;
-		
-		TreeNode<E> tail = splitOffTail(value);
-		if (inclusive && compareValues(tail, value) == 0) {//the value, if present is always part of the tail
-			result = tail.getValue();
-		} else {
-			result = internalLast(getRoot());
-		}
-		joinIn(tail);//reassmble
-		
-		
-		assert result == null || compareValues(result, value) <= 0;
-		assert result == null || inclusive || compareValues(result, value) < 0;
-		assert result != null || getRoot() == null || (inclusive && compareValues(value, first()) < 0) || compareValues(value, first()) <= 0;
-		
-		assert checkInvariants();
-		return result;
-	}*/
-	
-	/*
-	public E succedingValue(E value, boolean inclusive)
-	{
-		
-		TreeNode<E> tail = splitOffTail(value);
-		
-		E result = null;
-		if (!inclusive && compareValues(tail, value) == 0) {//the value might be part of the tail, but not wanted
-			assert tail.getLeftChild() == null;
-			result = internalFirst(tail.getRightChild());
-		} else {
-			result = valueOrNull(tail);
-		}
-		joinIn(tail);
-		
-		assert !(tail == null && result != null);
-		assert result == null || inclusive || compareValues(result, value) > 0;
-		assert result != null || getRoot() == null || (inclusive && compareValues(value, last()) > 0) || compareValues(value, last()) >= 0;
-		
-		assert checkInvariants();
-		return result;
-	}*/
 	
 	////
 	//IMPLEMENTATION : SPLITS & JOINS
@@ -319,6 +251,7 @@ public class SplayTree<E> extends RankedTree <E> {
 	
 	
 	//alternative split definition
+	/*
 	protected TreeNode<E> split(E val, Out<TreeNode<E>> lower, Out<TreeNode<E>>upper)
 	{
 		lower.set(null);
@@ -345,7 +278,7 @@ public class SplayTree<E> extends RankedTree <E> {
 		
 		assert checkInvariants();
 		return result;
-	}
+	}*/
 
 	
 	
@@ -353,7 +286,48 @@ public class SplayTree<E> extends RankedTree <E> {
 	//IMPLEMENTATION: SPLAYING
 	/////
 	
+	
+	//if the value is contained in the tree, it will be the root of the tree after this operation
+	//else, the root will either be the higher or lower value to 'val'
+	private void splay(E val)
+	{
+		if (getRoot() == null) return;
+		
+		ArrayList<TreeNode<E>> trace = find(val);
+		splay(trace);
+	}
+	
+	
+	//splay using the trace provided. the root of the subtree to be modified must be at index 1, its parent at index 0. The node to be splayed is at the last index.
+	private void splay(ArrayList<TreeNode<E>> trace)
+	{
+		assert isInOrder();
+		TreeNode<E> found = trace.get(trace.size()-1);
+		
+		//perform zig-zig and zig-zags
+		int current = trace.size()-1;
+		
+		for (; current >= 3; current-=2) {
+			TreeNode<E>	parent = trace.get(current-1);
+			TreeNode<E> grandparent = trace.get(current-2);
+			TreeNode<E> grandgrandparent = trace.get(current-3);
+			
+			splayStep(found, parent, grandparent, grandgrandparent);
+		}
+		
+		//in the odd case, a final zig is necessary to promote the node with value 'val' to the root
+		if (current == 2) {
+			zig(found, trace.get(1), trace.get(0));
+		}
+		
+		assert treeIsSplayedAroundValue(getRoot(), found.getValue());
+		assert getRoot() == found;
+		assert checkInvariants();
+	}
 
+	
+	
+	/*
 	//if the value is contained in the tree, it will be the root of the tree after this operation
 	//else, the root will either be the higher or lower value to 'val'
 	private void splay(E val)
@@ -384,7 +358,7 @@ public class SplayTree<E> extends RankedTree <E> {
 		assert treeIsSplayedAroundValue(getRoot(), val);
 		assert getRoot() == found;
 		assert checkInvariants();
-	}
+	}*/
 	
 	
 	private void splayStep(TreeNode<E> current, TreeNode<E> parent, TreeNode<E> grandparent, TreeNode<E> grandgrandparent)

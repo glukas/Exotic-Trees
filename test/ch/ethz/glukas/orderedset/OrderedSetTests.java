@@ -56,6 +56,7 @@ public class OrderedSetTests {
 			 nvControlSubset = control.tailSet(upper, false);
 			assertEqualNavigableSets(nvSubset, nvControlSubset);
 		}
+		System.out.println("OrderedSetTests: testTailSets done.");
 	}
 	
 	public static void testSubsetModification(NavigableSet<Integer> set)
@@ -134,6 +135,7 @@ public class OrderedSetTests {
 			assertEquals(control.next(), value);
 		}
 		assertFalse(control.hasNext());
+		System.out.println("OrderedSetTests: testIterator done.");
 	}
 
 	//tests add, remove, contains and size

@@ -24,8 +24,8 @@ class Main {
 		RangeSetTest.testRangeSizes(new RandomizedBST<Integer>());
 		
 		
-		//OrderedSetTests.testIterator(new SplayTree<Integer>());
-		//OrderedSetTests.testIterator(new RandomizedBST<Integer>());
+		OrderedSetTests.testIterator(new SplayTree<Integer>());
+		OrderedSetTests.testIterator(new RandomizedBST<Integer>());
 		
 		
 		RangeSetTest.testRangeSizes(new SplayTree<Integer>());
@@ -38,22 +38,23 @@ class Main {
 		
 		int performanceTestSize = 1000000;
 		
-		/*
-		performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
-		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
 		
-		performanceTestRepeatedAccess(new SplayTree<Integer>(), performanceTestSize);
-		performanceTestRepeatedAccess(new TreeSet<Integer>(), performanceTestSize);
+		//performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
+		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
+		
+		//performanceTestRepeatedAccess(new SplayTree<Integer>(), performanceTestSize);
+		//performanceTestRepeatedAccess(new TreeSet<Integer>(), performanceTestSize);
 		//testImmutableSet();
 		//performanceTestImmutableSet();
 		
-		performanceTestNavigableSet(new RandomizedBST<Integer>(), performanceTestSize);
-		performanceTestNavigableSet(new SplayTree<Integer>(), performanceTestSize);
-		performanceTestNavigableSet(new TreeSet<Integer>(), performanceTestSize);
-		*/
-		//performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
-		//performanceTestSet(new Treap<Integer>(), performanceTestSize);
-		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
+		//performanceTestNavigableSet(new RandomizedBST<Integer>(), performanceTestSize);
+		//performanceTestNavigableSet(new SplayTree<Integer>(), performanceTestSize);
+		//performanceTestNavigableSet(new TreeSet<Integer>(), performanceTestSize);
+		/*
+		performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
+		performanceTestSet(new Treap<Integer>(), performanceTestSize);
+		performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
+		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);*/
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
 	}
 	
