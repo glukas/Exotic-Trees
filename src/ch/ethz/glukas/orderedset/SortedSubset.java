@@ -282,8 +282,7 @@ class SortedSubset<T> extends AbstractCollection<T> implements NavigableSet<T> {
 
 	@Override
 	public NavigableSet<T> descendingSet() {
-		//TODO
-		return superset.descendingSet().subSet(upper, toInclusive, lower, fromInclusive);
+		return new DescendingSet<T>(this);
 	}
 
 	

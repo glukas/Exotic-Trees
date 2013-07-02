@@ -15,6 +15,8 @@ class NavigableSetIterator<T> implements Iterator<T> {
 	//precondition: set.contains(first), set.contains(last);
 	public NavigableSetIterator(NavigableSet<T> set, T first, T last)
 	{
+		if (first == null) throw new NullPointerException();
+		if (last == null) throw new NullPointerException();
 		assert set.contains(first);
 		assert set.contains(last);
 		internalSet = set;
@@ -36,6 +38,7 @@ class NavigableSetIterator<T> implements Iterator<T> {
 	@Override
 	public boolean hasNext() {
 		if (internalSet == null) return false;
+		if (current == null) return false;
 		return internalSet.comparator().compare(current, upperbound) <= 0;
 	}
 	

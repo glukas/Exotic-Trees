@@ -194,8 +194,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 
 	@Override
 	public NavigableSet<T> descendingSet() {
-		// TODO Auto-generated method stub
-		return null;
+		return new DescendingSet<T>(this);
 	}
 	
 	

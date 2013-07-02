@@ -13,8 +13,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 public class OrderedSetTests {
-
-
+	//sets are assumed to be empty
 	
 	public static void testSubsets(NavigableSet<Integer> set)
 	{
@@ -125,10 +124,10 @@ public class OrderedSetTests {
 		System.out.println("OrderedSetTests: testNavigation done.");
 	}
 	
+
 	
-	public static void testIterator(SortedSet<Integer> set)
+	public static void testIterator(SortedSet<Integer> set, SortedSet<Integer> controlSet)
 	{
-		SortedSet<Integer> controlSet = new TreeSet<Integer>();//golden model
 		SetTests.randomAdd(set, controlSet, 1000);
 		Iterator<Integer> control = controlSet.iterator();
 		for (Integer value : set) {
@@ -136,6 +135,12 @@ public class OrderedSetTests {
 		}
 		assertFalse(control.hasNext());
 		System.out.println("OrderedSetTests: testIterator done.");
+	}
+	
+	//assumes ascending ordering
+	public static void testIterator(SortedSet<Integer> set)
+	{
+		testIterator(set, new TreeSet<Integer>());
 	}
 
 	//tests add, remove, contains and size
@@ -175,7 +180,7 @@ public class OrderedSetTests {
 		}
 	}
 	
-	private static void assertEqualSubsets(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper)
+	public static void assertEqualSubsets(NavigableSet<Integer> set, NavigableSet<Integer> control, int lower, int upper)
 	{
 		//test sorted set interface subsets
 		SortedSet<Integer> subset = set.subSet(lower, upper);
@@ -198,16 +203,16 @@ public class OrderedSetTests {
 	}
 	
 	
-	private static void assertEqualSortedSets(SortedSet<Integer> set, SortedSet<Integer> control)
-	{
-		SetTests.assertEqualSets(set, control);
-		assertEqualFirstAndLast(set, control);
-	}
-	
-	private static void assertEqualNavigableSets(NavigableSet<Integer> set, NavigableSet<Integer> control)
+	public static void assertEqualNavigableSets(NavigableSet<Integer> set, NavigableSet<Integer> control)
 	{
 		assertEqualSortedSets(set, control);
 		testSetsReturnSameNeighborhoods(set, control);
+	}
+	
+	public static void assertEqualSortedSets(SortedSet<Integer> set, SortedSet<Integer> control)
+	{
+		SetTests.assertEqualSets(set, control);
+		assertEqualFirstAndLast(set, control);
 	}
 	
 	
