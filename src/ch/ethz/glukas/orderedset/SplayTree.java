@@ -248,6 +248,27 @@ public class SplayTree<E> extends RankedTree <E> {
 		return result;
 	}
 	
+	////
+	//Access by rank : add splaying operation where needed
+	///
+	
+	@Override
+	public E get(int index)
+	{
+		E result = super.get(index);
+		splay(result);
+		return result;
+	}
+	
+	@Override
+	public int indexOf(E value)
+	{
+		if (!isEmpty()) {
+			splay(value);
+		}
+		int result = super.indexOf(value);
+		return result;
+	}
 	
 	/////
 	//IMPLEMENTATION: SPLAYING
@@ -394,7 +415,7 @@ public class SplayTree<E> extends RankedTree <E> {
 	//INSTANCE VARIABLES
 	/////
 	
-	Out<TreeNode<E>> lower = new Out<TreeNode<E>>();
-	Out<TreeNode<E>> higher = new Out<TreeNode<E>>();
-	Random rand = new Random();
+	final Out<TreeNode<E>> lower = new Out<TreeNode<E>>();
+	final Out<TreeNode<E>> higher = new Out<TreeNode<E>>();
+	final Random rand = new Random();
 }

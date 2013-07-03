@@ -36,6 +36,7 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 		TreeNode<T> result = getByRank(getRoot(), index);
 		
 		assert checkInvariants();
+		
 		if (result == null) return null;
 		return result.getValue();
 	}
