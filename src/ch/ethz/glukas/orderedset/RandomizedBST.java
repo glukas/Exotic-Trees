@@ -45,28 +45,6 @@ public class RandomizedBST<T> extends RankedTree<T>{
 	//NAVIGABLE SET
 	///
 	
-	public T pollFirst()
-	{
-		if (isEmpty()) return null;
-		T first = first();
-		remove(first);
-		return first;
-	}
-	
-	public T poll()
-	{
-		return pollFirst();
-	}
-	
-	public T pollLast()
-	{
-		if (isEmpty()) return null;
-		T last = last();
-		remove(last);
-		return last;
-	}
-	
-	
 	
 	//NAVIGATE:
 	//the algorithms are based on split and join operations
@@ -188,7 +166,6 @@ public class RandomizedBST<T> extends RankedTree<T>{
 	
 	////
 	//IMPLEMENTATION
-	//TODO: reuse Out<TreeNode<T>> objects or consider simply using instance variables for multiple return values
 	////
 	
 	private TreeNode<T> internalAdd(T value, TreeNode<T> r, Out<Boolean> modified)

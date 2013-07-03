@@ -101,21 +101,6 @@ public class SplayTree<E> extends RankedTree <E> {
 		return higher(value);
 	}
 	
-	public E pollFirst()
-	{
-		E first = first();
-		remove(first);
-		return first;
-	}
-	
-	public E pollLast()
-	{
-		E last = last();
-		remove(last);
-		return last;
-	}
-	
-
 	
 	////
 	//IMPLEMENTATION :: NAVIGATION

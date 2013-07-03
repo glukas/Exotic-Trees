@@ -142,8 +142,31 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	}
 	
 	/////
-	//NAVIGABLE SET : Subsets
+	//NAVIGABLE SET
 	/////
+	
+	
+	public T pollFirst()
+	{
+		if (isEmpty()) return null;
+		T first = first();
+		remove(first);
+		return first;
+	}
+	
+	public T poll()
+	{
+		return pollFirst();
+	}
+	
+	public T pollLast()
+	{
+		if (isEmpty()) return null;
+		T last = last();
+		remove(last);
+		return last;
+	}
+	
 	
 	//Non-destructive subset methods : returned sets are backed by this set so changes in one set are reflected in the other set
 
