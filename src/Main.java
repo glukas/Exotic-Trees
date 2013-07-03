@@ -16,7 +16,7 @@ class Main {
 			e.printStackTrace();
 		}
 	
-		
+		/*
 		SetTests.testSet(new RandomizedBST<Integer>());
 		OrderedSetTests.testNavigation(new RandomizedBST<Integer>());
 		OrderedSetTests.testSortedSet(new RandomizedBST<Integer>());
@@ -33,28 +33,28 @@ class Main {
 		RangeSetTest.testPolling(new SplayTree<Integer>());
 		OrderedSetTests.testSubsets(new SplayTree<Integer>());
 		SetTests.testSet(new SplayTree<Integer>());
-		SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);
+		SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);*/
 		
 		
 		int performanceTestSize = 1000000;
 		
 		
-		//performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
-		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
+		performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
+		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
 		
-		//performanceTestRepeatedAccess(new SplayTree<Integer>(), performanceTestSize);
-		//performanceTestRepeatedAccess(new TreeSet<Integer>(), performanceTestSize);
+		performanceTestRepeatedAccess(new SplayTree<Integer>(), performanceTestSize);
+		performanceTestRepeatedAccess(new TreeSet<Integer>(), performanceTestSize);
 		//testImmutableSet();
 		//performanceTestImmutableSet();
 		
 		//performanceTestNavigableSet(new RandomizedBST<Integer>(), performanceTestSize);
-		//performanceTestNavigableSet(new SplayTree<Integer>(), performanceTestSize);
-		//performanceTestNavigableSet(new TreeSet<Integer>(), performanceTestSize);
-		/*
+		performanceTestNavigableSet(new SplayTree<Integer>(), performanceTestSize);
+		performanceTestNavigableSet(new TreeSet<Integer>(), performanceTestSize);
+		
 		performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
 		performanceTestSet(new Treap<Integer>(), performanceTestSize);
 		performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
-		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);*/
+		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
 	}
 	

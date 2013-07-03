@@ -61,8 +61,9 @@ abstract class BinarySearchTree<T> extends AbstractCollection<T> implements Set<
 	@Override
 	//returns false if arg0 == null
 	//to implement this method, override internalContains
+	//the trivial cases arg0==null and isEmpty() are taken care of here, so these special cases need not be addressed in the implementation
 	public boolean contains(Object arg0) {
-		if (arg0 == null) return false;
+		if (arg0 == null || isEmpty()) return false;
 		
 		@SuppressWarnings("unchecked")
 		T value = (T)arg0;

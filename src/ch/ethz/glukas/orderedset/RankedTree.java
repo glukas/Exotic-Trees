@@ -189,7 +189,8 @@ public abstract class RankedTree<T> extends BinarySearchTree<T> implements Range
 	
 	@Override
 	public Iterator<T> descendingIterator() {
-		return descendingSet().iterator();
+		//TODO: test
+		return new BinarySearchTreeIterator<T>(getRoot(), true);//use the fast BST iterator instead of the slower iterator of the descending set
 	}
 
 	@Override

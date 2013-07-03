@@ -9,6 +9,9 @@ class NavigableSetIterator<T> implements Iterator<T> {
 	//the empty iterator
 	public NavigableSetIterator()
 	{
+		lowerbound = null;
+		upperbound = null;
+		internalSet = null;
 	}
 	
 	//both first and last are inclusive bounds. 'first' is the first, 'last' the last element returned by the iterator
@@ -59,7 +62,7 @@ class NavigableSetIterator<T> implements Iterator<T> {
 	////
 	
 	private T current;
-	private NavigableSet<T> internalSet;
-	private T upperbound;
-	private T lowerbound;
+	private final NavigableSet<T> internalSet;
+	private final T upperbound;
+	private final T lowerbound;
 }

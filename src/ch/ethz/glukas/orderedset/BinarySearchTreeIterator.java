@@ -11,7 +11,21 @@ import javax.naming.OperationNotSupportedException;
 
 public class BinarySearchTreeIterator<T> implements Iterator<T> {
 
+	public BinarySearchTreeIterator(TreeNode<T> node, boolean descending) {
+		init(node, descending);
+	}
+	
 	public BinarySearchTreeIterator(TreeNode<T> node) {
+		init(node, false);
+	}
+	
+	private void init(TreeNode<T> node, boolean descending)
+	{
+		if (descending) {
+			parity = 1;
+		} else {
+			parity = -1;
+		}
 		push(node);
 	}
 
@@ -24,8 +38,7 @@ public class BinarySearchTreeIterator<T> implements Iterator<T> {
 	public T next() {
 		
 		TreeNode<T> current = deque.pop();
-		push(current.getRightChild());
-		
+		push(current.getChild(-parity));
 		return current.getValue();
 	}
 	
@@ -38,10 +51,10 @@ public class BinarySearchTreeIterator<T> implements Iterator<T> {
 	{
 		while(node != null) {
 			deque.push(node);
-			node = node.getLeftChild();
+			node = node.getChild(parity);
 		}
 	}
 
 	Deque<TreeNode<T>> deque = new ArrayDeque<TreeNode<T>>();
-	
+	int parity;//if parity is negative the left subtree is traversed first. otherwise the right subtree is traversed first ('descending order')
 }

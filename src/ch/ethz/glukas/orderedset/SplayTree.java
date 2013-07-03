@@ -3,6 +3,7 @@ package ch.ethz.glukas.orderedset;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NavigableSet;
+import java.util.Random;
 import java.util.SortedSet;
 
 /* Implements a SplayTree as introduced in http://www.cs.cmu.edu/~sleator/papers/self-adjusting.pdf
@@ -19,10 +20,6 @@ import java.util.SortedSet;
 
 
 public class SplayTree<E> extends RankedTree <E> {
-
-
-
-	
 	
 	/////
 	//IMPLEMENTATION
@@ -31,7 +28,6 @@ public class SplayTree<E> extends RankedTree <E> {
 	@Override
 	protected boolean internalContains(E val)
 	{
-		if (isEmpty()) return false;
 		//splaying moves an element to the root of the tree
 		splay(val);
 		return compareValues(val, getRoot()) == 0;
@@ -55,7 +51,6 @@ public class SplayTree<E> extends RankedTree <E> {
 	}
 	
 	@Override
-	//throws if value == null
 	protected boolean internalRemove(E value)
 	{
 		boolean modified = false;
@@ -138,6 +133,9 @@ public class SplayTree<E> extends RankedTree <E> {
 			result = getRoot().getValue();
 		} else {
 			result = valueOrNull(successor(getRoot()));
+			if (result!= null && rand.nextFloat() < 0.1) {//splay on the value sometimes to prevent bad worst case
+				splay(result);
+			}
 		}
 		
 		assert result == null || compareValues(result, value) > 0;
@@ -159,6 +157,9 @@ public class SplayTree<E> extends RankedTree <E> {
 			result = getRoot().getValue();
 		} else {
 			result = valueOrNull(predecessor(getRoot()));
+			if (result!= null && rand.nextFloat() < 0.1) {//splay on the value sometimes to prevent bad worst case
+				splay(result);
+			}
 		}
 		
 		assert result == null || compareValues(result, value) < 0;
@@ -198,8 +199,7 @@ public class SplayTree<E> extends RankedTree <E> {
 		//if either this tree or 'r' is null, the result is simple:
 		if (r == null) {
 			return;
-		}
-		if (getRoot() == null) {
+		} else if (getRoot() == null) {
 			setRoot(r);
 			return;
 		}
@@ -212,7 +212,7 @@ public class SplayTree<E> extends RankedTree <E> {
 		//since the largest element is now at the root, its right child is null
 		assert getRoot().getRightChild() == null;
 		getRoot().setRightChild(r);
-		((RankedTreeNode<E>)metaRoot).setSize(size(getRoot())+1);
+		((RankedTreeNode<E>)metaRoot).setSize(size(getRoot())+1);//the size of the metaRoot needs to be updated
 		
 		assert checkInvariants();
 	}
@@ -249,39 +249,6 @@ public class SplayTree<E> extends RankedTree <E> {
 	}
 	
 	
-	
-	//alternative split definition
-	/*
-	protected TreeNode<E> split(E val, Out<TreeNode<E>> lower, Out<TreeNode<E>>upper)
-	{
-		lower.set(null);
-		upper.set(null);
-		if (getRoot() == null) return null;
-		
-		TreeNode<E> result = null;
-		
-		splay(val);
-		
-		int comparison = compareValues(getRoot(), val);
-		
-		if (comparison == 0) {
-			result = getRoot();
-			lower.set(result.getLeftChild());
-			upper.set(result.getRightChild());
-		} else if (comparison < 0) {
-			lower.set(getRoot());
-			upper.set(getRoot().getRightChild());
-		} else {
-			lower.set(getRoot().getLeftChild());
-			upper.set(getRoot());
-		}
-		
-		assert checkInvariants();
-		return result;
-	}*/
-
-	
-	
 	/////
 	//IMPLEMENTATION: SPLAYING
 	/////
@@ -291,7 +258,7 @@ public class SplayTree<E> extends RankedTree <E> {
 	//else, the root will either be the higher or lower value to 'val'
 	private void splay(E val)
 	{
-		if (getRoot() == null) return;
+		assert (getRoot() != null);
 		
 		ArrayList<TreeNode<E>> trace = find(val);
 		splay(trace);
@@ -302,17 +269,18 @@ public class SplayTree<E> extends RankedTree <E> {
 	private void splay(ArrayList<TreeNode<E>> trace)
 	{
 		assert isInOrder();
-		TreeNode<E> found = trace.get(trace.size()-1);
+		
+		int current = trace.size()-1;
+		TreeNode<E> found = trace.get(current);
 		
 		//perform zig-zig and zig-zags
-		int current = trace.size()-1;
-		
 		for (; current >= 3; current-=2) {
 			TreeNode<E>	parent = trace.get(current-1);
 			TreeNode<E> grandparent = trace.get(current-2);
 			TreeNode<E> grandgrandparent = trace.get(current-3);
 			
-			splayStep(found, parent, grandparent, grandgrandparent);
+			splayStep(found, parent, grandparent);
+			grandgrandparent.replaceChild(grandparent, found);
 		}
 		
 		//in the odd case, a final zig is necessary to promote the node with value 'val' to the root
@@ -324,44 +292,9 @@ public class SplayTree<E> extends RankedTree <E> {
 		assert getRoot() == found;
 		assert checkInvariants();
 	}
-
 	
 	
-	/*
-	//if the value is contained in the tree, it will be the root of the tree after this operation
-	//else, the root will either be the higher or lower value to 'val'
-	private void splay(E val)
-	{
-		if (getRoot() == null) return;
-		assert isInOrder();
-		
-		ArrayList<TreeNode<E>> trace = find(val);
-		TreeNode<E> found = trace.get(trace.size()-1);
-		
-		//perform zig-zig and zig-zags
-		int current = trace.size()-1;
-		
-		for (; current >= 3; current-=2) {
-			TreeNode<E>	parent = trace.get(current-1);
-			TreeNode<E> grandparent = trace.get(current-2);
-			TreeNode<E> grandgrandparent = trace.get(current-3);
-			
-			splayStep(found, parent, grandparent, grandgrandparent);
-		}
-		
-		//in the odd case, a final zig is necessary to promote the node with value 'val' to the root
-		if (current == 2) {
-			zig(found, trace.get(1), trace.get(0));
-		}
-		
-		
-		assert treeIsSplayedAroundValue(getRoot(), val);
-		assert getRoot() == found;
-		assert checkInvariants();
-	}*/
-	
-	
-	private void splayStep(TreeNode<E> current, TreeNode<E> parent, TreeNode<E> grandparent, TreeNode<E> grandgrandparent)
+	private void splayStep(TreeNode<E> current, TreeNode<E> parent, TreeNode<E> grandparent)
 	{
 		//calculate which case we are in:
 		int directionSum = grandparent.childDirection(parent)+2*parent.childDirection(current);
@@ -369,11 +302,11 @@ public class SplayTree<E> extends RankedTree <E> {
 		if (Math.abs(directionSum) == 3) {
 			//if the direction sum is -3 the current and parent are both left children of their parents
 			//if the direction sum is 3 the current and parent are both right children of their parents
-			zigZig(current, parent, grandparent, grandgrandparent, directionSum);
+			zigZig(current, parent, grandparent, directionSum);
 		} else {
 			//if the direction sum is -1, the current node is the left child of its parent and the parent is the right child of the grandparent
 			//if the direction sum is 1, the current node is the right child of its parent and the parent is the left child of the grandparent
-			zigZag(current, parent, grandparent, grandgrandparent, directionSum);
+			zigZag(current, parent, grandparent, directionSum);
 		}
 	}
 	
@@ -389,7 +322,7 @@ public class SplayTree<E> extends RankedTree <E> {
 	//     x
 	
 	//gpp must be the parent of z
-	private void zigZag(TreeNode<E> x, TreeNode<E> y, TreeNode<E> z, TreeNode<E> ggp, int parity)
+	private void zigZag(TreeNode<E> x, TreeNode<E> y, TreeNode<E> z, int parity)
 	{
 		int antiparity = -parity;
 
@@ -400,7 +333,6 @@ public class SplayTree<E> extends RankedTree <E> {
 		z.setChild(antiparity, x.getChild(parity));
 		x.setChild(antiparity, y);
 		x.setChild(parity, z);
-		ggp.replaceChild(z, x);
 		
 		assert x.getChild(antiparity) == y;
 		assert x.getChild(parity) == z;
@@ -418,7 +350,7 @@ public class SplayTree<E> extends RankedTree <E> {
 	//     x                  z
 	
 	//gpp must be the parent of z
-	private void zigZig(TreeNode<E> x, TreeNode<E> y, TreeNode<E> z, TreeNode<E> ggp, int parity)
+	private void zigZig(TreeNode<E> x, TreeNode<E> y, TreeNode<E> z, int parity)
 	{
 		int antiparity = -parity;
 		
@@ -429,7 +361,6 @@ public class SplayTree<E> extends RankedTree <E> {
 		z.setChild(parity, y.getChild(antiparity));
 		y.setChild(antiparity, z);
 		x.setChild(antiparity, y);
-		ggp.replaceChild(z, x);
 		
 		assert x.getChild(antiparity) == y;
 		assert y.getChild(antiparity) == z;
@@ -465,5 +396,5 @@ public class SplayTree<E> extends RankedTree <E> {
 	
 	Out<TreeNode<E>> lower = new Out<TreeNode<E>>();
 	Out<TreeNode<E>> higher = new Out<TreeNode<E>>();
-
+	Random rand = new Random();
 }
