@@ -16,6 +16,9 @@ class Main {
 			e.printStackTrace();
 		}
 	
+		
+		testPackedMemoryStructure();
+		
 		/*
 		SetTests.testSet(new RandomizedBST<Integer>());
 		OrderedSetTests.testNavigation(new RandomizedBST<Integer>());
@@ -35,7 +38,7 @@ class Main {
 		SetTests.testSet(new SplayTree<Integer>());
 		SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);*/
 		
-		
+		/*
 		int performanceTestSize = 1000000;
 		
 		
@@ -54,7 +57,7 @@ class Main {
 		performanceTestSet(new RandomizedBST<Integer>(), performanceTestSize);
 		performanceTestSet(new Treap<Integer>(), performanceTestSize);
 		performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
-		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
+		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);*/
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
 	}
 	
@@ -125,6 +128,18 @@ class Main {
 		}
 		Date end = new Date();
 		System.out.println("test navigation done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+	}
+	
+	
+	static void testPackedMemoryStructure()
+	{
+		PackedMemoryStructure pma = new PackedMemoryStructure();
+		
+		for (int i=1; i<1000; i++) {
+			pma.insert(i);
+			if (!pma.contains(i)) throw new Error();
+		}
+		
 	}
 	
 	/*
