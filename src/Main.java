@@ -134,11 +134,23 @@ class Main {
 	static void testPackedMemoryStructure()
 	{
 		PackedMemoryStructure pma = new PackedMemoryStructure();
-		
-		for (int i=1; i<1000; i++) {
+		Date start = new Date();
+		/*for (int i=1; i<1000; i++) {
 			pma.insert(i);
 			if (!pma.contains(i)) throw new Error();
+		}*/
+		pma = new PackedMemoryStructure();
+		Random rand = new Random(2);
+		for (int i=0; i<1000; i++) {
+			int next = rand.nextInt();
+			if (next == 0) continue;
+			pma.insert(next);
+			if (!pma.contains(next)) throw new Error();
 		}
+		
+		
+		Date end = new Date();
+		System.out.println("test pma done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 		
 	}
 	

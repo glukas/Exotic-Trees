@@ -44,8 +44,11 @@ public class PackedMemoryStructure {
 	public void insert(int key)
 	{
 		int section = sectionForKey(key);
+		if (contains(key, section)) return;
+		count++;
 		insert(key, section);
 		assert checkInvariants();
+		assert contains(key);
 	}
 	
 	private boolean contains(int key, int section)
@@ -124,11 +127,13 @@ public class PackedMemoryStructure {
 		int numberOfKeys = crunch(startIndex, numberOfSections);
 		int [] sourceArray = keys;
 		if (level < 0) {
+			assert numberOfKeys == exhaustiveCountNonZeroEntries(keys);
 			init(2*capacity());
 			numberOfSections = numberOfSections();
 		}
 		distributeBlock(startIndex, sourceArray, numberOfSections, numberOfKeys);
 		
+		assert (level >= 0) || count == numberOfKeys;
 		assert isWithinCapacity();
 	}
 	
@@ -157,6 +162,8 @@ public class PackedMemoryStructure {
 			currentSectionIndex -= sectionSize;
 			
 		}
+		
+		assert countConsistent();
 	}
 	
 	//from index refers to the last element to be moved, toIndex to where the last element should go
@@ -169,7 +176,7 @@ public class PackedMemoryStructure {
 		
 		for (int i=0; i< length; i++) {
 			toArray[toIndex-i] = fromArray[fromIndex-i];
-			fromArray[fromIndex-i] = 0;
+			if (fromArray == toArray) fromArray[fromIndex-i] = 0;
 		}
 	}
 	
@@ -178,6 +185,8 @@ public class PackedMemoryStructure {
 	//returns the number of elements in the block
 	private int crunch(int indexOfFirstSection, int numberOfSections)
 	{
+		assert countConsistent();
+		
 		int currentDestinationIndex = indexOfFirstSection+numberOfUsedSlotsInSectionAtIndex(indexOfFirstSection);
 		int sectionIndex = indexOfFirstSection;
 		
@@ -186,12 +195,14 @@ public class PackedMemoryStructure {
 			currentDestinationIndex = crunchSection(sectionIndex, currentDestinationIndex);
 		}
 		
+		assert countConsistent();
 		return currentDestinationIndex-indexOfFirstSection;
 	}
 	
 	//cuts&copies a section to the destination index
 	private int crunchSection(int sectionIndex, int destinationIndex)
 	{
+		if (sectionIndex == destinationIndex) return firstFreeIndexForSectionAtIndex(sectionIndex);//if the section is already at the right place, don't crunch as this would zero out the section
 		int i=0;
 		for(; i < sectionSize && keys[sectionIndex+i] != 0; i++) {
 			keys[destinationIndex+i] = keys[sectionIndex+i];
@@ -359,6 +370,8 @@ public class PackedMemoryStructure {
 		assert result;
 		result = result && isOrdered();
 		assert result;
+		result = result && countConsistent();
+		assert result;
 		result = result && isWithinCapacity();
 		assert result;
 		return result;
@@ -406,6 +419,24 @@ public class PackedMemoryStructure {
 		return result;
 	}
 	
+	protected boolean countConsistent()
+	{
+		return exhaustiveCount() == count;
+	}
+	
+	protected int exhaustiveCountNonZeroEntries(int[] array)
+	{
+		int result = 0;
+		for (int i=0; i<array.length; i++) {
+			if (array[i] != 0) result++;
+		}
+		return result;
+	}
+	
+	protected int exhaustiveCount()
+	{
+		return exhaustiveCountNonZeroEntries(keys);
+	}
 	
 	////
 	//INSTANCE VARIABLES
@@ -413,6 +444,7 @@ public class PackedMemoryStructure {
 	
 	private int[] keys;
 	private int sectionSize;
+	private int count = 0;
 	
 	////
 	//CONSTANTS
