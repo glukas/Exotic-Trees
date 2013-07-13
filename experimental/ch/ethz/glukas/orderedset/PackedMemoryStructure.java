@@ -6,7 +6,7 @@ public class PackedMemoryStructure {
 	//The packed memory structure maintains an ordered set of keys
 	//the keys are arranged to allow fast O(K/B) traversal, where K is the number of keys to scan and B is the cache line size
 	//searches are O(log(N)) worst case time
-	//insertions are the cost of searching plus O(1 + log^2(N)/B) amortized time, where N is the number of keys in the structure
+	//insertions are the cost of searching plus O(log^2(N)/B) amortized time, where N is the number of keys in the structure
 	
 	
 	//Implementation details:
@@ -92,7 +92,9 @@ public class PackedMemoryStructure {
 			}
 		}
 		
-		if (key > keys[righthand]) return righthand;
+		//we might be off by one, choose between the two remaining sections
+		if (key >= keys[arrayIndexForSection(righthand)]) return righthand;
+		assert lefthand == 0 || key >= keys[arrayIndexForSection(lefthand)];
 		return lefthand;
 	}
 	
@@ -176,7 +178,7 @@ public class PackedMemoryStructure {
 		
 		for (int i=0; i< length; i++) {
 			toArray[toIndex-i] = fromArray[fromIndex-i];
-			if (fromArray == toArray) fromArray[fromIndex-i] = 0;
+			fromArray[fromIndex-i] = 0;
 		}
 	}
 	
@@ -282,6 +284,10 @@ public class PackedMemoryStructure {
 	{
 		if (keys[index+sectionSize-1] != 0) return sectionSize;
 		int count = 0;
+		if (keys[index+sectionSize/2] != 0) {//perform one step of binary search
+			index+=sectionSize/2;
+			count+=sectionSize/2;
+		}
 		while (keys[index] != 0) {//scan rightwards until finding a null element
 			index++;
 			count++;
@@ -307,7 +313,7 @@ public class PackedMemoryStructure {
 	
 	private int depth()
 	{
-		return binlog(numberOfSections());
+		return BinaryMath.log(numberOfSections());
 	}
 	
 	private int capacity()
@@ -318,38 +324,11 @@ public class PackedMemoryStructure {
 	//section sizes are always powers of twos
 	private int sectionSizeForCapacity(int capacity)
 	{
-		assert isPowerOfTwo(capacity);
+		assert BinaryMath.isPowerOfTwo(capacity);
 		
 		if (capacity <= 1) return 1;
 		if (capacity == 2) return 2;
-		return  nextHighestPowerOfTwo(binlog(capacity));
-	}
-	
-	////
-	//MATH HELPERS
-	////
-	
-	//fast binary logarithm by x4u at http://stackoverflow.com/questions/3305059/how-do-you-calculate-log-base-2-in-java-for-integers
-	private static int binlog( int bits ) // returns 0 for bits=0
-	{
-	    int log = 0;
-	    if( ( bits & 0xffff0000 ) != 0 ) { bits >>>= 16; log = 16; }
-	    if( bits >= 256 ) { bits >>>= 8; log += 8; }
-	    if( bits >= 16  ) { bits >>>= 4; log += 4; }
-	    if( bits >= 4   ) { bits >>>= 2; log += 2; }
-	    return log + ( bits >>> 1 );
-	}
-	
-	private static int nextHighestPowerOfTwo(int num)
-	{
-		assert num >= 0;
-		if (num <= 1) return 1;
-		
-		int result = 2;
-		while (num > result) {
-			result = result*2;
-		}
-		return result;
+		return  BinaryMath.nextHighestPowerOfTwo(BinaryMath.log(capacity));
 	}
 
 	
@@ -360,11 +339,11 @@ public class PackedMemoryStructure {
 	protected boolean checkInvariants()
 	{
 		boolean result;
-		result = isPowerOfTwo(numberOfSections());
+		result = BinaryMath.isPowerOfTwo(numberOfSections());
 		assert result;
-		result = result && isPowerOfTwo(keys.length);
+		result = result && BinaryMath.isPowerOfTwo(keys.length);
 		assert result;
-		result = result &&  isPowerOfTwo(sectionSize);
+		result = result &&  BinaryMath.isPowerOfTwo(sectionSize);
 		assert result;
 		result = result && (keys.length == sectionSize*numberOfSections());
 		assert result;
@@ -377,10 +356,7 @@ public class PackedMemoryStructure {
 		return result;
 	}
 	
-	protected boolean isPowerOfTwo(int num)
-	{
-		return nextHighestPowerOfTwo(num) == num;
-	}
+
 	
 	protected boolean isOrdered()
 	{

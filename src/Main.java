@@ -15,9 +15,9 @@ class Main {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	
 		
-		testPackedMemoryStructure();
+		performanceTestImmutableSet();
+		//testPackedMemoryStructure();
 		
 		/*
 		SetTests.testSet(new RandomizedBST<Integer>());
@@ -135,13 +135,13 @@ class Main {
 	{
 		PackedMemoryStructure pma = new PackedMemoryStructure();
 		Date start = new Date();
-		/*for (int i=1; i<1000; i++) {
+		for (int i=1; i<2000000; i++) {
 			pma.insert(i);
 			if (!pma.contains(i)) throw new Error();
-		}*/
+		}
 		pma = new PackedMemoryStructure();
 		Random rand = new Random(2);
-		for (int i=0; i<1000; i++) {
+		for (int i=0; i<2000000; i++) {
 			int next = rand.nextInt();
 			if (next == 0) continue;
 			pma.insert(next);
@@ -154,12 +154,11 @@ class Main {
 		
 	}
 	
-	/*
+	
 	static void performanceTestImmutableSet()
 	{
 		TreeSet<Integer> control = new TreeSet<Integer>();
-		int testMagnitude = 4;
-		int testSize = (int)Math.pow(2, Math.pow(2, testMagnitude))/2;
+		int testSize = (int)Math.pow(2, 18);
 		
 		int[] input = new int[testSize];
 		int testRange = 2*testSize;
@@ -172,7 +171,7 @@ class Main {
 		
 		
 		Date cstart = new Date();
-		for (int j=0; j<400; j++) {
+		for (int j=0; j<100; j++) {
 			for (int i=0; i<testRange; i++) {
 				control.contains(i);
 			}
@@ -183,7 +182,7 @@ class Main {
 		
 		ImmutableOrderedSet corona = new ImmutableOrderedSet(input);
 		Date start = new Date();
-		for (int j=0; j<400; j++) {
+		for (int j=0; j<100; j++) {
 			for (int i=0; i<testRange; i++) {
 				corona.contains(i);
 			}
@@ -194,25 +193,5 @@ class Main {
 
 	}
 	
-	static void testImmutableSet()
-	{
-		TreeSet<Integer> control = new TreeSet<Integer>();
-		int testMagnitude = 2;
-		int testSize = (int)Math.pow(2, Math.pow(2, testMagnitude))/2;
-		int testRange = testSize*5;
-		Random random = new Random(1);
-		int[] input = new int[testSize];
-		
-		for (int i=0; i<testSize; i++) {
-			input[i] = random.nextInt(testRange);
-			control.add(input[i]);
-		}
-		
-		ImmutableOrderedSet corona = new ImmutableOrderedSet(input);
-		for (int i=0; i<testRange; i++) {
-			if (corona.contains(i) != control.contains(i)) throw new Error();
-		}
-	}
-	*/
 
 }

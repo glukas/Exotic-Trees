@@ -5,68 +5,92 @@ import java.util.Arrays;
 public class ImmutableOrderedSet {
 	//Cache-oblivious Corona tree
 	//The memory layout is van Embde Boas
-	//all values are stored in the leafs of the tree
+	//all keys are stored in the leafs of the tree
 	//this allows for simple recursive algorithms that don't involve the direct calculation of child indexes in the implicit tree array
 	
 	
+	//TODO: investigate better base cases
+	//TODO: method to update individual keys (and sequences of adjacent keys)
+	
 	public ImmutableOrderedSet(int[] content)
 	{
-		rebuild(content);
+		rebuild(content, 0, content.length);
 	}
 
-	public boolean contains(int value)
+	public boolean contains(int key)
 	{
-		/*int index = Arrays.binarySearch(values, value);//simple binary search
-		if (index >= 0) {
+		/*int idx = Arrays.binarySearch(internalKeys, key);
+		if (idx >= 0) {
 			return true;
 		} else {
 			return false;
 		}*/
-		find(value, 0, rootRank);
-		return internalLastFound == value;
+		
+		if (treeHeight == 1) {
+			internalLastFound = tree[0];
+		} else if (treeHeight == 2) {
+			baseCaseHeight2Find(key, 0);
+		} else {
+			find(key, 0, treeHeight);
+		}
+		return internalLastFound == key;
 	}
 	
 	
-	//precondition: the content length is of the form Math.pow(2, Math.pow(2, testMagnitude))/2;
-	private void rebuild(int[] content)
+	//fromIndex inclusive, toIndex exclusive
+	private void rebuild(int[] keys, int fromIndex, int toIndex)
 	{
-		values = Arrays.copyOf(content, content.length);
-		Arrays.sort(values);
-		rootRank = values.length*2;
-		tree = new int[numberOfNodes(rootRank)];
+		assert BinaryMath.isPowerOfTwo(toIndex-fromIndex);
 		
-		rebuildUpwards(0, rootRank, values, values, 0);
-		assert treeConsistent();
+		internalKeys = keys;
+		
+		treeHeight = BinaryMath.log(toIndex-fromIndex)+1;
+		tree = new int[numberOfNodesForHeight(treeHeight)];
+		
+		rebuildUpwards(0, treeHeight, keys, keys, 0);
+		//assert treeConsistent();
 	}
 	
 	
 	//T(K^2) = KT(K) + O(1) = O(logK)
 	//returns the index of the leaf the search ended in (with respect to the given subtree at rootIndex of size numberOfNodes(rank)
-	//the value of this leaf is put into 'foundvalue'
-	private int find(int value, int rootIndex, int rank)
+	//the key of this leaf is put into 'foundkey'
+	private int find(int key, int rootIndex, int height)
 	{
+		assert height > 2;
 		
-		if (rank == 16) {
-			return baseCase16Find(value, rootIndex);
+		//base cases
+		//large base cases are needed for performance reasons
+		//the base cases assume that the tree has at least height 3
+		if (height == 5) {
+			return baseCaseHeight5Find(key, rootIndex);
+		} else if (height == 4) {
+			return baseCaseHeight4Find(key, rootIndex);
+		} else if (height == 3) {
+			return baseCaseHeight3Find(key, rootIndex);
 		}
 		
 		//subtree properties
-		int subrank = subrank(rank);
-
+		int topTreeHeight = height/2;
+		int bottomTreeHeight =  height-topTreeHeight;
+		
 		//top
-		int topindex = find(value, rootIndex, subrank);
-		assert topindex < numberOfLeaves(subrank);
+		int topindex = find(key, rootIndex, topTreeHeight);
+		assert topindex < numberOfLeavesForHeight(topTreeHeight);
+		assert topindex >= 0;
 		
 		//bottom
 		//decide where to continue the search
 		int bottomTreeIndex =  2*topindex;
-		if (value >= internalLastFound) {
+		if (key >= internalLastFound) {
 			bottomTreeIndex++;
 		}
 		
-		int bottomFoundIndex = find(value, bottomSubtreeIndex(rootIndex, subrank, bottomTreeIndex), subrank);
+		int bottomFoundIndex = find(key, rootIndex+numberOfNodesForHeight(topTreeHeight)+bottomTreeIndex*numberOfNodesForHeight(bottomTreeHeight), bottomTreeHeight);
+		assert bottomFoundIndex < numberOfLeavesForHeight(bottomTreeHeight);
+		assert bottomFoundIndex >= 0;
 		
-		return (bottomTreeIndex*numberOfLeaves(subrank))+bottomFoundIndex;
+		return bottomFoundIndex+(bottomTreeIndex*numberOfLeavesForHeight(bottomTreeHeight));
 	}
 
 	
@@ -77,47 +101,55 @@ public class ImmutableOrderedSet {
 	//P(k^2) implies P(k^4):
 	//T(k^4) = K^2T(k^2)+c0K <= K^2(c1K^2-c2)-c0*K = c1*K^4-c2*K^2+c0*K = c1*K^4-c2-(c2+c2*K^2-c0*K) <= c1*K^4-c2 for c2<=c0, k>=1
 	
-	//returns the minimum value in the subtree
-	//lower denotes the first value of the minimumSubtreeValues array that are relevant for the current step
+	//returns the minimum key in the subtree
+	//lower denotes the first key of the minimumSubtreekeys array that are relevant for the current step
 	//the end of the relevant part is implicit in the rank of the current subtree
-	private int rebuildUpwards(int rootIndex, int rank, int[] leftMinimumSubtreeValues, int[] rightMinimumSubtreeValues, int offset)
+	private int rebuildUpwards(int rootIndex, int height, int[] leftMinimumSubtreeKeys, int[] rightMinimumSubtreeKeys, int offset)
 	{
-		//base case - singleton tree : write value at root index
-		if (rank == 2) {
-			tree[rootIndex] = rightMinimumSubtreeValues[offset];//keys are the min of the right subtree
-			return Math.min(leftMinimumSubtreeValues[offset], rightMinimumSubtreeValues[offset]);//return the minimum of the whole subtree
+		//base case - singleton tree : write key at root index
+		if (height == 1) {
+			tree[rootIndex] = rightMinimumSubtreeKeys[offset];//keys are the min of the right subtree
+			return Math.min(leftMinimumSubtreeKeys[offset], rightMinimumSubtreeKeys[offset]);//return the minimum of the whole subtree
 		}
 		
 		//subtree properties
-		int subrank = subrank(rank);
-		int subcoronaSize = numberOfNodes(subrank);
-		int subcoronaLeaves = numberOfLeaves(subrank);
-		int subcoronas = 2*subcoronaLeaves;
+		int topTreeHeight = height/2;
+		int bottomTreeHeight =  height-topTreeHeight;
+		
+		
+		int bottomTreeSize = numberOfNodesForHeight(bottomTreeHeight);
+		int numberOfBottomTreeLeaves = numberOfLeavesForHeight(bottomTreeHeight);
+		
+		int topTreeSize = numberOfNodesForHeight(topTreeHeight);
+		int numberOfTopTreeLeaves = numberOfLeavesForHeight(topTreeHeight);
+		int numberOfBottomTrees = 2*numberOfTopTreeLeaves;
+		
 		
 		//bottom trees
-		int [] leftBottomTreeMins = new int[subcoronaLeaves];
-		int [] rightBottomTreeMins = new int[subcoronaLeaves];
+		int [] leftBottomTreeMins = new int[numberOfTopTreeLeaves];
+		int [] rightBottomTreeMins = new int[numberOfTopTreeLeaves];
 		
-		int currentIndex = rootIndex;
-		for (int i=0; i<subcoronas; i+=2) {
-			currentIndex += subcoronaSize;
-			leftBottomTreeMins[i/2] = rebuildUpwards(currentIndex, subrank, leftMinimumSubtreeValues, rightMinimumSubtreeValues, offset+i*subcoronaLeaves);
-			currentIndex += subcoronaSize;
-			rightBottomTreeMins[i/2] = rebuildUpwards(currentIndex, subrank, leftMinimumSubtreeValues, rightMinimumSubtreeValues, offset+(i+1)*subcoronaLeaves);
+		int currentIndex = rootIndex+topTreeSize;
+		for (int i=0; i<numberOfBottomTrees; i+=2) {
+			leftBottomTreeMins[i/2] = rebuildUpwards(currentIndex, bottomTreeHeight, leftMinimumSubtreeKeys, rightMinimumSubtreeKeys, offset+i*numberOfBottomTreeLeaves);
+			currentIndex += bottomTreeSize;
+			rightBottomTreeMins[i/2] = rebuildUpwards(currentIndex, bottomTreeHeight, leftMinimumSubtreeKeys, rightMinimumSubtreeKeys, offset+(i+1)*numberOfBottomTreeLeaves);
+			currentIndex += bottomTreeSize;
 		}
 		
-		//top tree: push up the values from the bottom trees
+		//top tree: push up the keys from the bottom trees
 		//the key of a node is the smallest key of its right subtree
-		rebuildUpwards(rootIndex, subrank, leftBottomTreeMins, rightBottomTreeMins, 0);
+		rebuildUpwards(rootIndex, topTreeHeight, leftBottomTreeMins, rightBottomTreeMins, 0);
 		
 		return leftBottomTreeMins[0];//because the input is presorted, the min is always the leftmost entry
 	}
 	
 	
+	/*
 	private void inOrder(int rootIndex, int rank, int[]output, int outputIndex)
 	{
 		
-		//base case - singleton tree : write value to output array
+		//base case - singleton tree : write key to output array
 		if (rank == 16) {
 			baseCase16InOrder(rootIndex, output, outputIndex);
 		}
@@ -134,30 +166,112 @@ public class ImmutableOrderedSet {
 			currentIndex += subcoronaSize;
 			inOrder(currentIndex, subrank, output, outputIndex+i*subcoronaLeaves);
 		}
-	}
+	}*/
 	
 	
-	//a base case of this size is needed for performance reasons
-	//a two level search is performed
-	private int baseCase16Find(int value, int rootIndex)
+	
+	//the currentIndex is the index in the tree of the subtree
+	private int baseCaseHeight4Find(int key, int rootIndex)
 	{
-		int current = rootIndex+3;
-		int i=0;
-		while(i < 3) {
-			if (tree[current]>=value) break;
-			current+=3;
-			i++;
+		int leaf = 0;
+		int currentIndex = rootIndex;
+		//level 1
+		if (key >= tree[currentIndex]) {
+			leaf += 4;
+			currentIndex += 2;
+		} else {
+			currentIndex ++;
 		}
-		i = 2*i;
-		current++;
-		if (tree[current] < value) {
-			current++;
-			i++;
+		
+		//level 2
+		if (key >= tree[currentIndex]) {
+			leaf += 2;
 		}
-		internalLastFound = tree[current];
-		return i;
+		currentIndex = rootIndex+3+(leaf/2)*3;
+		
+		//level 3
+		if (key >= tree[currentIndex]) {
+			leaf++;
+			currentIndex+=2;
+		} else {
+			currentIndex++;
+		}
+		
+		internalLastFound = tree[currentIndex];
+		
+		return leaf;
 	}
 	
+	private int baseCaseHeight3Find(int key, int rootIndex)
+	{
+		int leaf = 0;
+		//level 1
+		if (key >= tree[rootIndex]) {
+			rootIndex += 4;
+			leaf += 2;
+		} else {
+			rootIndex++;
+		}
+		//level 2
+		if (key >= tree[rootIndex]) {
+			rootIndex += 2;
+			leaf++;
+		} else {
+			rootIndex++;
+		}
+		internalLastFound = tree[rootIndex];
+		return leaf;
+	}
+	
+	private int baseCaseHeight2Find(int key, int rootIndex)
+	{
+		if (key >= tree[rootIndex]) {
+			internalLastFound = tree[rootIndex+2];
+			return 1;
+		} else {
+			internalLastFound = tree[rootIndex+1];
+			return 0;
+		}
+	}
+	
+	
+	
+	private int baseCaseHeight5Find(int key, int rootIndex)
+	{
+		int leaf = 0;
+		int currentIndex = rootIndex;
+		//level 1
+		if (key >= tree[currentIndex]) {
+			leaf += 8;
+			currentIndex += 2;
+		} else {
+			currentIndex ++;
+		}
+		//level 2
+		if (key >= tree[currentIndex]) {
+			leaf += 4;
+		}
+		currentIndex = rootIndex+3+(leaf/4)*7;
+		
+		//level 3
+		if (key >= tree[currentIndex]) {
+			currentIndex += 4;
+			leaf += 2;
+		} else {
+			currentIndex++;
+		}
+		//level 4
+		if (key >= tree[currentIndex]) {
+			currentIndex += 2;
+			leaf++;
+		} else {
+			currentIndex++;
+		}
+		internalLastFound = tree[currentIndex];
+		return leaf;
+	}
+	
+	/*
 	private void baseCase16InOrder(int rootIndex, int[]output, int offset)
 	{
 		output[offset] = tree[rootIndex+4];
@@ -168,46 +282,31 @@ public class ImmutableOrderedSet {
 		output[offset+5] = tree[rootIndex+11];
 		output[offset+6] = tree[rootIndex+13];
 		output[offset+7] = tree[rootIndex+14];
-	}
+	}*/
 	
+	/*
 	private int[] inOrder()
 	{
 		int[] traversal = new int[numberOfLeaves(rootRank)];
 		inOrder(0, rootRank, traversal, 0);
 		return traversal;
-	}
-
-	private int subrank(int rank)
+	}*/
+	
+	private int numberOfLeavesForHeight(int height)
 	{
-		//square root operations are very expensive, use a small lookup table
-		if (rank == 256) return 16;
-		if (rank == 65536) return 256;
-		return (int)Math.sqrt(rank);
+		return BinaryMath.powerOfTwo(height-1);
 	}
 	
-	private int numberOfLeaves(int rank)
+	private int numberOfNodesForHeight(int height)
 	{
-		return rank/2;
+		return BinaryMath.powerOfTwo(height)-1;
 	}
 	
-	private int numberOfNodes(int rank)
-	{
-		return rank-1;
-	}
-	
-	private int bottomSubtreeIndex(int parentRootIndex, int rank, int i)
-	{
-		return parentRootIndex+(i+1)*numberOfNodes(rank);
-	}
-	
-	
-	
-	private int[] values;//for debug purposes
+	private int[] internalKeys;//for debug purposes
 	private int[] tree;
 	
-	//The rank is the number of nodes + 1 or equivalently twice the number of leaves
-	//the rank of a sub-corona is 4 times smaller
-	private int rootRank;
+	
+	private int treeHeight;
 	
 	//used internally by the find method
 	private int internalLastFound;
@@ -216,14 +315,15 @@ public class ImmutableOrderedSet {
 	//INVARIANTS & ASSERTIONS
 	////
 	
+	/*
 	private boolean treeConsistent()
 	{
 		int[] traversal = inOrder();
 		boolean result = true;
-		for (int i=0; i<values.length; i++) {
-			result = result && values[i]==traversal[i];
+		for (int i=0; i<keys.length; i++) {
+			result = result && keys[i]==traversal[i];
 			assert result;
 		}
 		return result;
-	}
+	}*/
 }
