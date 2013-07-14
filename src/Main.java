@@ -158,18 +158,18 @@ class Main {
 	static void performanceTestImmutableSet()
 	{
 		TreeSet<Integer> control = new TreeSet<Integer>();
-		int testSize = (int)Math.pow(2, 18);
+		int testSize = (int)Math.pow(2, 20);
 		
 		int[] input = new int[testSize];
 		int testRange = 2*testSize;
-		Random random = new Random();
+		Random random = new Random(1);
 		
 		for (int i=0; i<testSize; i++) {
 			input[i] = random.nextInt(testRange);
-			control.add(input[i]);
+			//control.add(input[i]);
 		}
 		
-		
+		/*
 		Date cstart = new Date();
 		for (int j=0; j<100; j++) {
 			for (int i=0; i<testRange; i++) {
@@ -178,7 +178,7 @@ class Main {
 		}
 		Date cend = new Date();
 		System.out.println("test control set done!" + " took " + (cend.getTime()-cstart.getTime())/ 1000.0 + " s");
-		
+		*/
 		
 		ImmutableOrderedSet corona = new ImmutableOrderedSet(input);
 		Date start = new Date();

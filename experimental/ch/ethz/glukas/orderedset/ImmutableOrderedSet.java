@@ -26,13 +26,7 @@ public class ImmutableOrderedSet {
 			return false;
 		}*/
 		
-		if (treeHeight == 1) {
-			internalLastFound = tree[0];
-		} else if (treeHeight == 2) {
-			baseCaseHeight2Find(key, 0);
-		} else {
-			find(key, 0, treeHeight);
-		}
+		find(key, 0, treeHeight);
 		return internalLastFound == key;
 	}
 	
@@ -57,17 +51,10 @@ public class ImmutableOrderedSet {
 	//the key of this leaf is put into 'foundkey'
 	private int find(int key, int rootIndex, int height)
 	{
-		assert height > 2;
-		
 		//base cases
 		//large base cases are needed for performance reasons
-		//the base cases assume that the tree has at least height 3
-		if (height == 5) {
-			return baseCaseHeight5Find(key, rootIndex);
-		} else if (height == 4) {
-			return baseCaseHeight4Find(key, rootIndex);
-		} else if (height == 3) {
-			return baseCaseHeight3Find(key, rootIndex);
+		if (height <= 6) {
+			return baseCaseFind(key, rootIndex, height);
 		}
 		
 		//subtree properties
@@ -76,21 +63,15 @@ public class ImmutableOrderedSet {
 		
 		//top
 		int topindex = find(key, rootIndex, topTreeHeight);
-		assert topindex < numberOfLeavesForHeight(topTreeHeight);
+		assert topindex < 2*numberOfLeavesForHeight(topTreeHeight);
 		assert topindex >= 0;
 		
-		//bottom
-		//decide where to continue the search
-		int bottomTreeIndex =  2*topindex;
-		if (key >= internalLastFound) {
-			bottomTreeIndex++;
-		}
 		
-		int bottomFoundIndex = find(key, rootIndex+numberOfNodesForHeight(topTreeHeight)+bottomTreeIndex*numberOfNodesForHeight(bottomTreeHeight), bottomTreeHeight);
+		int bottomFoundIndex = find(key, rootIndex+numberOfNodesForHeight(topTreeHeight)+topindex*numberOfNodesForHeight(bottomTreeHeight), bottomTreeHeight);
 		assert bottomFoundIndex < numberOfLeavesForHeight(bottomTreeHeight);
 		assert bottomFoundIndex >= 0;
 		
-		return bottomFoundIndex+(bottomTreeIndex*numberOfLeavesForHeight(bottomTreeHeight));
+		return bottomFoundIndex+(topindex*numberOfLeavesForHeight(bottomTreeHeight));
 	}
 
 	
@@ -102,14 +83,12 @@ public class ImmutableOrderedSet {
 	//T(k^4) = K^2T(k^2)+c0K <= K^2(c1K^2-c2)-c0*K = c1*K^4-c2*K^2+c0*K = c1*K^4-c2-(c2+c2*K^2-c0*K) <= c1*K^4-c2 for c2<=c0, k>=1
 	
 	//returns the minimum key in the subtree
-	//lower denotes the first key of the minimumSubtreekeys array that are relevant for the current step
+	//offset denotes the first key of the minimumSubtreeKeys arrays that is relevant for the current step
 	//the end of the relevant part is implicit in the rank of the current subtree
 	private int rebuildUpwards(int rootIndex, int height, int[] leftMinimumSubtreeKeys, int[] rightMinimumSubtreeKeys, int offset)
 	{
-		//base case - singleton tree : write key at root index
-		if (height == 1) {
-			tree[rootIndex] = rightMinimumSubtreeKeys[offset];//keys are the min of the right subtree
-			return Math.min(leftMinimumSubtreeKeys[offset], rightMinimumSubtreeKeys[offset]);//return the minimum of the whole subtree
+		if (height <= 6) {
+			return baseCaseRebuild(rootIndex, height, leftMinimumSubtreeKeys, rightMinimumSubtreeKeys, offset);
 		}
 		
 		//subtree properties
@@ -145,6 +124,72 @@ public class ImmutableOrderedSet {
 	}
 	
 	
+	//stores the index subtree in order starting at the rootIndex.
+	//the index tree is constructed using the two input arrays
+	//the offset refers to the first index in the arrays that is relevant
+	//the height determines the size of the subtree to be constructed
+	//the method returns the minimum of the whole subtree rooted at 'rootIndex'
+	private int baseCaseRebuild(int rootIndex, int height, int[] leftMinimumSubtreeKeys, int[] rightMinimumSubtreeKeys, int offset)
+	{
+		int numberOfLeaves = numberOfLeavesForHeight(height);
+		
+		//the leaves are on the even positions, they come from the right children's keys
+		for (int i=0; i<numberOfLeaves; i++) {
+			tree[rootIndex+2*i] = rightMinimumSubtreeKeys[offset+i];
+		}
+		//the inner nodes are on the odd positions, they come from the left children's keys (the leftmost one is skipped
+		int numberOfInnerNodes = numberOfLeaves-1;
+		for (int i=0; i<numberOfInnerNodes; i++) {
+			tree[rootIndex+2*i+1] = leftMinimumSubtreeKeys[offset+i+1];
+		}
+		
+		//the leftmost entry of the left minimum children is the minimum overall
+		return leftMinimumSubtreeKeys[offset];
+	}
+	
+	private int baseCaseFind(int key, int rootIndex, int height)
+	{
+		int leaf;
+		int startIdx = rootIndex;//one variable would be enough. refactor.
+		int maxRootIndex = rootIndex+numberOfNodesForHeight(height);
+		rootIndex++;
+		
+		while (rootIndex < maxRootIndex && key >= tree[rootIndex]) {
+			rootIndex+=2;
+		}
+		internalLastFound = tree[rootIndex-1];//this write can be avoided
+		leaf = rootIndex-startIdx;
+		if (key<tree[rootIndex-1]) {
+			leaf--;
+		}
+		return leaf;
+	}
+	
+	
+	/*
+	private int baseCaseBinaryFind(int key, int rootIndex, int height)
+	{
+		int size = numberOfNodesForHeight(height);
+		
+		int idx = Arrays.binarySearch(tree, rootIndex, rootIndex+size, key);
+		int offset;
+		if (idx < 0) {
+			idx = -(idx+1);
+			if (idx == rootIndex+size) {
+				idx--;
+			}
+			idx = idx-((idx-rootIndex)%2);
+		} else {
+			offset = idx-rootIndex;
+			idx = idx+((idx-rootIndex)%2);
+		}
+
+		internalLastFound = tree[idx];
+		return (idx-rootIndex)/2;
+	}*/
+	
+	
+	
 	/*
 	private void inOrder(int rootIndex, int rank, int[]output, int outputIndex)
 	{
@@ -167,109 +212,6 @@ public class ImmutableOrderedSet {
 			inOrder(currentIndex, subrank, output, outputIndex+i*subcoronaLeaves);
 		}
 	}*/
-	
-	
-	
-	//the currentIndex is the index in the tree of the subtree
-	private int baseCaseHeight4Find(int key, int rootIndex)
-	{
-		int leaf = 0;
-		int currentIndex = rootIndex;
-		//level 1
-		if (key >= tree[currentIndex]) {
-			leaf += 4;
-			currentIndex += 2;
-		} else {
-			currentIndex ++;
-		}
-		
-		//level 2
-		if (key >= tree[currentIndex]) {
-			leaf += 2;
-		}
-		currentIndex = rootIndex+3+(leaf/2)*3;
-		
-		//level 3
-		if (key >= tree[currentIndex]) {
-			leaf++;
-			currentIndex+=2;
-		} else {
-			currentIndex++;
-		}
-		
-		internalLastFound = tree[currentIndex];
-		
-		return leaf;
-	}
-	
-	private int baseCaseHeight3Find(int key, int rootIndex)
-	{
-		int leaf = 0;
-		//level 1
-		if (key >= tree[rootIndex]) {
-			rootIndex += 4;
-			leaf += 2;
-		} else {
-			rootIndex++;
-		}
-		//level 2
-		if (key >= tree[rootIndex]) {
-			rootIndex += 2;
-			leaf++;
-		} else {
-			rootIndex++;
-		}
-		internalLastFound = tree[rootIndex];
-		return leaf;
-	}
-	
-	private int baseCaseHeight2Find(int key, int rootIndex)
-	{
-		if (key >= tree[rootIndex]) {
-			internalLastFound = tree[rootIndex+2];
-			return 1;
-		} else {
-			internalLastFound = tree[rootIndex+1];
-			return 0;
-		}
-	}
-	
-	
-	
-	private int baseCaseHeight5Find(int key, int rootIndex)
-	{
-		int leaf = 0;
-		int currentIndex = rootIndex;
-		//level 1
-		if (key >= tree[currentIndex]) {
-			leaf += 8;
-			currentIndex += 2;
-		} else {
-			currentIndex ++;
-		}
-		//level 2
-		if (key >= tree[currentIndex]) {
-			leaf += 4;
-		}
-		currentIndex = rootIndex+3+(leaf/4)*7;
-		
-		//level 3
-		if (key >= tree[currentIndex]) {
-			currentIndex += 4;
-			leaf += 2;
-		} else {
-			currentIndex++;
-		}
-		//level 4
-		if (key >= tree[currentIndex]) {
-			currentIndex += 2;
-			leaf++;
-		} else {
-			currentIndex++;
-		}
-		internalLastFound = tree[currentIndex];
-		return leaf;
-	}
 	
 	/*
 	private void baseCase16InOrder(int rootIndex, int[]output, int offset)
