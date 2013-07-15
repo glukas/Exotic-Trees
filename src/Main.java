@@ -16,6 +16,8 @@ class Main {
 			e.printStackTrace();
 		}
 		
+		ImmutableOrderedSetTest.testImmutableSet();
+		
 		performanceTestImmutableSet();
 		//testPackedMemoryStructure();
 		
@@ -158,11 +160,11 @@ class Main {
 	static void performanceTestImmutableSet()
 	{
 		TreeSet<Integer> control = new TreeSet<Integer>();
-		int testSize = (int)Math.pow(2, 20);
+		int testSize = (int)Math.pow(2, 25);
 		
 		int[] input = new int[testSize];
 		int testRange = 2*testSize;
-		Random random = new Random(1);
+		Random random = new Random(2);
 		
 		for (int i=0; i<testSize; i++) {
 			input[i] = random.nextInt(testRange);
@@ -180,11 +182,12 @@ class Main {
 		System.out.println("test control set done!" + " took " + (cend.getTime()-cstart.getTime())/ 1000.0 + " s");
 		*/
 		
+		Arrays.sort(input);
 		ImmutableOrderedSet corona = new ImmutableOrderedSet(input);
 		Date start = new Date();
-		for (int j=0; j<100; j++) {
-			for (int i=0; i<testRange; i++) {
-				corona.contains(i);
+		for (int j=0; j<1; j++) {
+			for (int i=0; i<testSize; i++) {
+				corona.contains(random.nextInt(testRange));
 			}
 		}
 		Date end = new Date();

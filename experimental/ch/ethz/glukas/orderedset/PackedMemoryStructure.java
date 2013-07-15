@@ -264,7 +264,7 @@ public class PackedMemoryStructure {
 	
 	private int capacityOfNodeAtLevel(int level)
 	{
-		return capacity()/(1 << level);
+		return capacity()/BinaryMath.powerOfTwo(level);
 	}
 	
 	private int numberOfSectionsForLevel(int level)

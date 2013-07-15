@@ -12,7 +12,12 @@ public class ImmutableOrderedSetTest {
 
 	
 	@Test
-	public void testImmutableSet()
+	public void testImmutableSetForVariousSizes()
+	{
+		testImmutableSet();
+	}
+	
+	public static void testImmutableSet()
 	{
 		int testSize = 1;
 		Random random = new Random(1);
@@ -22,7 +27,7 @@ public class ImmutableOrderedSetTest {
 		}
 	}
 	
-	private void testImmutableSet(int testSize, int seed)
+	public static void testImmutableSet(int testSize, int seed)
 	{
 		TreeSet<Integer> control = new TreeSet<Integer>();
 		int[] input = new int[testSize];
