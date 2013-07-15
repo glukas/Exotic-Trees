@@ -9,7 +9,6 @@ public class ImmutableOrderedSet {
 	//this allows for simple recursive algorithms that don't involve the direct calculation of child indexes in the implicit tree array
 	
 	
-	//TODO: investigate better base cases
 	//TODO: method to update individual keys (and sequences of adjacent keys)
 	
 	public ImmutableOrderedSet(int[] content)
@@ -47,7 +46,8 @@ public class ImmutableOrderedSet {
 	}
 
 	
-	//T(K^2) = KT(K) + O(1) = O(logK)
+	//Asymptotics:
+	//T(K^2) = KT(K) + O(1) = O(logK) (note that if we divide a tree of size K^2 in half by height, the resulting subtrees have size K)
 	//returns the index of the leaf the search ended in (with respect to the given subtree at rootIndex of size numberOfNodes(rank)
 	//the key of this leaf is put into 'foundkey'
 	private int find(int key, int rootIndex, int height)
@@ -80,9 +80,10 @@ public class ImmutableOrderedSet {
 	}
 
 	
+	//Asymptotics:
 	//T(K^2) = KT(K) + O(K) = O(K^2)
-	//proof: assume P(K^2): T(K^2)<=c1*K^2-c2
-	//we know T(K^2) = KT(K) + c0*K and T(1) = c3
+	//proof: assume P(K^2): T(K^2)<=c1*K^2-c2 
+	//we know T(K^2) = KT(K) + c0*K and T(1) = c3 (note that if we divide a tree of size K^2 in half by height, the resulting subtrees have size K)
 	//P(1) holds for c1-c2>=c3
 	//P(k^2) implies P(k^4):
 	//T(k^4) = K^2T(k^2)+c0K <= K^2(c1K^2-c2)-c0*K = c1*K^4-c2*K^2+c0*K = c1*K^4-c2-(c2+c2*K^2-c0*K) <= c1*K^4-c2 for c2<=c0, k>=1
@@ -133,7 +134,7 @@ public class ImmutableOrderedSet {
 	//the index tree is constructed using the two input arrays
 	//the offset refers to the first index in the arrays that is relevant
 	//the height determines the size of the subtree to be constructed
-	//the method returns the minimum of the whole subtree rooted at 'rootIndex'
+	//the method returns the minimum of the whole subtree rooted at 'rootIndex' (this is the entry of the left key array at index 'offset)
 	private int baseCaseRebuild(int rootIndex, int height, int[] leftMinimumSubtreeKeys, int[] rightMinimumSubtreeKeys, int offset)
 	{
 		int numberOfLeaves = numberOfLeavesForHeight(height);
@@ -155,19 +156,22 @@ public class ImmutableOrderedSet {
 	
 	private int baseCaseFind(int key, int rootIndex, int height)
 	{
+		//performs a linear scan on the inner nodes of the subtree (subtrees are stored in-order for small heights)
 		int startIdx = rootIndex;
 		int maxRootIndex = rootIndex+numberOfNodesForHeight(height);
+		//the inner nodes are on the odd positions (every second position)
 		rootIndex++;
-		
 		while (rootIndex < maxRootIndex && key >= tree[rootIndex]) {
 			rootIndex+=2;
 		}
 		
-		int leaf = rootIndex-startIdx;
+		int nextNode = rootIndex-startIdx;
+		//we need to decide which subtree the search should continue on (test on the leaf the search ended on - this leaf is just behind the inner node the search ended on)
 		if (key<tree[rootIndex-1]) {
-			leaf--;
+			nextNode--;
 		}
-		return leaf;
+		//the arithmetic works out well so that this will get the index of the subtree the search should continue on
+		return nextNode;
 	}
 	
 	private int numberOfLeavesForHeight(int height)
