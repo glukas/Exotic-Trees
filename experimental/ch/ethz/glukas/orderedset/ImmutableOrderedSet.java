@@ -4,10 +4,13 @@ import java.util.Arrays;
 
 public class ImmutableOrderedSet {
 	//Cache-oblivious Corona tree
-	//The memory layout is van Embde Boas
-	//all keys are stored in the leafs of the tree
-	//this allows for simple recursive algorithms that don't involve the direct calculation of child indexes in the implicit tree array
+	//The structure is a cache oblivious static search tree (sometimes called "Van Embde Boas" layout.
 	
+	//all keys are stored in the leafs of the tree. the value of the parent is the minimum key in the right subtree.
+	//the leafs are stored in the internalKeys array (consecutively).
+	//the index structure is stored in the tree array. the tree is implicit.
+	//the algorithms operate recursively on the top and bottom halves of a subtree
+	//the base cases are large for performance reasons. In the base case, the tree is stored in-order.
 	
 	//TODO: method to update individual keys (and sequences of adjacent keys)
 	
@@ -15,35 +18,38 @@ public class ImmutableOrderedSet {
 	{
 		assert BinaryMath.isPowerOfTwo(content.length);
 		assert isSorted(content);
+		assert content.length > 0;//TODO: generalize to handle 0 length content
 		
 		treeHeight = BinaryMath.log(content.length);
 		internalKeys = content;
-		
+
 		if (treeHeight > 0) {
 			tree = new int[numberOfNodesForHeight(treeHeight)];
+			
 			int[]leftInput = evenEntries(content, 0, content.length);
 			int[]rightInput = oddEntries(content, 0, content.length);
 			
 			rebuildUpwards(0, treeHeight, leftInput, rightInput, 0);
 		} else {
-			tree = new int[1];//create a dummy tree that always return index 0
+			//if there is only one key,
+			//create a dummy tree that always returns index 0
+			tree = new int[1];
 			tree[0] = Integer.MAX_VALUE;
 		}
 	}
 
 	public boolean contains(int key)
 	{
-		/*int idx = Arrays.binarySearch(internalKeys, key);
-		if (idx >= 0) {
-			return true;
-		} else {
-			return false;
-		}*/
-		
+		//problem: if internalKeys.length == 0 :: crash
 		int idx = find(key, 0, treeHeight);
+		boolean result = internalKeys[idx] == key;
+		
 		assert internalKeys[idx] == key || ((idx == 0 || internalKeys[idx-1] < key) && (idx == internalKeys.length-1 || internalKeys[idx+1] > key));
-		return internalKeys[idx] == key;
+		assert simpleContains(key) == result;
+		
+		return result;
 	}
+	
 
 	
 	//Asymptotics:
@@ -144,7 +150,7 @@ public class ImmutableOrderedSet {
 		for (int i=0; i<numberOfLeaves; i++) {
 			tree[rootIndex+2*i] = rightMinimumSubtreeKeys[offset+i];
 		}
-		//the inner nodes are on the odd positions, they come from the left children's keys (the leftmost one is skipped
+		//the inner nodes are on the odd positions, they come from the left children's keys (the leftmost one is skipped)
 		int numberOfInnerNodes = numberOfLeaves-1;
 		for (int i=0; i<numberOfInnerNodes; i++) {
 			tree[rootIndex+2*i+1] = leftMinimumSubtreeKeys[offset+i+1];
@@ -219,7 +225,7 @@ public class ImmutableOrderedSet {
 	//INSTANCE VARIABLES
 	////
 	
-	private final int[] internalKeys;//for debug purposes
+	private final int[] internalKeys;
 	private final int[] tree;
 	private final int treeHeight;
 	
@@ -237,6 +243,17 @@ public class ImmutableOrderedSet {
 			last = array[i];
 		}
 		return result;
+	}
+	
+	protected boolean simpleContains(int key)
+	{
+		//naive binary search (this is the baseline algorithm)
+		int idx = Arrays.binarySearch(internalKeys, key);
+		if (idx >= 0) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 }

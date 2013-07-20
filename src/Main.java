@@ -18,7 +18,7 @@ class Main {
 		
 		ImmutableOrderedSetTest.testImmutableSet();
 		
-		performanceTestImmutableSet();
+		//performanceTestImmutableSet();
 		//testPackedMemoryStructure();
 		
 		/*
@@ -132,61 +132,26 @@ class Main {
 		System.out.println("test navigation done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 	}
 	
-	
-	static void testPackedMemoryStructure()
-	{
-		PackedMemoryStructure pma = new PackedMemoryStructure();
-		Date start = new Date();
-		for (int i=1; i<2000000; i++) {
-			pma.insert(i);
-			if (!pma.contains(i)) throw new Error();
-		}
-		pma = new PackedMemoryStructure();
-		Random rand = new Random(2);
-		for (int i=0; i<2000000; i++) {
-			int next = rand.nextInt();
-			if (next == 0) continue;
-			pma.insert(next);
-			if (!pma.contains(next)) throw new Error();
-		}
-		
-		
-		Date end = new Date();
-		System.out.println("test pma done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
-		
-	}
+
 	
 	
 	static void performanceTestImmutableSet()
 	{
-		TreeSet<Integer> control = new TreeSet<Integer>();
-		int testSize = (int)Math.pow(2, 25);
+		int testSize = (int)Math.pow(2, 29);
 		
 		int[] input = new int[testSize];
-		int testRange = 2*testSize;
+		int testRange = testSize;
 		Random random = new Random(2);
 		
 		for (int i=0; i<testSize; i++) {
 			input[i] = random.nextInt(testRange);
-			//control.add(input[i]);
 		}
-		
-		/*
-		Date cstart = new Date();
-		for (int j=0; j<100; j++) {
-			for (int i=0; i<testRange; i++) {
-				control.contains(i);
-			}
-		}
-		Date cend = new Date();
-		System.out.println("test control set done!" + " took " + (cend.getTime()-cstart.getTime())/ 1000.0 + " s");
-		*/
 		
 		Arrays.sort(input);
 		ImmutableOrderedSet corona = new ImmutableOrderedSet(input);
 		Date start = new Date();
 		for (int j=0; j<1; j++) {
-			for (int i=0; i<testSize; i++) {
+			for (int i=0; i<200000; i++) {
 				corona.contains(random.nextInt(testRange));
 			}
 		}

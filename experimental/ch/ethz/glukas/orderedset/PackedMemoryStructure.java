@@ -31,6 +31,10 @@ public class PackedMemoryStructure {
 
 	}
 	
+	public int size()
+	{
+		return count;
+	}
 	
 	public boolean contains(int key)
 	{

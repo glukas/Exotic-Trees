@@ -19,11 +19,9 @@ public class ImmutableOrderedSetTest {
 	
 	public static void testImmutableSet()
 	{
-		int testSize = 1;
 		Random random = new Random(1);
-		while (testSize < 2048) {
-			testImmutableSet(testSize, random.nextInt());
-			testSize = testSize << 1;
+		for (int i=1; i<3000; i=i<<1) {
+			testImmutableSet(i, random.nextInt());
 		}
 	}
 	
@@ -46,8 +44,9 @@ public class ImmutableOrderedSetTest {
 		input = new int[testSize];
 		
 		for (int i=0; i<testSize; i++) {
-			input[i] = random.nextInt(testRange);
-			control.add(input[i]);
+			int next = random.nextInt(testRange);
+			input[i] = next;
+			control.add(next);
 		}
 		Arrays.sort(input);
 		uut = new ImmutableOrderedSet(input);
