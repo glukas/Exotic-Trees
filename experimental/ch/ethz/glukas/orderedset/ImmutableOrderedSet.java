@@ -20,28 +20,18 @@ public class ImmutableOrderedSet {
 		assert isSorted(content);
 		assert content.length > 0;//TODO: generalize to handle 0 length content
 		
-		treeHeight = BinaryMath.log(content.length);
+		treeHeight = BinaryMath.log(content.length)+1;
 		internalKeys = content;
 
-		if (treeHeight > 0) {
-			tree = new int[numberOfNodesForHeight(treeHeight)];
-			
-			int[]leftInput = evenEntries(content, 0, content.length);
-			int[]rightInput = oddEntries(content, 0, content.length);
-			
-			rebuildUpwards(0, treeHeight, leftInput, rightInput, 0);
-		} else {
-			//if there is only one key,
-			//create a dummy tree that always returns index 0
-			tree = new int[1];
-			tree[0] = Integer.MAX_VALUE;
-		}
+		tree = new int[numberOfNodesForHeight(treeHeight)];
+		rebuildUpwards(0, treeHeight, internalKeys, internalKeys, 0);
 	}
 
 	public boolean contains(int key)
 	{
-		//problem: if internalKeys.length == 0 :: crash
-		int idx = find(key, 0, treeHeight);
+		//find the index where the key should reside
+		//since the find method returns the index where the search should continue, the index where the search ended is half of the return value
+		int idx = find(key, 0, treeHeight)/2;
 		boolean result = internalKeys[idx] == key;
 		
 		assert internalKeys[idx] == key || ((idx == 0 || internalKeys[idx-1] < key) && (idx == internalKeys.length-1 || internalKeys[idx+1] > key));
@@ -49,13 +39,11 @@ public class ImmutableOrderedSet {
 		
 		return result;
 	}
-	
 
 	
 	//Asymptotics:
 	//T(K^2) = KT(K) + O(1) = O(logK) (note that if we divide a tree of size K^2 in half by height, the resulting subtrees have size K)
-	//returns the index of the leaf the search ended in (with respect to the given subtree at rootIndex of size numberOfNodes(rank)
-	//the key of this leaf is put into 'foundkey'
+	//returns the index of the leaf the search should continue with (with respect to the parent tree)
 	private int find(int key, int rootIndex, int height)
 	{
 		//base cases
@@ -68,33 +56,39 @@ public class ImmutableOrderedSet {
 		int topTreeHeight = height/2;
 		int bottomTreeHeight =  height-topTreeHeight;
 		
-		//top
+		//recurse on the top half of the tree
 		int topindex = find(key, rootIndex, topTreeHeight);
-		
-		assert topindex < 2*numberOfLeavesForHeight(topTreeHeight);
+		//check if result is within range
 		assert topindex >= 0;
+		assert topindex < 2*numberOfLeavesForHeight(topTreeHeight);
 		
+		
+		//recurse on one of the bottom trees (the topindex-th bottom tree)
 		int topTreeSize = numberOfNodesForHeight(topTreeHeight);
 		int bottomTreeSize = numberOfNodesForHeight(bottomTreeHeight);
 		int bottomFoundIndex = find(key, rootIndex+topTreeSize+topindex*bottomTreeSize, bottomTreeHeight);
-		
-		
-		assert bottomFoundIndex < 2*numberOfLeavesForHeight(bottomTreeHeight);
+		//check if result is within range
 		assert bottomFoundIndex >= 0;
+		assert bottomFoundIndex < 2*numberOfLeavesForHeight(bottomTreeHeight);
 		
+		//the index the search should continue with is the sum of the index relative to the bottom tree plus 2*the numberOfLeaves in a bottom tree * the number of trees to the left of the bottom tree
 		return bottomFoundIndex+(topindex*BinaryMath.powerOfTwo(bottomTreeHeight));//(2^bottomTreeHeight) == 2*numberOfLeavesForHeight(bottomTreeHeight)
 	}
 
 	
 	//Asymptotics:
 	//T(K^2) = KT(K) + O(K) = O(K^2)
-	//proof: assume P(K^2): T(K^2)<=c1*K^2-c2 
-	//we know T(K^2) = KT(K) + c0*K and T(1) = c3 (note that if we divide a tree of size K^2 in half by height, the resulting subtrees have size K)
+	
+	//proof by induction (substitution method): let P(K^2) be the predicate that T(K^2)<=c1*K^2-c2 
+	
+	//we know from inspecting the algorithm that T(K^2) = K*T(K) + c0*K and T(1) = c3 (note that if we divide a tree of size K^2 in half by height, the resulting subtrees have size K)
 	//P(1) holds for c1-c2>=c3
 	//P(k^2) implies P(k^4):
-	//T(k^4) = K^2T(k^2)+c0K <= K^2(c1K^2-c2)-c0*K = c1*K^4-c2*K^2+c0*K = c1*K^4-c2-(c2+c2*K^2-c0*K) <= c1*K^4-c2 for c2<=c0, k>=1
+	//T(k^4) = K^2 * T(k^2)+c0K <= K^2(c1*K^2-c2)+c0*K = c1*K^4-c2*K^2+c0*K = c1*K^4-c2-(c2+c2*K^2-c0*K) <= c1*K^4-c2 for c2<=c0, k>=1
+	
 	
 	//returns the minimum key in the subtree
+	//the input arrays contain the minimum elements of the children of the leaf nodes (left and right children respectively)
 	//offset denotes the first key of the minimumSubtreeKeys arrays that is relevant for the current step
 	//the end of the relevant part is implicit in the rank of the current subtree
 	private int rebuildUpwards(int rootIndex, int height, int[] leftMinimumSubtreeKeys, int[] rightMinimumSubtreeKeys, int offset)
@@ -107,34 +101,31 @@ public class ImmutableOrderedSet {
 		int topTreeHeight = height/2;
 		int bottomTreeHeight =  height-topTreeHeight;
 		
-		
-		int bottomTreeSize = numberOfNodesForHeight(bottomTreeHeight);
-		int numberOfBottomTreeLeaves = numberOfLeavesForHeight(bottomTreeHeight);
-		
 		int topTreeSize = numberOfNodesForHeight(topTreeHeight);
+		int bottomTreeSize = numberOfNodesForHeight(bottomTreeHeight);
+		
 		int numberOfTopTreeLeaves = numberOfLeavesForHeight(topTreeHeight);
-		int numberOfBottomTrees = 2*numberOfTopTreeLeaves;
-		
-		
-		//bottom trees
+		int numberOfBottomTreeLeaves = numberOfLeavesForHeight(bottomTreeHeight);
+
+		//recursively build the bottom trees
+		//and store the minimum elements of all those subtrees
 		int [] leftBottomTreeMins = new int[numberOfTopTreeLeaves];
 		int [] rightBottomTreeMins = new int[numberOfTopTreeLeaves];
 		
 		int currentIndex = rootIndex+topTreeSize;
-		for (int i=0; i<numberOfBottomTrees; i+=2) {
-			leftBottomTreeMins[i/2] = rebuildUpwards(currentIndex, bottomTreeHeight, leftMinimumSubtreeKeys, rightMinimumSubtreeKeys, offset+i*numberOfBottomTreeLeaves);
+		for (int i=0; i<numberOfTopTreeLeaves; i++) {
+			leftBottomTreeMins[i] = rebuildUpwards(currentIndex, bottomTreeHeight, leftMinimumSubtreeKeys, rightMinimumSubtreeKeys, offset);
 			currentIndex += bottomTreeSize;
-			rightBottomTreeMins[i/2] = rebuildUpwards(currentIndex, bottomTreeHeight, leftMinimumSubtreeKeys, rightMinimumSubtreeKeys, offset+(i+1)*numberOfBottomTreeLeaves);
+			offset += numberOfBottomTreeLeaves;
+			
+			rightBottomTreeMins[i] = rebuildUpwards(currentIndex, bottomTreeHeight, leftMinimumSubtreeKeys, rightMinimumSubtreeKeys, offset);
 			currentIndex += bottomTreeSize;
+			offset += numberOfBottomTreeLeaves;
 		}
 		
-		//top tree: push up the keys from the bottom trees
-		//the key of a node is the smallest key of its right subtree
-		rebuildUpwards(rootIndex, topTreeHeight, leftBottomTreeMins, rightBottomTreeMins, 0);
-		
-		return leftBottomTreeMins[0];//because the input is presorted, the min is always the leftmost entry
+		//recursively build the top tree and return the minimum overall
+		return rebuildUpwards(rootIndex, topTreeHeight, leftBottomTreeMins, rightBottomTreeMins, 0);
 	}
-	
 	
 	//stores the index subtree in order starting at the rootIndex.
 	//the index tree is constructed using the two input arrays
@@ -144,17 +135,11 @@ public class ImmutableOrderedSet {
 	private int baseCaseRebuild(int rootIndex, int height, int[] leftMinimumSubtreeKeys, int[] rightMinimumSubtreeKeys, int offset)
 	{
 		int numberOfLeaves = numberOfLeavesForHeight(height);
-		//todo: use the copy some keys subroutine
 		
 		//the leaves are on the even positions, they come from the right children's keys
-		for (int i=0; i<numberOfLeaves; i++) {
-			tree[rootIndex+2*i] = rightMinimumSubtreeKeys[offset+i];
-		}
+		copySomeEntries(rightMinimumSubtreeKeys, tree, offset, rootIndex, 1, 2, numberOfLeaves);
 		//the inner nodes are on the odd positions, they come from the left children's keys (the leftmost one is skipped)
-		int numberOfInnerNodes = numberOfLeaves-1;
-		for (int i=0; i<numberOfInnerNodes; i++) {
-			tree[rootIndex+2*i+1] = leftMinimumSubtreeKeys[offset+i+1];
-		}
+		copySomeEntries(leftMinimumSubtreeKeys, tree, offset+1, rootIndex+1, 1, 2, numberOfLeaves-1);
 		
 		//the leftmost entry of the left minimum children is the minimum overall
 		return leftMinimumSubtreeKeys[offset];
@@ -195,7 +180,7 @@ public class ImmutableOrderedSet {
 	//ARRAY HELPERS
 	////
 	
-	private int[] evenEntries(int[]keys, int fromIndex, int toIndex)
+	private static int[] evenEntries(int[]keys, int fromIndex, int toIndex)
 	{
 		int size = (toIndex-fromIndex)/2;
 		int[] result = new int[size];
@@ -203,7 +188,7 @@ public class ImmutableOrderedSet {
 		return result;
 	}
 	
-	private int[] oddEntries(int[]keys, int fromIndex, int toIndex)
+	private static int[] oddEntries(int[]keys, int fromIndex, int toIndex)
 	{
 		int size = (toIndex-fromIndex)/2;
 		int[] result = new int[size];
@@ -211,12 +196,12 @@ public class ImmutableOrderedSet {
 		return result;
 	}
 	
-	private void copySomeEntries(int[]source, int[]target, int sourceIndex, int targetIndex, int fromStepSize, int toStepSize, int numberOfSteps)
+	private static void copySomeEntries(int[]source, int[]target, int sourceIndex, int targetIndex, int fromStepSize, int toStepSize, int numberOfSteps)
 	{
 		for (int i=0; i<numberOfSteps; i++) {
 			target[targetIndex] = source[sourceIndex];
-			targetIndex += toStepSize;
 			sourceIndex += fromStepSize;
+			targetIndex += toStepSize;
 		}
 	}
 	
