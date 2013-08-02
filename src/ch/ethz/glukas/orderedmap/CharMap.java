@@ -3,7 +3,6 @@ package ch.ethz.glukas.orderedmap;
 import java.util.concurrent.ForkJoinPool;
 
 import ch.ethz.glukas.orderedset.BinaryMath;
-import ch.ethz.glukas.orderedset.ParallelCruncher;
 
 public class CharMap<T> {
 

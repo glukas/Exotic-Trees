@@ -17,13 +17,13 @@ class Main {
 			e.printStackTrace();
 		}
 		
-		TrieTest.basicTestTrie();
+		//TrieTest.basicTestTrie();
 		//ImmutableOrderedSetTest.testImmutableSet();
 		
 		//performanceTestImmutableSet();
 		
 		//PackedMemoryStructureTest.testPackedMemoryStructure();
-		//performanceTestPackedMemoryArray();
+		performanceTestPackedMemoryArray();
 		
 		/*
 		SetTests.testSet(new RandomizedBST<Integer>());
