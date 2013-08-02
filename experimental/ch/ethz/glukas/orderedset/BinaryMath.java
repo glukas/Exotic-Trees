@@ -1,6 +1,6 @@
 package ch.ethz.glukas.orderedset;
 
-class BinaryMath {
+public class BinaryMath {
 
 	
 	////

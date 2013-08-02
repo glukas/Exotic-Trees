@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.*;
 
+import ch.ethz.glukas.orderedmap.TrieTest;
 import ch.ethz.glukas.orderedset.*;
 
 class Main {
@@ -16,10 +17,13 @@ class Main {
 			e.printStackTrace();
 		}
 		
-		ImmutableOrderedSetTest.testImmutableSet();
+		TrieTest.basicTestTrie();
+		//ImmutableOrderedSetTest.testImmutableSet();
 		
 		//performanceTestImmutableSet();
-		//testPackedMemoryStructure();
+		
+		//PackedMemoryStructureTest.testPackedMemoryStructure();
+		//performanceTestPackedMemoryArray();
 		
 		/*
 		SetTests.testSet(new RandomizedBST<Integer>());
@@ -134,28 +138,62 @@ class Main {
 	
 
 	
+	static void performanceTestPackedMemoryArray()
+	{
+		int testSize = (int)Math.pow(2, 27);
+
+		int testRange = testSize;
+		Random random = new Random(2);
+		
+		Date start = new Date();
+
+		PackedMemoryStructure pma = new PackedMemoryStructure();
+		for (int i=1; i<testSize/2; i++) {
+			pma.insert(i);
+			int next = random.nextInt(testRange);
+			if (next != 0) {
+				pma.insert(next);
+			}
+		}
+		Date end = new Date();
+		System.out.println("testing pma done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		
+	}
+	
 	
 	static void performanceTestImmutableSet()
 	{
-		int testSize = (int)Math.pow(2, 29);
+		int testSize = (int)Math.pow(2, 26);
 		
+		Date start = new Date();
 		int[] input = new int[testSize];
+		
 		int testRange = testSize;
 		Random random = new Random(2);
+		
 		
 		for (int i=0; i<testSize; i++) {
 			input[i] = random.nextInt(testRange);
 		}
-		
 		Arrays.sort(input);
+		Date end = new Date();
+		System.out.println("setting up immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		
+		start = new Date();
 		ImmutableOrderedSet corona = new ImmutableOrderedSet(input);
-		Date start = new Date();
+		for (int i=0; i<0; i++) {
+			corona = new ImmutableOrderedSet(input);
+		}
+		end = new Date();
+		
+		System.out.println("building immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		start = new Date();
 		for (int j=0; j<1; j++) {
-			for (int i=0; i<200000; i++) {
+			for (int i=0; i<0; i++) {
 				corona.contains(random.nextInt(testRange));
 			}
 		}
-		Date end = new Date();
+		end = new Date();
 		System.out.println("test immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 		
 

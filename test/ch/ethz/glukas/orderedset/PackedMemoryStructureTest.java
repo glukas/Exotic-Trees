@@ -14,6 +14,11 @@ public class PackedMemoryStructureTest {
 	@Test
 	public void testPMA()
 	{
+		testPackedMemoryStructure();
+	}
+	
+	public static void testPackedMemoryStructure()
+	{
 		for (int i=0; i<3000; i*=2) {
 			testPackedMemoryStructure(i, i);
 			i++;
@@ -32,6 +37,7 @@ public class PackedMemoryStructureTest {
 			pma.insert(i);
 			control.add(i);
 			assertEquals(pma.contains(i), control.contains(i));
+			assertTrue(pma.size() == control.size());
 		}
 		
 		assertEqualSets(pma, control);
