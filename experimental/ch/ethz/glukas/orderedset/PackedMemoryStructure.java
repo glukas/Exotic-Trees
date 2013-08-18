@@ -33,8 +33,9 @@ public class PackedMemoryStructure {
 	{
 		//capacity should be a power of 2
 		keys = new int[capacity];
-		auxiliary = new int[capacity];
+		//auxiliary = new int[capacity];
 		sectionSize = sectionSizeForCapacity(capacity);
+		firstKeyOfSection = new int[capacity/sectionSize];
 		depth = BinaryMath.log(numberOfSections());
 		//usedSlotsPerSection = new int[numberOfSectionsForLevel(0)];
 	}
@@ -102,6 +103,8 @@ public class PackedMemoryStructure {
 			index--;
 		}*/
 		
+		firstKeyOfSection[section] = keys[arrayIndexOfSection];
+		
 		//usedSlotsPerSection[arrayIndexOfSection/sectionSize]++;
 		assert sectionIsSorted(section);
 		
@@ -112,26 +115,14 @@ public class PackedMemoryStructure {
 	
 	private int sectionForKey(int key)
 	{
-		//binary search on the first element of the sections (first element is always non-null, except when capacity == 1)
-		int lefthand = 0;
-		int righthand = numberOfSections()-1;
-		
-		while (righthand-lefthand > 1) {
-			int middle = lefthand+(righthand-lefthand)/2;
-			int sectionIndex = arrayIndexForSection(middle);
-			if (key > keys[sectionIndex]) {
-				lefthand = middle;
-			} else if (key < keys[sectionIndex]) {
-				righthand = middle;
-			} else {
-				return middle;
-			}
+		//return directSectionForKey(key);
+		if (key <= firstKeyOfSection[0]) return 0;
+		int index = Arrays.binarySearch(firstKeyOfSection, 0, firstKeyOfSection.length, key);
+		if (index < 0) {
+			index = -(index+1)-1;
 		}
-		
-		//we might be off by one, choose between the two remaining sections
-		if (key >= keys[arrayIndexForSection(righthand)]) return righthand;
-		assert lefthand == 0 || key >= keys[arrayIndexForSection(lefthand)];
-		return lefthand;
+		assert (index == directSectionForKey(key));
+		return index;
 	}
 	
 	//this is the meat of the structure
@@ -148,108 +139,14 @@ public class PackedMemoryStructure {
 			}
 
 			//B) redistribute the keys among the sections
-			int numberOfSections = numberOfSectionsForLevel(level);
-			if (numberOfSections*sectionSize > 100000) {
-				parallelRedistribute(arrayIndexForNode(level, section), level);
-			} else {
-				redistribute(arrayIndexForNode(level, section), level);
-			}
+			//int numberOfSections = numberOfSectionsForLevel(level);
+			//if (numberOfSections*sectionSize > 100000) {
+			//	parallelRedistribute(arrayIndexForNode(level, section), level);
+			//} else {
+			redistribute(arrayIndexForNode(level, section), level);
+			//}
 		}
 		assert isWithinCapacity();
-	}
-	
-
-	
-
-	/////
-	//Parallel restructuring algorithms
-	////
-	
-	
-	private void parallelRedistribute(int startIndex, int level)
-	{
-		int numberOfSections = numberOfSectionsForLevel(level);
-		int numberOfKeys = parallelCrunch(startIndex, numberOfSections);
-		int [] sourceArray = auxiliary;
-		if (level < 0) {
-			init(2*capacity());
-			numberOfSections = numberOfSections();
-			assert startIndex == 0;
-		}
-		int [] targetArray = keys;
-		parallelDistributeBlock(sourceArray, numberOfKeys, targetArray, startIndex, numberOfSections);
-		
-	}
-	
-	private int parallelCrunch(int indexOfFirstSection, int numberOfSections)
-	{
-		assert countConsistent();
-		
-		
-		int chunkSize = numberOfSections*sectionSize/numberOfTasks;
-		int numberOfSectionsPerTask = numberOfSections/numberOfTasks;
-		assert chunkSize*numberOfTasks == numberOfSections*sectionSize;
-		
-		int currentSourceSectionIndex = indexOfFirstSection;
-		
-		//partially crunch each chunk in parallel
-		
-		for (int i=0; i<numberOfTasks; i++) {
-			ParallelPartialCrunch task = new ParallelPartialCrunch(keys, currentSourceSectionIndex, sectionSize, numberOfSectionsPerTask);
-			threadPool.execute(task);
-			ppcTasks[i] = task;
-			currentSourceSectionIndex += chunkSize;
-		}
-		
-		
-		
-		//copy the keys from the chunks to the destination array (in parallel)
-		int currentTargetIndex = 0;
-		currentSourceSectionIndex = indexOfFirstSection;
-		for (int i=0; i<numberOfTasks; i++) {
-			int nonzeroEntries = ppcTasks[i].join();
-			ParallelArrayCopy task = new ParallelArrayCopy(auxiliary, currentTargetIndex, keys, currentSourceSectionIndex, nonzeroEntries);
-			threadPool.execute(task);
-			kmtasks[i] = task;
-			currentTargetIndex += nonzeroEntries;
-			currentSourceSectionIndex += chunkSize;
-		}
-		
-		//wait for completion
-		for (ForkJoinTask<Void> task : kmtasks) {
-			task.join();
-		}
-		return currentTargetIndex;
-	}
-	
-	private static final int numberOfTasks = 64;
-	private ParallelPartialCrunch[] ppcTasks = new ParallelPartialCrunch[numberOfTasks];
-	private ParallelArrayCopy[] kmtasks = new ParallelArrayCopy[numberOfTasks];
-	
-	
-	private void parallelDistributeBlock(int[]fromArray, int numberOfKeys, int[]toArray, int toStartIndex, int targetNumberOfSections)
-	{
-		//TODO: parallelize
-		int keysPerSection = numberOfKeys/targetNumberOfSections;
-		int leftover = numberOfKeys-(targetNumberOfSections*keysPerSection);//the remaining keys are distributed evenly among the first few sections
-		
-		int currentBlockIndex = 0;
-		int currentSectionIndex = toStartIndex;
-		
-		for (int i=targetNumberOfSections; i>0; i--) {
-			
-			if (i == leftover) {//the last few sections might have some more elements
-				keysPerSection++;
-			}
-			assert currentBlockIndex <= numberOfKeys;
-			
-			System.arraycopy(fromArray, currentBlockIndex, toArray, currentSectionIndex, keysPerSection);
-			Arrays.fill(toArray, currentSectionIndex+keysPerSection, currentSectionIndex+sectionSize, 0);
-			
-			currentBlockIndex += keysPerSection;
-			currentSectionIndex += sectionSize;
-			
-		}
 	}
 	
 	
@@ -289,6 +186,7 @@ public class PackedMemoryStructure {
 		int currentBlockIndex = fromStartIndex+numberOfKeys-1;//points to the right end of the crunched block that still need to be distributed
 		int currentSectionIndex = fromStartIndex+sectionSize*(targetNumberOfSections-1);//points to the first element of the next section that the keys will move to
 		//the distribution proceeds from right to left
+		int currentSection = currentSectionIndex/sectionSize;
 		
 		for (int i=targetNumberOfSections; i>0; i--) {
 			
@@ -298,6 +196,8 @@ public class PackedMemoryStructure {
 			
 			moveKeys(currentBlockIndex, fromArray, currentSectionIndex+keysPerSection-1, keys, keysPerSection);
 			//usedSlotsPerSection[currentSectionIndex/sectionSize] = keysPerSection;
+			firstKeyOfSection[currentSection] = keys[currentSectionIndex];
+			currentSection--;
 			currentBlockIndex -= keysPerSection;
 			currentSectionIndex -= sectionSize;
 			
@@ -311,12 +211,14 @@ public class PackedMemoryStructure {
 	//the copied segment of the fromArray is zeroed out
 	private void moveKeys(int fromIndex, int[] fromArray, int toIndex, int[]toArray, int length)
 	{
+		//TODO: consider using system.arraycopy and arrays.fill
 		if (fromArray == toArray && fromIndex == toIndex) return;
 		assert fromArray != toArray || fromIndex < toIndex;
-		
-		for (int i=0; i< length; i++) {
-			toArray[toIndex-i] = fromArray[fromIndex-i];
-			fromArray[fromIndex-i] = 0;
+		;
+		for (int minToIndex = toIndex-length; toIndex>minToIndex; toIndex--) {
+			toArray[toIndex] = fromArray[fromIndex];
+			fromArray[fromIndex] = 0;
+			fromIndex--;
 		}
 	}
 	
@@ -370,19 +272,11 @@ public class PackedMemoryStructure {
 		//assert usedSlotsConsistent();
 		int numberOfSections = numberOfSectionsForLevel(level);
 		
-		//if (numberOfSections < minimumParallelism*numberOfSectionsPerChunk) {
-			int count = 0;
-			for (int i=0; i<numberOfSections; i++) {
-				count += numberOfUsedSlotsInSectionAtIndex(arrayIndex+i*sectionSize);
-			}
-			return count;
-		/*} else {
-			//TODO: consider better parallelized count (non-recursive)
-			int sectionNumber = arrayIndex/sectionSize;
-			ParallelSectionCounter counter = new ParallelSectionCounter(keys, sectionSize, sectionNumber, sectionNumber+numberOfSections-1);
-			threadPool.execute(counter);
-			return counter.join();
-		}*/
+		int count = 0;
+		for (int i=0; i<numberOfSections; i++) {
+			count += numberOfUsedSlotsInSectionAtIndex(arrayIndex+i*sectionSize);
+		}
+		return count;
 
 	}
 	
@@ -478,7 +372,8 @@ public class PackedMemoryStructure {
 	
 	//private int[] usedSlotsPerSection;
 	private int[] keys;
-	private int[] auxiliary;
+	private int[] firstKeyOfSection;
+	//private int[] auxiliary;
 	private int sectionSize;
 	private int count = 0;
 	private int depth;
@@ -492,10 +387,10 @@ public class PackedMemoryStructure {
 	private final static double leafDensityLowerbound = 0.1;
 	private final static double leafDensityUpperbound = 1.0;
 
-	private static final int numberOfSectionsPerChunk = BinaryMath.powerOfTwo(11);//used as a base case for the parallelized algorithms
-	private static final int minimumParallelism = 4;
+	//private static final int numberOfSectionsPerChunk = BinaryMath.powerOfTwo(11);//used as a base case for the parallelized algorithms
+	//private static final int minimumParallelism = 4;
 	
-	private static final ForkJoinPool threadPool = new ForkJoinPool();
+	//private static final ForkJoinPool threadPool = new ForkJoinPool();
 	/////
 	//INVARIANTS & ASSERTIONS
 	////
@@ -519,6 +414,8 @@ public class PackedMemoryStructure {
 		assert result;
 		result = result && depth == BinaryMath.log(numberOfSections());
 		assert result;
+		result = result && firstKeyOfSectionsConsistent();
+		assert result;
 		//result = result && usedSlotsConsistent();
 		//assert result;
 		return result;
@@ -535,7 +432,6 @@ public class PackedMemoryStructure {
 		}
 		return result;
 	}
-	
 
 	protected boolean isWithinCapacity()
 	{
@@ -586,6 +482,39 @@ public class PackedMemoryStructure {
 		return exhaustiveCountNonZeroEntries(keys);
 	}
 	
+	protected boolean firstKeyOfSectionsConsistent()
+	{
+		boolean result = true;
+		for (int i=0; i<numberOfSections(); i++) {
+			result = result && keys[arrayIndexForSection(i)] == firstKeyOfSection[i];
+		}
+		return result;
+	}
+	
+	//calculates the section for a given key based soley on the 'keys' array
+	protected int directSectionForKey(int key)
+	{
+		//binary search on the first element of the sections (first element is always non-null, except when capacity == 1)
+		int lefthand = 0;
+		int righthand = numberOfSections()-1;
+		
+		while (righthand-lefthand > 1) {
+			int middle = lefthand+(righthand-lefthand)/2;
+			int sectionIndex = arrayIndexForSection(middle);
+			if (key > keys[sectionIndex]) {
+				lefthand = middle;
+			} else if (key < keys[sectionIndex]) {
+				righthand = middle;
+			} else {
+				return middle;
+			}
+		}
+		//we might be off by one, choose between the two remaining sections
+		if (key >= keys[arrayIndexForSection(righthand)]) return righthand;
+		assert lefthand == 0 || key >= keys[arrayIndexForSection(lefthand)];
+		return lefthand;
+	}
+	
 	/*
 	protected boolean usedSlotsConsistent()
 	{
@@ -598,5 +527,98 @@ public class PackedMemoryStructure {
 		return result;
 	}*/
 	
+	
+
+	/////
+	//Parallel restructuring algorithms
+	////
+	
+	
+	/*
+	private void parallelRedistribute(int startIndex, int level)
+	{
+		int numberOfSections = numberOfSectionsForLevel(level);
+		int numberOfKeys = parallelCrunch(startIndex, numberOfSections);
+		int [] sourceArray = auxiliary;
+		if (level < 0) {
+			init(2*capacity());
+			numberOfSections = numberOfSections();
+			assert startIndex == 0;
+		}
+		int [] targetArray = keys;
+		parallelDistributeBlock(sourceArray, numberOfKeys, targetArray, startIndex, numberOfSections);
+		
+	}
+	
+	private int parallelCrunch(int indexOfFirstSection, int numberOfSections)
+	{
+		assert countConsistent();
+		
+		
+		int chunkSize = numberOfSections*sectionSize/numberOfTasks;
+		int numberOfSectionsPerTask = numberOfSections/numberOfTasks;
+		assert chunkSize*numberOfTasks == numberOfSections*sectionSize;
+		
+		int currentSourceSectionIndex = indexOfFirstSection;
+		
+		//partially crunch each chunk in parallel
+		
+		for (int i=0; i<numberOfTasks; i++) {
+			ParallelPartialCrunch task = new ParallelPartialCrunch(keys, currentSourceSectionIndex, sectionSize, numberOfSectionsPerTask);
+			threadPool.execute(task);
+			ppcTasks[i] = task;
+			currentSourceSectionIndex += chunkSize;
+		}
+		
+		
+		
+		//copy the keys from the chunks to the destination array (in parallel)
+		int currentTargetIndex = 0;
+		currentSourceSectionIndex = indexOfFirstSection;
+		for (int i=0; i<numberOfTasks; i++) {
+			int nonzeroEntries = ppcTasks[i].join();
+			ParallelArrayCopy task = new ParallelArrayCopy(auxiliary, currentTargetIndex, keys, currentSourceSectionIndex, nonzeroEntries);
+			threadPool.execute(task);
+			kmtasks[i] = task;
+			currentTargetIndex += nonzeroEntries;
+			currentSourceSectionIndex += chunkSize;
+		}
+		
+		//wait for completion
+		for (ForkJoinTask<Void> task : kmtasks) {
+			task.join();
+		}
+		return currentTargetIndex;
+	}
+	
+	private static final int numberOfTasks = 256;
+	private ParallelPartialCrunch[] ppcTasks = new ParallelPartialCrunch[numberOfTasks];
+	private ParallelArrayCopy[] kmtasks = new ParallelArrayCopy[numberOfTasks];
+	
+	
+	private void parallelDistributeBlock(int[]fromArray, int numberOfKeys, int[]toArray, int toStartIndex, int targetNumberOfSections)
+	{
+		//TODO: parallelize
+		int keysPerSection = numberOfKeys/targetNumberOfSections;
+		int leftover = numberOfKeys-(targetNumberOfSections*keysPerSection);//the remaining keys are distributed evenly among the first few sections
+		
+		int currentBlockIndex = 0;
+		int currentSectionIndex = toStartIndex;
+		
+		for (int i=targetNumberOfSections; i>0; i--) {
+			
+			if (i == leftover) {//the last few sections might have some more elements
+				keysPerSection++;
+			}
+			assert currentBlockIndex <= numberOfKeys;
+			
+			System.arraycopy(fromArray, currentBlockIndex, toArray, currentSectionIndex, keysPerSection);
+			Arrays.fill(toArray, currentSectionIndex+keysPerSection, currentSectionIndex+sectionSize, 0);
+			
+			currentBlockIndex += keysPerSection;
+			currentSectionIndex += sectionSize;
+			
+		}
+	}*/
 
 }

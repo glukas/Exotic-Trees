@@ -22,9 +22,9 @@ class Main {
 		
 		//performanceTestImmutableSet();
 		
-		//PackedMemoryStructureTest.testPackedMemoryStructure();
-		performanceTestPackedMemoryArray();
-		
+		PackedMemoryStructureTest.testPackedMemoryStructure();
+		performanceTestPackedMemoryArray(25);
+		performanceTestSet(new TreeSet<Integer>(), BinaryMath.powerOfTwo(25));
 		/*
 		SetTests.testSet(new RandomizedBST<Integer>());
 		OrderedSetTests.testNavigation(new RandomizedBST<Integer>());
@@ -78,13 +78,16 @@ class Main {
 		
 		for (int i=0; i<testSize; i++) {
 			set.add(i);
-			set.contains(i);
 		}
+		for (int i=0; i<testSize; i++) {
+			set.contains(random.nextInt(testSize));
+		}
+		
+		/*
 		for (int i=0; i<testSize; i++) {
 			set.remove(i);
 			set.contains(i);
 		}
-		
 		
 		for (int i=0; i< testSize; i++) {
 			int nextOperation = random.nextInt(10);
@@ -97,7 +100,7 @@ class Main {
 				set.contains(nextNumber);
 			}
 			
-		}
+		}*/
 		Date end = new Date();
 		System.out.println("randomized performance test set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 	}
@@ -138,9 +141,9 @@ class Main {
 	
 
 	
-	static void performanceTestPackedMemoryArray()
+	static void performanceTestPackedMemoryArray(int testMagnitude)
 	{
-		int testSize = (int)Math.pow(2, 27);
+		int testSize = (int)Math.pow(2, testMagnitude);
 
 		int testRange = testSize;
 		Random random = new Random(2);
@@ -148,15 +151,15 @@ class Main {
 		Date start = new Date();
 
 		PackedMemoryStructure pma = new PackedMemoryStructure();
-		for (int i=1; i<testSize/2; i++) {
+		//force worst case behaviour: sequential inserts and random searches
+		for (int i=1; i<testSize; i++) {
 			pma.insert(i);
-			int next = random.nextInt(testRange);
-			if (next != 0) {
-				pma.insert(next);
-			}
+		}
+		for (int i=0; i<testSize; i++) {
+			pma.contains(random.nextInt(testSize));
 		}
 		Date end = new Date();
-		System.out.println("testing pma done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		System.out.println("performance testing pma done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 		
 	}
 	
