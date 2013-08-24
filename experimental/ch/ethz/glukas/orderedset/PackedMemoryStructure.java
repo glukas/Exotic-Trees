@@ -92,17 +92,6 @@ public class PackedMemoryStructure {
 		
 		//insert the key in the now free spot
 		keys[index] = key;
-		
-		/*alternative algorithm
-		int index = firstFreeIndexForSectionAtIndex(arrayIndexOfSection);
-		assert keys[index] == 0;
-		keys[index] = key;
-		//insertion sort step
-		while (index > arrayIndexOfSection && keys[index-1] > keys[index]) {
-			swapKeys(index, index-1);
-			index--;
-		}*/
-		
 		firstKeyOfSection[section] = keys[arrayIndexOfSection];
 		
 		//usedSlotsPerSection[arrayIndexOfSection/sectionSize]++;
@@ -115,7 +104,6 @@ public class PackedMemoryStructure {
 	
 	private int sectionForKey(int key)
 	{
-		//return directSectionForKey(key);
 		if (key <= firstKeyOfSection[0]) return 0;
 		int index = Arrays.binarySearch(firstKeyOfSection, 0, firstKeyOfSection.length, key);
 		if (index < 0) {
@@ -139,12 +127,7 @@ public class PackedMemoryStructure {
 			}
 
 			//B) redistribute the keys among the sections
-			//int numberOfSections = numberOfSectionsForLevel(level);
-			//if (numberOfSections*sectionSize > 100000) {
-			//	parallelRedistribute(arrayIndexForNode(level, section), level);
-			//} else {
 			redistribute(arrayIndexForNode(level, section), level);
-			//}
 		}
 		assert isWithinCapacity();
 	}
@@ -195,6 +178,7 @@ public class PackedMemoryStructure {
 			}
 			
 			moveKeys(currentBlockIndex, fromArray, currentSectionIndex+keysPerSection-1, keys, keysPerSection);
+			
 			//usedSlotsPerSection[currentSectionIndex/sectionSize] = keysPerSection;
 			firstKeyOfSection[currentSection] = keys[currentSectionIndex];
 			currentSection--;
@@ -204,6 +188,7 @@ public class PackedMemoryStructure {
 		}
 		
 		assert countConsistent();
+		assert firstKeyOfSectionsConsistent();
 	}
 	
 	//from index refers to the last element to be moved, toIndex to where the last element should go
@@ -387,6 +372,8 @@ public class PackedMemoryStructure {
 	private final static double leafDensityLowerbound = 0.1;
 	private final static double leafDensityUpperbound = 1.0;
 
+	//private final static int dummy = Integer.MIN_VALUE;
+	
 	//private static final int numberOfSectionsPerChunk = BinaryMath.powerOfTwo(11);//used as a base case for the parallelized algorithms
 	//private static final int minimumParallelism = 4;
 	

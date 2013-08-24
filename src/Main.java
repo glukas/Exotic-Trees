@@ -20,11 +20,15 @@ class Main {
 		//TrieTest.basicTestTrie();
 		//ImmutableOrderedSetTest.testImmutableSet();
 		
-		//performanceTestImmutableSet();
+		//
 		
-		PackedMemoryStructureTest.testPackedMemoryStructure();
-		performanceTestPackedMemoryArray(25);
-		performanceTestSet(new TreeSet<Integer>(), BinaryMath.powerOfTwo(25));
+		//FixedSizeCOSearchTreeTest.testImmutableSet();
+		
+		performanceTestFixedSizeCoSearchTree(26);
+		performanceTestImmutableSet(26);
+		//PackedMemoryStructureTest.testPackedMemoryStructure();
+		//performanceTestPackedMemoryArray(25);
+		//performanceTestSet(new TreeSet<Integer>(), BinaryMath.powerOfTwo(25));
 		/*
 		SetTests.testSet(new RandomizedBST<Integer>());
 		OrderedSetTests.testNavigation(new RandomizedBST<Integer>());
@@ -164,9 +168,54 @@ class Main {
 	}
 	
 	
-	static void performanceTestImmutableSet()
+	static void performanceTestFixedSizeCoSearchTree(int testMagnitude)
 	{
-		int testSize = (int)Math.pow(2, 26);
+		int testSize = (int)Math.pow(2, testMagnitude);
+		
+		Date start = new Date();
+		int[] input = new int[testSize];
+		
+		int testRange = testSize;
+		Random random = new Random(2);
+		
+		for (int i=0; i<testSize; i++) {
+			input[i] = random.nextInt(testRange);
+		}
+		Arrays.sort(input);
+		Date end = new Date();
+		System.out.println("setting up immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		
+		start = new Date();
+		StaticSearchTree uut = new FixedSizeCOSearchTree(input);
+		end = new Date();
+		
+		System.out.println("building immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		
+		performanceTestStaticSearchTree(uut, testMagnitude);
+	}
+	
+	static void performanceTestStaticSearchTree(StaticSearchTree uut, int testMagnitude)
+	{
+		int testSize = (int)Math.pow(2, testMagnitude);
+		
+		int testRange = testSize;
+		Random random = new Random(2);
+
+		Date start = new Date();
+		for (int j=0; j<1; j++) {
+			for (int i=0; i<testSize; i++) {
+				uut.contains(random.nextInt(testRange));
+			}
+		}
+		Date end = new Date();
+		System.out.println("testing static set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		
+
+	}
+	
+	static void performanceTestImmutableSet(int testMagnitude)
+	{
+		int testSize = (int)Math.pow(2, testMagnitude);
 		
 		Date start = new Date();
 		int[] input = new int[testSize];
@@ -184,22 +233,11 @@ class Main {
 		
 		start = new Date();
 		ImmutableOrderedSet corona = new ImmutableOrderedSet(input);
-		for (int i=0; i<0; i++) {
-			corona = new ImmutableOrderedSet(input);
-		}
 		end = new Date();
 		
 		System.out.println("building immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
-		start = new Date();
-		for (int j=0; j<1; j++) {
-			for (int i=0; i<0; i++) {
-				corona.contains(random.nextInt(testRange));
-			}
-		}
-		end = new Date();
-		System.out.println("test immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 		
-
+		performanceTestStaticSearchTree(corona, testMagnitude);
 	}
 	
 
