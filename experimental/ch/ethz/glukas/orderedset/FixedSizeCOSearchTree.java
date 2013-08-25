@@ -8,64 +8,100 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 		assert BinaryMath.isPowerOfTwo(content.length);
 		assert isSorted(content);
 		assert content.length > 0;//TODO: generalize to handle 0 length content
-		
-		treeHeight = BinaryMath.log(content.length);
+	
 		internalKeys = content;
-
-		if (treeHeight > 0) {
-			int numberOfNodes = numberOfNodesForHeight(treeHeight);
-			tree = new int[numberOfNodes];
-			leftChild = new int[numberOfNodes];
-			rightChild = new int[numberOfNodes];
-			rebuild();
-		} else {
-			//create a dummy tree that always returns index 0
-			tree = new int[1];
-			leftChild = new int[1];
-			rightChild = new int[1];
-			tree[0] = Integer.MAX_VALUE;
+		
+		int magnitude = BinaryMath.log(content.length);
+		int height = magnitude/nodeMagnitude;
+		boolean leftover = magnitude == 0 || height*nodeMagnitude<magnitude;
+		
+		if (leftover) {
+			height++;
 		}
+		
+		
+		treeHeight = height;
+		
+		int numberOfNodes = numberOfNodesForHeight(height);
+		
+		assert numberOfNodes > 0;
+		assert treeHeight > 0;
+		
+		if (height == 1) {
+			children = null;
+			tree = content;
+			numberOfKeysInTheRootNode = content.length;
+		} else {
+			children = new int[numberOfNodes];
+			tree = new int[numberOfNodes];
+			numberOfKeysInTheRootNode = leftover ? BinaryMath.powerOfTwo(magnitude-(magnitude/nodeMagnitude)*nodeMagnitude) : nodeSize;
+			rebuild();
+		}
+		
+		assert height == 1 || numberOfKeysInTheRootNode > 1;
+		assert numberOfKeysInTheRootNode <= nodeSize;
 	}
 	
 	public boolean contains(int key)
 	{
-		return internalKeys[indexOf(key)] == key;
+		int index = indexOf(key);
+		return internalKeys[index] == key;
 	}
 	
 	public int indexOf(int key)
 	{
-		if (treeHeight == 0) {
-			return 0;
-		}
-		
-		int currentIndex = 0;
-		int layerIndex = 0;
-		int depth = 0;
-		int maxDepth = treeHeight-1;
-		
-		while (depth < maxDepth) {
-			layerIndex *= 2;
-			int rightChildIndex = rightChild[currentIndex];
-			if (key < tree[rightChildIndex]) {//smaller than the minimum of the right tree
-				currentIndex = leftChild[currentIndex];
-			} else {
-				currentIndex = rightChildIndex;
-				layerIndex++;
-			}
-			depth++;
-		}
-		
-		if (key >= internalKeys[2*layerIndex+1]) {
-			return 2*layerIndex+1;
-		} else {
-			return 2*layerIndex;
-		}
+		return find(key, 0, treeHeight);
 	}
 	
+
+	//T(K^2) = T(K) + O(1) = O(log(K)) (note that if we divide a tree of size K^2 in half by height, the resulting subtrees have size K)
+	//returns the index of the leaf the search should continue with (with respect to the parent tree)
+	private int find(int key, int rootIndex, int height)
+	{
+		//base cases
+		//large base cases are needed for performance reasons
+		if (height == 1) {
+			return baseCaseFind(key, rootIndex);
+		}
+		
+		//subtree properties
+		int topTreeHeight = height/2;
+		int bottomTreeHeight =  height-topTreeHeight;
+		
+		int topTreeSize = numberOfNodesForHeight(topTreeHeight);
+		int bottomTreeSize = numberOfNodesForHeight(bottomTreeHeight);
+		
+		//recurse on the top half of the tree
+		int topindex = find(key, rootIndex, topTreeHeight);
+		//check if result is within range
+		assert topindex >= 0;
+		assert topindex < numberOfLeavesForHeight(bottomTreeHeight);
+		
+		
+		//recurse on one of the bottom trees (the topindex-th bottom tree)
+		int bottomFoundIndex = find(key, rootIndex+topTreeSize+topindex*bottomTreeSize, bottomTreeHeight);
+		//check if result is within range
+		assert bottomFoundIndex >= 0;
+		assert bottomFoundIndex < numberOfLeavesForHeight(bottomTreeHeight);
+		
+		//the index the search should continue with is the sum of the index relative to the bottom tree plus 2*the numberOfLeaves in a bottom tree * the number of trees to the left of the bottom tree
+		return bottomFoundIndex+(topindex*numberOfLeavesForHeight(bottomTreeHeight));//(2^bottomTreeHeight) == 2*numberOfLeavesForHeight(bottomTreeHeight)
+	}
+	
+	private int baseCaseFind(int key, int rootIndex)
+	{
+		int maxIndex = rootIndex+sizeOfNodeAtIndex(rootIndex);
+		int currentIndex = rootIndex+1;
+		while (currentIndex < maxIndex && tree[currentIndex] <= key) {
+			currentIndex++;
+		}
+		return currentIndex-rootIndex-1;
+	}
+
 	private void rebuild()
 	{
 		rebuildChildrenPointers();
-		rebuildKeys(0, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+		totalRebuildKeys(0, 0);
 		assert checkInvariants();
 	}
 	
@@ -75,46 +111,62 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 		rebuildChildrenPointers(0, treeHeight, null, 0);
 	}
 	
-	private boolean isLeafIndex(int index)
-	{
-		return leftChild[index] == 0;
-	}
-	
 	
 	//(re)builds a minimum tree
 	//assumes all internalKeys are distinct and sorted in ascending order
-	private void rebuildKeys(int rootIndex, int layerindex, int smallestValueToUpdate, int largestValueToUpdate)
+	private void rebuildKeys(int rootIndex, int layerIndex, int smallestValueToUpdate, int largestValueToUpdate)
 	{
 		if (isLeafIndex(rootIndex)) {//base case
-			tree[rootIndex] = internalKeys[2*layerindex];
+			assert rootIndex > 0;
+			System.arraycopy(internalKeys, layerIndex, tree, rootIndex, nodeSize);
 		} else {
 			
-			int rightChildIndex = rightChild[rootIndex];
-			int rightChildValue = tree[rightChildIndex];
-			
-			assert smallestValueToUpdate < rightChildValue || largestValueToUpdate >= rightChildValue;
-			
-			if (smallestValueToUpdate < rightChildValue) {
-				int leftChildIndex = leftChild[rootIndex];
-				int leftChildValue = tree[leftChildIndex];
+			int currentChild = 0;
+			int currentChildIndex = rootIndex;
+			int length = sizeOfNodeAtIndex(rootIndex);
+			while (tree[currentChildIndex] <= largestValueToUpdate && currentChild < length) {
 				
-				rebuildKeys(leftChildIndex, layerindex*2, smallestValueToUpdate, largestValueToUpdate);
-				tree[rootIndex] = tree[leftChildIndex];
-			}
-			if (largestValueToUpdate >= rightChildValue) {
-				rebuildKeys(rightChildIndex, layerindex*2+1, smallestValueToUpdate, largestValueToUpdate);
+				if (tree[currentChildIndex+1] > smallestValueToUpdate) {//Probably BUGGY
+					//update:
+					rebuildKeys(children[currentChildIndex], (layerIndex+currentChild)*nodeSize, smallestValueToUpdate, largestValueToUpdate);
+					tree[currentChildIndex] = tree[children[currentChildIndex]];
+				}
+				
+				currentChild++;
+				currentChildIndex++;
 			}
 			
-			assert tree[rootIndex] == tree[leftChild[rootIndex]];
+		}
+	}
+	
+	private void totalRebuildKeys(int rootIndex, int layerIndex)
+	{
+		if (isLeafIndex(rootIndex)) {//base case
+			assert rootIndex > 0;
+			System.arraycopy(internalKeys, layerIndex, tree, rootIndex, nodeSize);
+		} else {
+			
+			int currentChild = 0;
+			int currentChildIndex = rootIndex;
+			int length = sizeOfNodeAtIndex(rootIndex);
+			while (currentChild < length) {
+				
+				totalRebuildKeys(children[currentChildIndex], (layerIndex+currentChild)*nodeSize);
+				tree[currentChildIndex] = tree[children[currentChildIndex]];
+				
+				currentChild++;
+				currentChildIndex++;
+			}
+			
 		}
 	}
 	
 	private void rebuildChildrenPointers(int rootIndex, int height, int[] indexesOfChildren, int offset)
 	{
 		if (height == 1) {
-			if (indexesOfChildren != null) {//if indexesOfChildren is null, the nodes is a leaf: no children
-				leftChild[rootIndex] = indexesOfChildren[offset];
-				rightChild[rootIndex] = indexesOfChildren[offset+1];
+			if (indexesOfChildren != null) {//if indexesOfChildren is null, the node is a leaf and it has no children
+				int length = sizeOfNodeAtIndex(rootIndex);
+				System.arraycopy(indexesOfChildren, offset, children, rootIndex, length);
 			}
 			return;
 		}
@@ -126,40 +178,67 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 		int topTreeSize = numberOfNodesForHeight(topTreeHeight);
 		int bottomTreeSize = numberOfNodesForHeight(bottomTreeHeight);
 		
-		int numberOfChildrenOfTheTopTree = 2*numberOfLeavesForHeight(topTreeHeight);//==topTreeSize+1;
-		int numberOfChildrenOfEachBottomTree = 2*numberOfLeavesForHeight(bottomTreeHeight);//==bottomTreeSize+1
+		int numberOfChildrenOfTheTopTree = numberOfLeavesForHeight(topTreeHeight);
+		int numberOfChildrenOfEachBottomTree = numberOfLeavesForHeight(bottomTreeHeight);
 		
 		//recursively build the bottom trees and save their indexes
-		int [] bottomTreeIndeces = new int[numberOfChildrenOfTheTopTree];
+		int [] bottomTreeIndexes = new int[numberOfChildrenOfTheTopTree];
 		
 		int currentIndex = rootIndex+topTreeSize;
 		for (int i=0; i<numberOfChildrenOfTheTopTree; i++) {
-			bottomTreeIndeces[i] = currentIndex;
-			rebuildChildrenPointers(currentIndex, bottomTreeHeight, indexesOfChildren, offset);//maybe it would be more cache efficient to first write the bottomTreeIndeces array before recursing?
+			bottomTreeIndexes[i] = currentIndex;
+			rebuildChildrenPointers(currentIndex, bottomTreeHeight, indexesOfChildren, offset);//maybe it would be more cache efficient to first write the bottomTreeIndexes array before recursing?
 			currentIndex += bottomTreeSize;
 			offset += numberOfChildrenOfEachBottomTree;
 		}
 		
 		//recursively build the top trees
-		rebuildChildrenPointers(rootIndex, topTreeHeight, bottomTreeIndeces, 0);
+		rebuildChildrenPointers(rootIndex, topTreeHeight, bottomTreeIndexes, 0);
 	}
 	
 	
 	private static int numberOfLeavesForHeight(int height)
 	{
-		return BinaryMath.powerOfTwo(height-1);
+		return BinaryMath.powerOfTwo(nodeMagnitude*height);
 	}
 	
 	private static int numberOfNodesForHeight(int height)
 	{
-		return BinaryMath.powerOfTwo(height)-1;
+		//q+q^2+...+q^k = (q-q^(k+1))/(1-q)
+		//TODO: investigate more elegant solution
+		long size = (long)1 << (nodeMagnitude*(height+1));
+		long result = ((long)nodeSize-size)/(long)(1-nodeSize);
+		assert (int)result > 0;
+		return (int)result;
 	}
 	
-	private final int[] leftChild;
-	private final int[] rightChild;
-	private final int[] internalKeys;
+	
+	private int sizeOfNodeAtIndex(int index)
+	{
+		return (index > 0) ? nodeSize : numberOfKeysInTheRootNode;//the root might have less children
+	}
+	private boolean isLeafIndex(int index)
+	{
+		return children[index] == 0;
+	}
+	
+	////
+	//INSTANCE VARIABLES
+	///
+	
+	private final int[] children;
 	private final int[] tree;
 	private final int treeHeight;
+	private final int[] internalKeys;
+	private final int numberOfKeysInTheRootNode;
+	
+	////
+	//CONSTANTS
+	////
+
+	private static final int nodeMagnitude = 5;
+	private static final int nodeSize = BinaryMath.powerOfTwo(nodeMagnitude);
+
 	
 	////
 	//INVARIANTS & ASSERTIONS
@@ -189,12 +268,15 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 		if (isLeafIndex(rootIndex)) {
 			return true;
 		}
-		
-		boolean result = tree[rootIndex] == tree[leftChild[rootIndex]];
-		assert result;
-		result = result && subtreesConsistent(leftChild[rootIndex]);
-		assert result;
-		result = result && subtreesConsistent(rightChild[rootIndex]);
+		boolean result = true;
+		for (int i=0; i<nodeSize; i++) {
+			if (children[rootIndex+i] == 0) break;
+			
+			result = result && tree[rootIndex+i] == tree[children[rootIndex+i]];
+			assert result;
+			result = result && subtreesConsistent(children[rootIndex+i]);
+			result = result && subtreesConsistent(children[rootIndex+i]);
+		}
 		assert result;
 		return result;
 	}

@@ -19,7 +19,8 @@ public class FixedSizeCOSearchTreeTest {
 	public static void testImmutableSet()
 	{
 		Random random = new Random(1);
-		for (int i=1; i<3000; i=i<<1) {
+		int maxValue = BinaryMath.powerOfTwo(21);
+		for (int i=1; i<maxValue; i=i<<1) {
 			testImmutableSet(i, random.nextInt());
 		}
 	}

@@ -24,8 +24,8 @@ class Main {
 		
 		//FixedSizeCOSearchTreeTest.testImmutableSet();
 		
-		performanceTestFixedSizeCoSearchTree(26);
-		performanceTestImmutableSet(26);
+		performanceTestFixedSizeCoSearchTree(25);
+		//performanceTestImmutableSet(25);
 		//PackedMemoryStructureTest.testPackedMemoryStructure();
 		//performanceTestPackedMemoryArray(25);
 		//performanceTestSet(new TreeSet<Integer>(), BinaryMath.powerOfTwo(25));
