@@ -37,8 +37,7 @@ public class CocoTreeTest {
 		Random random = new Random(seed);
 		int distance = 200;
 		int[] keys = inOrderArray(testSize, distance);
-		CocoTree uut = new CocoTree(keys);
-		
+		CocoTree uut = new CocoTree(keys).rebuild();
 		//test single key updates
 		for (int i=0; i<testSize; i++) {
 			int updateIndex = random.nextInt(testSize);
@@ -58,7 +57,7 @@ public class CocoTreeTest {
 		keys = inOrderArray(testSize, 100);
 		int rangeSize = keys.length < 200 ? keys.length/4+2 : 1+random.nextInt(300);
 		
-		uut = new CocoTree(keys);
+		uut = new CocoTree(keys).rebuild();
 		
 		for (int i=0; i<keys.length; i++) {
 			int updateAmount = random.nextInt(distance/4);
@@ -101,7 +100,7 @@ public class CocoTreeTest {
 	
 	protected static CocoTree inOrderTree(int testSize)
 	{
-		CocoTree uut = new CocoTree(inOrderArray(testSize, 1));
+		CocoTree uut = new CocoTree(inOrderArray(testSize, 1)).rebuild();
 		return uut;
 	}
 	
@@ -126,7 +125,7 @@ public class CocoTreeTest {
 			control.add(next);
 		}
 		Arrays.sort(input);
-		uut = new CocoTree(input);
+		uut = new CocoTree(input).rebuild();
 		for (int i=-10; i<testRange; i++) {
 			assertEquals(uut.contains(i), control.contains(i));
 		}

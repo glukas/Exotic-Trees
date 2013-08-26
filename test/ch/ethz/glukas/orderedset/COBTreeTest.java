@@ -9,7 +9,7 @@ import java.util.TreeSet;
 
 import org.junit.Test;
 
-public class PackedMemoryStructureTest {
+public class COBTreeTest {
 
 	@Test
 	public void testPMA()
@@ -29,7 +29,7 @@ public class PackedMemoryStructureTest {
 	static void testPackedMemoryStructure(int testSize, int seed)
 	{
 		TreeSet<Integer> control = new TreeSet<Integer>();
-		PackedMemoryStructure pma = new PackedMemoryStructure();
+		COBTree pma = new COBTree();
 		Random rand = new Random(seed);
 		assertFalse(pma.contains(1));
 		//sequence insert
@@ -56,7 +56,7 @@ public class PackedMemoryStructureTest {
 	}
 	
 	
-	static void assertEqualSets(PackedMemoryStructure pma, Set<Integer> control)
+	static void assertEqualSets(COBTree pma, Set<Integer> control)
 	{
 		assertEquals(pma.size(), control.size());
 		//check result

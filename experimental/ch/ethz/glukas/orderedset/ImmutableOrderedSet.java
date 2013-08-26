@@ -105,64 +105,6 @@ public class ImmutableOrderedSet implements StaticSearchTree {
 		return nextNode;
 	}
 	
-	
-	protected void rebuild(int fromIndex, int[] newKeys)
-	{
-		partialRebuildUpwards(0, treeHeight, newKeys, 0, fromIndex, fromIndex+newKeys.length-1);
-	}
-	
-	
-	//returns the new minimum of the subtree
-	//if the tree minimum didn't change, the value is undefined
-	//possible simplification: encapsulate subtreeMinima and subtreeMinimaStartIndex into a single object that behaves like a simple array (the startIndex is mutable)
-	private int partialRebuildUpwards(int rootIndex, int height, int[] subtreeMinima, int subtreeMinimaStartIndex, int indexOfFirstModifiedSubtree, int indexOfLastModifiedSubtree)
-	{
-		assert indexOfFirstModifiedSubtree < 2*numberOfLeavesForHeight(height);
-		assert indexOfLastModifiedSubtree < 2*numberOfLeavesForHeight(height);
-		
-		if (height <= 7) {
-			copySomeEntries(subtreeMinima, tree, subtreeMinimaStartIndex+1, rootIndex+indexOfFirstModifiedSubtree, 1, 1, indexOfLastModifiedSubtree-indexOfFirstModifiedSubtree);
-			//the leftmost entry is the minimum overall if the minimum changed (indexOfFirstModifiedSubtree==0)
-			return subtreeMinima[subtreeMinimaStartIndex];
-		}
-		
-		//subtree properties
-		int topTreeHeight = height/2;
-		int bottomTreeHeight =  height-topTreeHeight;
-		
-		int topTreeSize = numberOfNodesForHeight(topTreeHeight);
-		int bottomTreeSize = numberOfNodesForHeight(bottomTreeHeight);
-		
-		//int numberOfChildrenOfTheTopTree = numberOfLeavesForHeight(topTreeHeight+1);//==topTreeSize+1;
-		int numberOfChildrenOfEachBottomTree = numberOfLeavesForHeight(bottomTreeHeight+1);//==bottomTreeSize+1
-		
-		//find out which bottom trees are affected and update those recursively
-		int firstAffectedBottomTree = indexOfFirstModifiedSubtree/numberOfChildrenOfEachBottomTree;
-		int lastAffectedBottomTree = indexOfLastModifiedSubtree/numberOfChildrenOfEachBottomTree;
-		
-		//TODO: if the first affected tree is not fully affected, it doesn't propagate the minimum, as it did not change
-		int numberOfAffectedBottomTrees = lastAffectedBottomTree-firstAffectedBottomTree+1;
-		int[] bottomTreeMinima = new int[numberOfAffectedBottomTrees];
-		
-		
-		//TODO: special calculation for the first and last trees (or find general formula)
-		int indexOfFirstAffectedSubtreeInTheFirstAffectedBottomTree;
-		int indexOfLastAfffectedSubtreeInTheLastAffectedBottomTree;
-		
-		int currentIndex = rootIndex+topTreeSize+bottomTreeSize*firstAffectedBottomTree;
-		for (int i=0; i<numberOfAffectedBottomTrees; i++) {
-			bottomTreeMinima[i] = partialRebuildUpwards(currentIndex, bottomTreeHeight, subtreeMinima, subtreeMinimaStartIndex, 0, numberOfChildrenOfEachBottomTree-1);
-			currentIndex += bottomTreeSize;
-			subtreeMinimaStartIndex += numberOfChildrenOfEachBottomTree;
-		}
-		
-		
-		//recursively build the top tree and return the minimum overall (if defined)
-		return partialRebuildUpwards(rootIndex, topTreeHeight, bottomTreeMinima, 0, firstAffectedBottomTree, lastAffectedBottomTree);
-	}
-	
-	
-	
 	private int baseCasePartialRebuild(int rootIndex, int[] subtreeMinima, int offset, int indexOfFirstModifiedSubtree, int numberOfModifiedSubtrees)
 	{
 		copySomeEntries(subtreeMinima, tree, offset+1, rootIndex+indexOfFirstModifiedSubtree, 1, 1, numberOfModifiedSubtrees);

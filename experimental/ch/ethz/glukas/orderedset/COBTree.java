@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 
-public class PackedMemoryStructure {
+public class COBTree {
 	//The packed memory structure maintains an ordered set of keys
 	//the keys are arranged to allow fast O(K/B) traversal, where K is the number of keys to scan and B is the cache line size
 	//searches are O(log(N)) worst case time
@@ -23,7 +23,7 @@ public class PackedMemoryStructure {
 	
 	
 	
-	public PackedMemoryStructure()
+	public COBTree()
 	{
 		init(1);
 		assert checkInvariants();
@@ -36,6 +36,7 @@ public class PackedMemoryStructure {
 		//auxiliary = new int[capacity];
 		sectionSize = sectionSizeForCapacity(capacity);
 		firstKeyOfSection = new int[capacity/sectionSize];
+		indexTree = new CocoTree(firstKeyOfSection);
 		depth = BinaryMath.log(numberOfSections());
 		//usedSlotsPerSection = new int[numberOfSectionsForLevel(0)];
 	}
@@ -92,7 +93,11 @@ public class PackedMemoryStructure {
 		
 		//insert the key in the now free spot
 		keys[index] = key;
-		firstKeyOfSection[section] = keys[arrayIndexOfSection];
+		if (index == arrayIndexOfSection) {
+			int oldValue = firstKeyOfSection[section];
+			firstKeyOfSection[section] = keys[arrayIndexOfSection];
+			indexTree.update(oldValue, oldValue);
+		}
 		
 		//usedSlotsPerSection[arrayIndexOfSection/sectionSize]++;
 		assert sectionIsSorted(section);
@@ -104,13 +109,17 @@ public class PackedMemoryStructure {
 	
 	private int sectionForKey(int key)
 	{
-		if (key <= firstKeyOfSection[0]) return 0;
+		//co height-partitioned static search tree
+		return indexTree.indexOf(key);
+		
+		//binary search
+		/*if (key <= firstKeyOfSection[0]) return 0;
 		int index = Arrays.binarySearch(firstKeyOfSection, 0, firstKeyOfSection.length, key);
 		if (index < 0) {
 			index = -(index+1)-1;
 		}
 		assert (index == directSectionForKey(key));
-		return index;
+		return index;*/
 	}
 	
 	//this is the meat of the structure
@@ -145,12 +154,23 @@ public class PackedMemoryStructure {
 		int numberOfSections = numberOfSectionsForLevel(level);
 		int numberOfKeys = crunch(startIndex, numberOfSections);
 		int [] sourceArray = keys;
+		int lowestIndexValue;
+		int highestIndexValue;
 		if (level < 0) {
 			assert numberOfKeys == exhaustiveCountNonZeroEntries(keys);
 			init(2*capacity());
 			numberOfSections = numberOfSections();
+			lowestIndexValue = Integer.MIN_VALUE;
+			highestIndexValue = Integer.MAX_VALUE;
+		} else {
+			int section = startIndex/sectionSize;
+			lowestIndexValue = firstKeyOfSection[section];
+			highestIndexValue = firstKeyOfSection[section+numberOfSections-1];
 		}
+		
 		distributeBlock(startIndex, sourceArray, numberOfSections, numberOfKeys);
+		
+		indexTree.update(lowestIndexValue, highestIndexValue);
 		
 		assert (level >= 0) || count == numberOfKeys;
 		assert isWithinCapacity();
@@ -358,10 +378,12 @@ public class PackedMemoryStructure {
 	//private int[] usedSlotsPerSection;
 	private int[] keys;
 	private int[] firstKeyOfSection;
+	private CocoTree indexTree;
 	//private int[] auxiliary;
 	private int sectionSize;
 	private int count = 0;
 	private int depth;
+	
 	
 	////
 	//CONSTANTS
