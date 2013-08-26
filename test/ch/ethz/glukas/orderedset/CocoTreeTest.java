@@ -32,8 +32,11 @@ public class CocoTreeTest {
 	
 	public static void testUpdates(int testSize, int seed)
 	{
+		//the test's significance is greatly increased by enabling assertions
+		
 		Random random = new Random(seed);
-		int[] keys = inOrderArray(testSize, 100);
+		int distance = 200;
+		int[] keys = inOrderArray(testSize, distance);
 		CocoTree uut = new CocoTree(keys);
 		
 		//test single key updates
@@ -51,6 +54,28 @@ public class CocoTreeTest {
 			
 		}
 		
+		//test range updates
+		keys = inOrderArray(testSize, 100);
+		int rangeSize = keys.length < 200 ? keys.length/4+2 : 1+random.nextInt(300);
+		
+		uut = new CocoTree(keys);
+		
+		for (int i=0; i<keys.length; i++) {
+			int updateAmount = random.nextInt(distance/4);
+			int oldLower = keys[i];
+			int oldUpper = i+rangeSize < keys.length ? keys[i+rangeSize-1] : keys[keys.length-1];
+			incrementRange(keys, i, Math.min(keys.length, i+rangeSize), updateAmount);
+			uut.update(oldLower, oldUpper);
+			assertTrue(uut.contains(oldLower+updateAmount));
+			assertTrue(uut.contains(oldUpper+updateAmount));
+		}
+	}
+	
+	private static void incrementRange(int[] array, int fromIndex, int toIndex, int amount)
+	{
+		for (int i=fromIndex; i<toIndex; i++) {
+			array[i] = array[i]+amount;
+		}
 	}
 	
 	public static void testImmutableSet()
