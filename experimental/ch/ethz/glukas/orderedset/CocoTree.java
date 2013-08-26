@@ -1,9 +1,11 @@
 package ch.ethz.glukas.orderedset;
 
-public class FixedSizeCOSearchTree implements StaticSearchTree {
+import java.util.Arrays;
+
+public class CocoTree implements StaticSearchTree {
 
 	
-	public FixedSizeCOSearchTree(int[] content)
+	public CocoTree(int[] content)
 	{
 		assert BinaryMath.isPowerOfTwo(content.length);
 		assert isSorted(content);
@@ -27,7 +29,7 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 		assert treeHeight > 0;
 		
 		if (height == 1) {
-			children = null;
+			children = new int[1];
 			tree = content;
 			numberOfKeysInTheRootNode = content.length;
 		} else {
@@ -65,6 +67,7 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 	public void update(int smallestValueToUpdate, int largestValueToUpdate)
 	{
 		rebuildKeys(0, 0, smallestValueToUpdate, largestValueToUpdate);
+		assert checkInvariants();
 	}
 
 	//T(K^2) = T(K) + O(1) = O(log(K)) (note that if we divide a tree of size K^2 in half by height, the resulting subtrees have size K)
@@ -129,16 +132,16 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 	{
 		//TODO: Test
 		if (isLeafIndex(rootIndex)) {//base case
-			assert rootIndex > 0;
-			System.arraycopy(internalKeys, layerIndex, tree, rootIndex, nodeSize);
+			System.arraycopy(internalKeys, layerIndex, tree, rootIndex, sizeOfNodeAtIndex(rootIndex));
 		} else {
 			
 			int currentChild = 0;
 			int currentChildIndex = rootIndex;
 			int length = sizeOfNodeAtIndex(rootIndex);
+			
 			while (currentChild < length && tree[currentChildIndex] <= largestValueToUpdate) {
 				
-				if (tree[currentChildIndex] >= smallestValueToUpdate) {
+				if (currentChild == length-1 || tree[currentChildIndex+1] >= smallestValueToUpdate) {
 					//update:
 					rebuildKeys(children[currentChildIndex], (layerIndex+currentChild)*nodeSize, smallestValueToUpdate, largestValueToUpdate);
 					tree[currentChildIndex] = tree[children[currentChildIndex]];
@@ -273,7 +276,11 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 	
 	protected boolean checkInvariants()
 	{
-		boolean result = subtreesConsistent(0);
+		boolean result = isSorted(internalKeys);
+		assert result;
+		result = result && subtreesConsistent(0);
+		assert result;
+		result = result && internalKeysAndTreeConsistent();
 		assert result;
 		return result;
 	}
@@ -290,9 +297,34 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 			result = result && tree[rootIndex+i] == tree[children[rootIndex+i]];
 			assert result;
 			result = result && subtreesConsistent(children[rootIndex+i]);
-			result = result && subtreesConsistent(children[rootIndex+i]);
 		}
 		assert result;
+		return result;
+	}
+	
+	protected void copyKeysFromTree(int rootIndex, int[] targetArray, int targetIndex)
+	{
+		if (isLeafIndex(rootIndex)) {
+			System.arraycopy(tree, rootIndex, targetArray, targetIndex, sizeOfNodeAtIndex(rootIndex));
+			return;
+		}
+		
+		int length = sizeOfNodeAtIndex(rootIndex);
+		
+		for (int i=0; i<length; i++) {
+			copyKeysFromTree(children[rootIndex+i], targetArray, (targetIndex+i)*nodeSize);
+		}
+	}
+	
+	protected boolean internalKeysAndTreeConsistent()
+	{
+		int[] inOrder = new int[internalKeys.length];
+		copyKeysFromTree(0, inOrder, 0);
+		boolean result = true;
+		for (int i=0; i<internalKeys.length; i++) {
+			result = result && internalKeys[i] == inOrder[i];
+			assert result;
+		}
 		return result;
 	}
 	

@@ -22,9 +22,10 @@ class Main {
 		
 		//
 		
-		FixedSizeCOSearchTreeTest.testImmutableSet();
+		CocoTreeTest.testUpdates();
+		CocoTreeTest.testImmutableSet();
 		
-		performanceTestFixedSizeCoSearchTree(25);
+		//performanceTestFixedSizeCoSearchTree(25);
 		//performanceTestImmutableSet(25);
 		//PackedMemoryStructureTest.testPackedMemoryStructure();
 		//performanceTestPackedMemoryArray(25);
@@ -186,7 +187,7 @@ class Main {
 		System.out.println("setting up immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 		
 		start = new Date();
-		StaticSearchTree uut = new FixedSizeCOSearchTree(input);
+		StaticSearchTree uut = new CocoTree(input);
 		end = new Date();
 		
 		System.out.println("building immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
