@@ -22,7 +22,7 @@ class Main {
 		
 		//
 		
-		//FixedSizeCOSearchTreeTest.testImmutableSet();
+		FixedSizeCOSearchTreeTest.testImmutableSet();
 		
 		performanceTestFixedSizeCoSearchTree(25);
 		//performanceTestImmutableSet(25);

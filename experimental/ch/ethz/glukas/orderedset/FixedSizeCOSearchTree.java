@@ -19,7 +19,6 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 			height++;
 		}
 		
-		
 		treeHeight = height;
 		
 		int numberOfNodes = numberOfNodesForHeight(height);
@@ -46,6 +45,15 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 	{
 		int index = indexOf(key);
 		return internalKeys[index] == key;
+		
+		/*explicit navigation
+		int currentIndex = 0;
+		int depth = 1;
+		while (depth < treeHeight) {
+			currentIndex = children[currentIndex+baseCaseFind(key, currentIndex)];
+			depth++;
+		}
+		return tree[currentIndex+baseCaseFind(key, currentIndex)] == key;*/
 	}
 	
 	public int indexOf(int key)
@@ -53,13 +61,17 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 		return find(key, 0, treeHeight);
 	}
 	
+	//both values are inclusive
+	public void update(int smallestValueToUpdate, int largestValueToUpdate)
+	{
+		rebuildKeys(0, 0, smallestValueToUpdate, largestValueToUpdate);
+	}
 
 	//T(K^2) = T(K) + O(1) = O(log(K)) (note that if we divide a tree of size K^2 in half by height, the resulting subtrees have size K)
 	//returns the index of the leaf the search should continue with (with respect to the parent tree)
 	private int find(int key, int rootIndex, int height)
 	{
-		//base cases
-		//large base cases are needed for performance reasons
+		//base case
 		if (height == 1) {
 			return baseCaseFind(key, rootIndex);
 		}
@@ -84,8 +96,7 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 		assert bottomFoundIndex >= 0;
 		assert bottomFoundIndex < numberOfLeavesForHeight(bottomTreeHeight);
 		
-		//the index the search should continue with is the sum of the index relative to the bottom tree plus 2*the numberOfLeaves in a bottom tree * the number of trees to the left of the bottom tree
-		return bottomFoundIndex+(topindex*numberOfLeavesForHeight(bottomTreeHeight));//(2^bottomTreeHeight) == 2*numberOfLeavesForHeight(bottomTreeHeight)
+		return bottomFoundIndex+(topindex*numberOfLeavesForHeight(bottomTreeHeight));
 	}
 	
 	private int baseCaseFind(int key, int rootIndex)
@@ -116,6 +127,7 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 	//assumes all internalKeys are distinct and sorted in ascending order
 	private void rebuildKeys(int rootIndex, int layerIndex, int smallestValueToUpdate, int largestValueToUpdate)
 	{
+		//TODO: Test
 		if (isLeafIndex(rootIndex)) {//base case
 			assert rootIndex > 0;
 			System.arraycopy(internalKeys, layerIndex, tree, rootIndex, nodeSize);
@@ -124,9 +136,9 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 			int currentChild = 0;
 			int currentChildIndex = rootIndex;
 			int length = sizeOfNodeAtIndex(rootIndex);
-			while (tree[currentChildIndex] <= largestValueToUpdate && currentChild < length) {
+			while (currentChild < length && tree[currentChildIndex] <= largestValueToUpdate) {
 				
-				if (tree[currentChildIndex+1] > smallestValueToUpdate) {//Probably BUGGY
+				if (tree[currentChildIndex] >= smallestValueToUpdate) {
 					//update:
 					rebuildKeys(children[currentChildIndex], (layerIndex+currentChild)*nodeSize, smallestValueToUpdate, largestValueToUpdate);
 					tree[currentChildIndex] = tree[children[currentChildIndex]];
@@ -141,6 +153,9 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 	
 	private void totalRebuildKeys(int rootIndex, int layerIndex)
 	{
+		rebuildKeys(0, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+		
+		/*
 		if (isLeafIndex(rootIndex)) {//base case
 			assert rootIndex > 0;
 			System.arraycopy(internalKeys, layerIndex, tree, rootIndex, nodeSize);
@@ -158,7 +173,7 @@ public class FixedSizeCOSearchTree implements StaticSearchTree {
 				currentChildIndex++;
 			}
 			
-		}
+		}*/
 	}
 	
 	private void rebuildChildrenPointers(int rootIndex, int height, int[] indexesOfChildren, int offset)

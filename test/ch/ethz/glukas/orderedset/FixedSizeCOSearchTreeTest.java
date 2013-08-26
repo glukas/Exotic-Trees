@@ -11,14 +11,21 @@ import org.junit.Test;
 public class FixedSizeCOSearchTreeTest {
 
 	@Test
-	public void testImmutableSetForVariousSizes()
+	public void testSetForVariousSizes()
 	{
 		testImmutableSet();
+	}
+	
+	@Test
+	public void testUpdates()
+	{
+		//TODO
 	}
 	
 	public static void testImmutableSet()
 	{
 		Random random = new Random(1);
+		//testImmutableSet(0, 0);
 		int maxValue = BinaryMath.powerOfTwo(21);
 		for (int i=1; i<maxValue; i=i<<1) {
 			testImmutableSet(i, random.nextInt());
@@ -34,6 +41,7 @@ public class FixedSizeCOSearchTreeTest {
 			input[i] = i+1;
 		}
 		FixedSizeCOSearchTree uut = new FixedSizeCOSearchTree(input);
+		
 		for (int i=1; i<=testSize; i++) {
 			assertTrue(uut.contains(i));
 		}
