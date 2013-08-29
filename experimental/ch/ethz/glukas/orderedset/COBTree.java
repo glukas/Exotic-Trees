@@ -38,7 +38,7 @@ public class COBTree {
 		firstKeyOfSection = new int[capacity/sectionSize];
 		indexTree = new CocoTree(firstKeyOfSection);
 		depth = BinaryMath.log(numberOfSections());
-		//usedSlotsPerSection = new int[numberOfSectionsForLevel(0)];
+		usedSlotsPerSection = new int[numberOfSectionsForLevel(0)];
 	}
 	
 	public int size()
@@ -99,7 +99,7 @@ public class COBTree {
 			indexTree.update(oldValue, oldValue);
 		}
 		
-		//usedSlotsPerSection[arrayIndexOfSection/sectionSize]++;
+		usedSlotsPerSection[section]++;
 		assert sectionIsSorted(section);
 		
 		//ensure there is enough space
@@ -148,7 +148,7 @@ public class COBTree {
 	
 	private void redistribute(int startIndex, int level)
 	{
-		//assert usedSlotsConsistent();
+		assert usedSlotsConsistent();
 		assert startIndex >= 0;
 		
 		int numberOfSections = numberOfSectionsForLevel(level);
@@ -174,7 +174,7 @@ public class COBTree {
 		
 		assert (level >= 0) || count == numberOfKeys;
 		assert isWithinCapacity();
-		//assert usedSlotsConsistent();
+		assert usedSlotsConsistent();
 	}
 	
 	
@@ -199,8 +199,9 @@ public class COBTree {
 			
 			moveKeys(currentBlockIndex, fromArray, currentSectionIndex+keysPerSection-1, keys, keysPerSection);
 			
-			//usedSlotsPerSection[currentSectionIndex/sectionSize] = keysPerSection;
+			usedSlotsPerSection[currentSection] = keysPerSection;
 			firstKeyOfSection[currentSection] = keys[currentSectionIndex];
+			
 			currentSection--;
 			currentBlockIndex -= keysPerSection;
 			currentSectionIndex -= sectionSize;
@@ -216,10 +217,18 @@ public class COBTree {
 	//the copied segment of the fromArray is zeroed out
 	private void moveKeys(int fromIndex, int[] fromArray, int toIndex, int[]toArray, int length)
 	{
+		
 		//TODO: consider using system.arraycopy and arrays.fill
 		if (fromArray == toArray && fromIndex == toIndex) return;
+		
+		/*
+		System.arraycopy(fromArray, fromIndex-length+1, toArray, toIndex-length+1, length);
+		if (fromArray == toArray) {
+			Arrays.fill(fromArray, fromIndex-length, fromIndex, 0);
+		}*/
+		
 		assert fromArray != toArray || fromIndex < toIndex;
-		;
+		
 		for (int minToIndex = toIndex-length; toIndex>minToIndex; toIndex--) {
 			toArray[toIndex] = fromArray[fromIndex];
 			fromArray[fromIndex] = 0;
@@ -274,12 +283,12 @@ public class COBTree {
 	
 	private int numberOfUsedSlotsForNode(int arrayIndex, int level)
 	{
-		//assert usedSlotsConsistent();
+		assert usedSlotsConsistent();
 		int numberOfSections = numberOfSectionsForLevel(level);
-		
 		int count = 0;
-		for (int i=0; i<numberOfSections; i++) {
-			count += numberOfUsedSlotsInSectionAtIndex(arrayIndex+i*sectionSize);
+		int section = arrayIndex/sectionSize;
+		for (int maxSection = section+numberOfSections; section<maxSection; section++) {
+			count += usedSlotsPerSection[section];
 		}
 		return count;
 
@@ -313,11 +322,10 @@ public class COBTree {
 		keys[index2] = key1;
 	}
 	
-	
 	private int numberOfUsedSlotsInSectionAtIndex(int index)
 	{
-		return countNumberOfUsedSlotsInSectionAtIndex(index);
-		//return usedSlotsPerSection[index/sectionSize];
+		//return countNumberOfUsedSlotsInSectionAtIndex(index);
+		return usedSlotsPerSection[index/sectionSize];
 	}
 	
 	private int countNumberOfUsedSlotsInSectionAtIndex(int index)
@@ -375,7 +383,7 @@ public class COBTree {
 	//INSTANCE VARIABLES
 	////
 	
-	//private int[] usedSlotsPerSection;
+	private int[] usedSlotsPerSection;
 	private int[] keys;
 	private int[] firstKeyOfSection;
 	private CocoTree indexTree;
@@ -524,7 +532,7 @@ public class COBTree {
 		return lefthand;
 	}
 	
-	/*
+	
 	protected boolean usedSlotsConsistent()
 	{
 		int numberOfSections = numberOfSectionsForLevel(0);
@@ -534,7 +542,7 @@ public class COBTree {
 			assert result;
 		}
 		return result;
-	}*/
+	}
 	
 	
 

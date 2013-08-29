@@ -120,7 +120,7 @@ public class CocoTree implements StaticSearchTree {
 	
 	
 	//updates the tree to reflect the current state of the content array
-	//returns the current object (just a convenience)
+	//returns the current object (for convenience)
 	public CocoTree rebuild()
 	{
 		assert isSorted(internalKeys);
@@ -149,24 +149,26 @@ public class CocoTree implements StaticSearchTree {
 	//assumes all internalKeys are distinct and sorted in ascending order
 	private void rebuildKeys(int rootIndex, int layerIndex, int smallestValueToUpdate, int largestValueToUpdate)
 	{
-		if (isLeafIndex(rootIndex)) {//base case
+		if (isLeafIndex(rootIndex)) {//base case : replace node
 			System.arraycopy(internalKeys, layerIndex, tree, rootIndex, sizeOfNodeAtIndex(rootIndex));
 		} else {
 			
-			int currentChild = 0;
-			int currentChildIndex = rootIndex;
-			int length = sizeOfNodeAtIndex(rootIndex);
+			int currentIndex = rootIndex;
+			int remainingChildren = sizeOfNodeAtIndex(rootIndex);
+			int currentLayerIndex = layerIndex*nodeSize;
 			
-			while (currentChild < length && tree[currentChildIndex] <= largestValueToUpdate) {
+			
+			while (remainingChildren > 0 && tree[currentIndex] <= largestValueToUpdate) {
 				
-				if (currentChild == length-1 || tree[currentChildIndex+1] >= smallestValueToUpdate) {
+				if (remainingChildren == 1 || tree[currentIndex+1] >= smallestValueToUpdate) {
 					//update:
-					rebuildKeys(children[currentChildIndex], (layerIndex+currentChild)*nodeSize, smallestValueToUpdate, largestValueToUpdate);
-					tree[currentChildIndex] = tree[children[currentChildIndex]];
+					rebuildKeys(children[currentIndex], currentLayerIndex, smallestValueToUpdate, largestValueToUpdate);
+					tree[currentIndex] = tree[children[currentIndex]];
 				}
 				
-				currentChild++;
-				currentChildIndex++;
+				remainingChildren--;
+				currentIndex++;
+				currentLayerIndex += nodeSize;
 			}
 			
 		}
@@ -176,24 +178,24 @@ public class CocoTree implements StaticSearchTree {
 	{
 		rebuildKeys(0, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
 		
-		/*
-		if (isLeafIndex(rootIndex)) {//base case
-			assert rootIndex > 0;
-			System.arraycopy(internalKeys, layerIndex, tree, rootIndex, nodeSize);
+		/*alternative rebuild algorithm (if there wouldn't exist an absolute minimum and maximum element, use this algorithm)
+		if (isLeafIndex(rootIndex)) {//base case : replace node
+			System.arraycopy(internalKeys, layerIndex, tree, rootIndex, sizeOfNodeAtIndex(rootIndex));
 		} else {
 			
-			int currentChild = 0;
-			int currentChildIndex = rootIndex;
-			int length = sizeOfNodeAtIndex(rootIndex);
-			while (currentChild < length) {
-				
-				totalRebuildKeys(children[currentChildIndex], (layerIndex+currentChild)*nodeSize);
-				tree[currentChildIndex] = tree[children[currentChildIndex]];
-				
-				currentChild++;
-				currentChildIndex++;
-			}
+			int currentIndex = rootIndex;
+			int remainingChildren = sizeOfNodeAtIndex(rootIndex);
+			int currentLayerIndex = layerIndex*nodeSize;
 			
+			while (remainingChildren > 0) {
+				
+				rebuildKeys(children[currentIndex], currentLayerIndex, smallestValueToUpdate, largestValueToUpdate);
+				tree[currentIndex] = tree[children[currentIndex]];
+				
+				remainingChildren--;
+				currentIndex++;
+				currentLayerIndex += nodeSize;
+			}
 		}*/
 	}
 	
@@ -245,9 +247,9 @@ public class CocoTree implements StaticSearchTree {
 		//q+q^2+...+q^k = (q-q^(k+1))/(1-q)
 		//TODO: investigate more elegant solution
 		long size = (long)1 << (nodeMagnitude*(height+1));
-		long result = ((long)nodeSize-size)/(long)(1-nodeSize);
-		assert (int)result > 0;
-		return (int)result;
+		int result = (int)((nodeSize-size)/(1-nodeSize));
+		assert result > 0;
+		return result;
 	}
 	
 	

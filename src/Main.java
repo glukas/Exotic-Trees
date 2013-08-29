@@ -23,21 +23,20 @@ class Main {
 		//CocoTreeTest.testUpdates();
 		//CocoTreeTest.testImmutableSet();
 		
-		COBTreeTest.testPackedMemoryStructure();
+		//COBTreeTest.testPackedMemoryStructure();
 		
-		performanceTestCOBTree(26);
+		performanceTestCOBTree(25);
 		
-		//performanceTestFixedSizeCoSearchTree(25);
+		//performanceTestFixedSizeCoSearchTree(26);
 		//performanceTestImmutableSet(25);
 		
-		//performanceTestSet(new TreeSet<Integer>(), BinaryMath.powerOfTwo(25));
+		//performanceTestSet(new TreeSet<Integer>(), BinaryMath.powerOfTwo(20));
 		/*
 		SetTests.testSet(new RandomizedBST<Integer>());
 		OrderedSetTests.testNavigation(new RandomizedBST<Integer>());
 		OrderedSetTests.testSortedSet(new RandomizedBST<Integer>());
 		OrderedSetTests.testSubsets(new RandomizedBST<Integer>());
 		RangeSetTest.testRangeSizes(new RandomizedBST<Integer>());
-		
 		
 		OrderedSetTests.testIterator(new SplayTree<Integer>());
 		OrderedSetTests.testIterator(new RandomizedBST<Integer>());
@@ -77,17 +76,29 @@ class Main {
 	
 	static void performanceTestSet(Set<Integer> set, int testSize)
 	{
-		int testRange = testSize/5;
+		int testRange = testSize;
 		Random random = new Random(2);
 		Date start = new Date();
-		
-		
 		for (int i=0; i<testSize; i++) {
 			set.add(i);
 		}
+		Date end = new Date();
+		System.out.println("performanceTestSet: in order insertion test done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		
+		set.clear();
+		start = new Date();
+		for (int i=0; i<testSize; i++) {
+			set.add(random.nextInt(testRange));
+		}
+		end = new Date();
+		System.out.println("performanceTestSet: random insertion test done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		
+		start = new Date();
 		for (int i=0; i<testSize; i++) {
 			set.contains(random.nextInt(testSize));
 		}
+		end = new Date();
+		System.out.println("performanceTestSet: random search test done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 		
 		/*
 		for (int i=0; i<testSize; i++) {
@@ -107,8 +118,7 @@ class Main {
 			}
 			
 		}*/
-		Date end = new Date();
-		System.out.println("randomized performance test set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+
 	}
 
 	
@@ -157,13 +167,23 @@ class Main {
 		Date start = new Date();
 
 		COBTree pma = new COBTree();
-		//force worst case behaviour: sequential inserts and random searches
+		//force worst case behaviour: sequential inserts
 		for (int i=1; i<testSize; i++) {
 			pma.insert(i);
 		}
 		Date end = new Date();
-		System.out.println("building cobtree done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		System.out.println("in-order-building cobtree done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 		
+		//best case insertion: random inserts
+		start = new Date();
+		pma = new COBTree();
+		for (int i=1; i<testSize; i++) {
+			pma.insert(random.nextInt(testRange));
+		}
+		end = new Date();
+		System.out.println("randomly building cobtree done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
+		
+		//worst case searches: random searches
 		start = new Date();
 		for (int i=0; i<testSize; i++) {
 			pma.contains(random.nextInt(testSize));
@@ -198,6 +218,7 @@ class Main {
 		System.out.println("building immutable set done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 		
 		performanceTestStaticSearchTree(uut, testMagnitude);
+		
 	}
 	
 	static void performanceTestStaticSearchTree(StaticSearchTree uut, int testMagnitude)
