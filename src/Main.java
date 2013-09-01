@@ -1,6 +1,8 @@
 import java.io.IOException;
 import java.util.*;
 
+import priorityQueue.COPriorityQueueTest;
+
 import ch.ethz.glukas.orderedmap.TrieTest;
 import ch.ethz.glukas.orderedset.*;
 
@@ -17,6 +19,12 @@ class Main {
 			e.printStackTrace();
 		}
 		
+		COPriorityQueueTest.testPolling();
+		COPriorityQueueTest.randomUsage();
+		COPriorityQueueTest.testInsertionAndMinimum();
+		
+		
+		
 		//TrieTest.basicTestTrie();
 		//ImmutableOrderedSetTest.testImmutableSet();
 		
@@ -25,7 +33,7 @@ class Main {
 		
 		//COBTreeTest.testPackedMemoryStructure();
 		
-		performanceTestCOBTree(25);
+		//performanceTestCOBTree(25);
 		
 		//performanceTestFixedSizeCoSearchTree(26);
 		//performanceTestImmutableSet(25);
