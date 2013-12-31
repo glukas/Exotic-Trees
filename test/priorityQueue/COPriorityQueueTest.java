@@ -32,7 +32,7 @@ public class COPriorityQueueTest {
 		COPriorityQueue uut = new COPriorityQueue();
 		PriorityQueue<Integer> control = new PriorityQueue<Integer>();
 		Random rand = new Random(3);
-		int testSize = 1020;
+		int testSize = 10000;
 		int testRange = 10*testSize;
 		for (int i=0; i<testSize; i++) {
 			int next = rand.nextInt(testRange);
@@ -56,6 +56,18 @@ public class COPriorityQueueTest {
 				control.add(next);
 				assertTrue(uut.size() == control.size());
 				assertTrue(uut.peek() == control.peek());
+			}
+			
+			if (rand.nextBoolean()) {
+				next = rand.nextInt(testRange);
+				uut.add(next);
+				control.add(next);
+				assertTrue(uut.size() == control.size());
+				assertTrue(uut.peek() == control.peek());
+				result = uut.poll();
+				shouldBe = control.poll();
+				assertTrue(result == shouldBe);
+				assertTrue(uut.size() == control.size());
 			}
 		}
 		

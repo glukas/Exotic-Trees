@@ -129,7 +129,7 @@ public class COPriorityQueue {
 		int numberOfKeys = size();
 		
 		auxiliaryKeys[0] = Integer.MIN_VALUE;
-		int afterwards = mergeValidPartsOfChunksIntoAuxiliary(numberOfChunks());//BUGGY: this method assumes that all chunks have valid information, or that they are filled with -infinity if they are invalid
+		int afterwards = mergeValidPartsOfChunksIntoAuxiliary(numberOfChunks());
 		
 		int[] source = auxiliaryKeys;
 		int firstValidIndex = afterwards-numberOfKeys;
