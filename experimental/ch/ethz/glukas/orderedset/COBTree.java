@@ -152,17 +152,17 @@ public class COBTree {
 		assert startIndex >= 0;
 		
 		int numberOfSections = numberOfSectionsForLevel(level);
-		int numberOfKeys = crunch(startIndex, numberOfSections);
+		int numberOfKeys = crunch(startIndex, numberOfSections);//shift all elements to the left of the block and count them
 		int [] sourceArray = keys;
 		int lowestIndexValue;
 		int highestIndexValue;
-		if (level < 0) {
+		if (level < 0) {//total rebuild necessary
 			assert numberOfKeys == exhaustiveCountNonZeroEntries(keys);
 			init(2*capacity());
 			numberOfSections = numberOfSections();
 			lowestIndexValue = Integer.MIN_VALUE;
 			highestIndexValue = Integer.MAX_VALUE;
-		} else {
+		} else {//prepare partial rebuild
 			int section = startIndex/sectionSize;
 			lowestIndexValue = firstKeyOfSection[section];
 			highestIndexValue = firstKeyOfSection[section+numberOfSections-1];
