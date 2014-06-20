@@ -152,6 +152,16 @@ class TreeNode<T> {
 		setRightChild(null);
 	}
 	
+	///
+	//OVERRIDING OBJECT
+	////
+	
+	@Override
+	public String toString() {
+		if (getValue() == null) return "(Null)";
+		return getValue().toString();
+	}
+	
 	/////
 	//INSTANCE VARIABLES
 	/////

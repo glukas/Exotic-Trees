@@ -19,10 +19,9 @@ class Main {
 			e.printStackTrace();
 		}
 		
-		COPriorityQueueTest.testPolling();
-		COPriorityQueueTest.randomUsage();
-		COPriorityQueueTest.testInsertionAndMinimum();
-		
+		//COPriorityQueueTest.testPolling();
+		//COPriorityQueueTest.randomUsage();
+		//COPriorityQueueTest.testInsertionAndMinimum();
 		
 		
 		//TrieTest.basicTestTrie();
@@ -57,12 +56,12 @@ class Main {
 		SetTests.testSet(new SplayTree<Integer>());
 		SetTests.randomizedTestSet(new SplayTree<Integer>(), 1000);*/
 		
-		/*
+		
 		int performanceTestSize = 1000000;
-		
-		
+		//performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
+		/*
 		performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
-		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
+		
 		
 		performanceTestRepeatedAccess(new SplayTree<Integer>(), performanceTestSize);
 		performanceTestRepeatedAccess(new TreeSet<Integer>(), performanceTestSize);
@@ -78,6 +77,7 @@ class Main {
 		performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
 		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);*/
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
+		performanceTestSet(new ScapegoatTree<Integer>(), performanceTestSize);
 	}
 	
 
