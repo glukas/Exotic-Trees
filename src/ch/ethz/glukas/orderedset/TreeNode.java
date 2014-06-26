@@ -57,7 +57,11 @@ class TreeNode<T> {
 		}
 	}
 	
-	//if the argument is negative, the leftChild is set, else the right child is set
+	/**
+	 * if the argument is negative, the leftChild is set, else the right child is set
+	 * @param parity
+	 * @param child
+	 */
 	public void setChild(int parity, TreeNode<T> child)
 	{
 		if (parity < 0) {

@@ -77,7 +77,10 @@ class Main {
 		performanceTestSet(new SplayTree<Integer>(), performanceTestSize);
 		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);*/
 		//performanceTestSet(new HashSet<Integer>(), performanceTestSize);
+		
 		performanceTestSet(new ScapegoatTree<Integer>(), performanceTestSize);
+		performanceTestSet(new TreeSet<Integer>(), performanceTestSize);
+		
 	}
 	
 
@@ -108,12 +111,15 @@ class Main {
 		end = new Date();
 		System.out.println("performanceTestSet: random search test done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 		
-		/*
+		start = new Date();
 		for (int i=0; i<testSize; i++) {
 			set.remove(i);
 			set.contains(i);
 		}
+		end = new Date();
+		System.out.println("performanceTestSet: in order removal test done!" + " took " + (end.getTime()-start.getTime())/ 1000.0 + " s");
 		
+		/*
 		for (int i=0; i< testSize; i++) {
 			int nextOperation = random.nextInt(10);
 			int nextNumber = random.nextInt(testRange);

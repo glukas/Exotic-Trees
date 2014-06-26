@@ -11,4 +11,10 @@ public class ScapegoatTreeTest {
 		SetTests.testAddAndContains(new ScapegoatTree<Integer>());
 	}
 
+	
+	@Test
+	public void testSet() {
+		SetTests.testSet(new ScapegoatTree<Integer>());
+	}
+
 }
